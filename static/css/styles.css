@@ -1,0 +1,300 @@
+/* Layer Studios - Clean Premium Theme */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+:root {
+  --bg-dark: #09090b;
+  --bg-card: #111114;
+  --bg-card-hover: #18181b;
+  --border-subtle: #27272a;
+  --border-active: #3b82f6;
+  --accent-cyan: #60a5fa;
+  --accent-blue: #3b82f6;
+  --accent-glow: rgba(59, 130, 246, 0.15);
+  --accent-orange: #f59e0b;
+  --text-main: #fafafa;
+  --text-muted: #a1a1aa;
+  --text-dim: #71717a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+  color-scheme: dark;
+}
+
+/* Monospace font for telemetry, metrics, dimensions */
+.font-mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Subtle background grid */
+.cad-grid {
+  background-size: 48px 48px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+}
+
+.cad-grid-dense {
+  background-size: 24px 24px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+}
+
+/* Glassmorphism */
+.glass-panel {
+  background: rgba(13, 20, 36, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-panel-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.glass-panel-hover:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.4);
+  transform: translateY(-2px);
+}
+
+/* Layer Slicing Animation Effect */
+@keyframes layerScan {
+  0% { transform: translateY(0%); opacity: 0.1; }
+  50% { opacity: 0.8; }
+  100% { transform: translateY(100%); opacity: 0.1; }
+}
+
+.layer-scanner-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #60a5fa, transparent);
+  box-shadow: 0 0 10px #60a5fa;
+  animation: layerScan 4s linear infinite;
+}
+
+/* Gradient text utility */
+.text-gradient {
+  background: linear-gradient(135deg, #FFFFFF 20%, #a1a1aa 60%, #60a5fa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-cyan {
+  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 50%, #2563eb 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Custom 3D Viewport styling */
+#hero-canvas, #quote-3d-canvas, #modal-3d-canvas {
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  cursor: grab;
+}
+#hero-canvas:active, #quote-3d-canvas:active {
+  cursor: grabbing;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #09090b;
+}
+::-webkit-scrollbar-thumb {
+  background: #27272a;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3f3f46;
+}
+
+/* Custom Range Slider */
+input[type=range] {
+  -webkit-appearance: none;
+  background: #27272a;
+  height: 6px;
+  border-radius: 3px;
+  outline: none;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #3b82f6;
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
+  cursor: pointer;
+  border: 2px solid #09090b;
+  transition: transform 0.15s ease;
+}
+input[type=range]::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+/* Dropzone dragover highlight */
+.dropzone.drag-active {
+  border-color: #3b82f6 !important;
+  background: rgba(59, 130, 246, 0.06) !important;
+}
+
+/* Live pulse radar indicator */
+@keyframes liveRadar {
+  0% { transform: scale(0.9); opacity: 1; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+.radar-dot {
+  position: relative;
+}
+.radar-dot::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: inherit;
+  animation: liveRadar 2s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+}
+
+/* Modal and Drawer Animations */
+.modal-backdrop {
+  transition: opacity 0.25s ease-in-out;
+}
+.drawer-content {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Badge glow */
+.badge-glow-cyan {
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.25);
+}
+
+/* Print Quality Visualizer lines */
+.layer-line-fine { height: 1.2px; background: rgba(96, 165, 250, 0.85); margin-bottom: 1.2px; }
+.layer-line-std  { height: 2.0px; background: rgba(96, 165, 250, 0.70); margin-bottom: 2.0px; }
+.layer-line-draft{ height: 2.8px; background: rgba(96, 165, 250, 0.55); margin-bottom: 2.8px; }
+
+/* Tooltip */
+.tooltip-trigger:hover .tooltip-body {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* =========================================================
+   STORE THEMES: STUDIO MINIMAL (LUXURY) vs CAD TECHNICAL
+   ========================================================= */
+
+/* Store Section Transition */
+#store {
+  transition: background-color 0.4s ease, border-color 0.4s ease;
+}
+
+/* 1. STUDIO MINIMAL (LUXURY & SIMPLE THEME) */
+.store-theme-minimal {
+  background-color: #08090d !important;
+}
+
+.store-theme-minimal .store-luxury-card {
+  background: linear-gradient(180deg, rgba(20, 23, 31, 0.7) 0%, rgba(10, 12, 17, 0.9) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1.25rem;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.store-theme-minimal .store-luxury-card:hover {
+  border-color: rgba(255, 255, 255, 0.22);
+  transform: translateY(-4px);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 30px rgba(255, 255, 255, 0.03);
+}
+
+.store-theme-minimal .store-card-img-wrap {
+  background: radial-gradient(circle at 50% 50%, rgba(30, 35, 48, 0.5) 0%, rgba(9, 11, 16, 0.95) 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.store-theme-minimal .store-pill-badge {
+  background: rgba(255, 255, 255, 0.06);
+  color: #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-family: 'Inter', sans-serif;
+  letter-spacing: 0.04em;
+}
+
+.store-theme-minimal .store-category-tag {
+  color: #94a3b8;
+  font-family: 'Inter', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.65rem;
+  font-weight: 600;
+}
+
+.store-theme-minimal .store-card-title {
+  color: #ffffff;
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.store-theme-minimal .store-card-price {
+  color: #ffffff;
+  font-family: 'Inter', sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.store-theme-minimal .store-card-btn {
+  background: #ffffff;
+  color: #09090b;
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  border: none;
+  box-shadow: 0 4px 14px rgba(255, 255, 255, 0.12);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.store-theme-minimal .store-card-btn:hover {
+  background: #f1f5f9;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(255, 255, 255, 0.22);
+}
+
+/* Category Filter Active in Minimal Theme */
+.store-theme-minimal .store-filter-btn.active {
+  background: #ffffff !important;
+  color: #09090b !important;
+  border-color: #ffffff !important;
+  font-weight: 700 !important;
+  box-shadow: 0 4px 15px rgba(255, 255, 255, 0.15) !important;
+}
+
+.store-theme-minimal .store-filter-btn:not(.active) {
+  background: rgba(255, 255, 255, 0.03) !important;
+  color: #94a3b8 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.store-theme-minimal .store-filter-btn:not(.active):hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+}
+
+/* 2. CAD BLUEPRINT / TECHNICAL THEME (Original High-Tech Dark) */
+.store-theme-cad {
+  background-color: #090E1A !important;
+}

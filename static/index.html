@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Layer Studios | Professional 3D Printing & Rapid Prototyping Studio</title>
+  <meta name="description" content="Premium 3D printing, rapid prototyping, custom mechanical parts, and CAD design studio in Portugal and Europe. You imagine it. We print it.">
+  <meta name="keywords" content="3D printing Portugal, 3D printing Lisbon, rapid prototyping, custom 3D printed parts, replacement parts 3D printing, CAD design, small batch manufacturing">
+  <meta name="author" content="Layer Studios">
+
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              dark: '#09090b',
+              card: '#111114',
+              hover: '#18181b',
+              blue: '#3b82f6',
+              accent: '#60a5fa'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Three.js r128 & OrbitControls for WebGL 3D Model Rendering -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+  <link rel="stylesheet" href="/static/css/styles.css">
+  <link rel="icon" type="image/svg+xml" href="/static/assets/logo.svg">
+</head>
+<body class="bg-[#09090b] text-slate-100 antialiased selection:bg-blue-500 selection:text-white relative overflow-x-hidden cad-grid">
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col space-y-3 pointer-events-none"></div>
+
+  <!-- GDPR Cookie Banner -->
+  <div id="cookie-banner" class="hidden fixed bottom-0 left-0 right-0 z-50 p-4 bg-slate-950/95 border-t border-slate-800 backdrop-blur-md">
+    <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center space-x-3 text-xs text-slate-400">
+        <span class="text-blue-400 text-lg">🍪</span>
+        <span>We use minimal local storage to remember your cart, 3D preferences, and estimate history.</span>
+      </div>
+      <div class="flex items-center space-x-2 shrink-0">
+        <button id="cookie-accept" class="px-4 py-1.5 rounded-lg bg-blue-500 hover:bg-blue-400 text-white font-semibold text-xs transition-colors">Accept</button>
+        <button id="cookie-decline" class="px-4 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 hover:text-white text-xs transition-colors">Decline</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       1. GLOBAL STICKY NAVBAR (Clean, Single-Line, Aligned)
+  ═══════════════════════════════════════════════════════════════════ -->
+  <header id="main-header" class="fixed top-0 left-0 right-0 z-40 bg-slate-950/85 backdrop-blur-xl border-b border-slate-800/80 transition-all duration-300">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-18 py-3.5 gap-6">
+        
+        <!-- Brand Logo -->
+        <a href="/" class="flex items-center space-x-3 group shrink-0">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 p-0.5 shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform flex items-center justify-center">
+            <img src="/static/assets/logo.svg" alt="Layer Studios" class="w-6 h-6">
+          </div>
+          <div class="flex flex-col">
+            <span class="text-lg font-black tracking-tight text-white leading-none flex items-center">
+              Layer<span class="text-blue-400">Studios</span>
+            </span>
+            <span class="text-[9px] text-slate-400 tracking-wider uppercase font-semibold mt-0.5 leading-none">3D Printing Studio</span>
+          </div>
+        </a>
+
+        <!-- Desktop Navigation Links (Clean, Single-Line, Aligned) -->
+        <nav class="hidden md:flex items-center space-x-1 lg:space-x-2 text-sm font-medium text-slate-300">
+          <a href="/" class="px-3.5 py-2 rounded-xl text-white font-semibold bg-slate-900 border border-slate-800 whitespace-nowrap transition-colors">Home</a>
+          <a href="/quote" class="px-3.5 py-2 rounded-xl hover:text-white hover:bg-slate-900/60 whitespace-nowrap transition-colors">Get a Quote</a>
+          <a href="/store" class="px-3.5 py-2 rounded-xl hover:text-white hover:bg-slate-900/60 whitespace-nowrap transition-colors">Store</a>
+          <a href="/materials" class="px-3.5 py-2 rounded-xl hover:text-white hover:bg-slate-900/60 whitespace-nowrap transition-colors">Materials</a>
+          <a href="/track" class="px-3.5 py-2 rounded-xl hover:text-white hover:bg-slate-900/60 whitespace-nowrap transition-colors">Track Order</a>
+        </nav>
+
+        <!-- Right Quick Actions (Aligned Heights) -->
+        <div class="flex items-center space-x-3 shrink-0">
+          <a href="/track" class="hidden sm:inline-flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-900/90 hover:bg-slate-800 text-slate-300 border border-slate-800 transition-all whitespace-nowrap">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span>Live Status</span>
+          </a>
+          <a href="/quote" class="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-blue-500 hover:bg-blue-400 text-white shadow-md shadow-blue-500/20 hover:shadow-blue-500/35 transition-all whitespace-nowrap">
+            <span>Instant Quote &rarr;</span>
+          </a>
+          
+          <!-- Mobile Menu Hamburger -->
+          <button id="mobile-menu-toggle" type="button" class="md:hidden p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white" aria-label="Toggle Menu">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile Drawer -->
+  <div id="mobile-menu-backdrop" class="hidden fixed inset-0 z-40 bg-black/70 backdrop-blur-sm transition-opacity"></div>
+  <div id="mobile-menu-drawer" class="fixed top-0 right-0 bottom-0 z-50 w-80 bg-slate-950 border-l border-slate-800 translate-x-full transition-transform duration-300 flex flex-col p-6 overflow-y-auto">
+    <div class="flex items-center justify-between pb-6 border-b border-slate-800">
+      <div class="flex items-center space-x-2">
+        <img src="/static/assets/logo.svg" class="w-6 h-6" alt="">
+        <span class="font-bold text-white">Layer Studios</span>
+      </div>
+      <button id="mobile-menu-close" class="p-2 text-slate-400 hover:text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+    </div>
+    <nav class="flex flex-col space-y-1.5 py-6">
+      <a href="/" class="mobile-nav-link px-4 py-3 rounded-xl text-white font-bold bg-blue-500/10 border border-blue-500/20">Home</a>
+      <a href="/quote" class="mobile-nav-link px-4 py-3 rounded-xl text-slate-300 hover:text-white hover:bg-slate-900 font-semibold">Get a Quote</a>
+      <a href="/store" class="mobile-nav-link px-4 py-3 rounded-xl text-slate-300 hover:text-white hover:bg-slate-900 font-semibold">Store</a>
+      <a href="/materials" class="mobile-nav-link px-4 py-3 rounded-xl text-slate-300 hover:text-white hover:bg-slate-900 font-semibold">Materials Guide</a>
+      <a href="/track" class="mobile-nav-link px-4 py-3 rounded-xl text-slate-300 hover:text-white hover:bg-slate-900 font-semibold">Track Order</a>
+      <div class="pt-4 border-t border-slate-800 my-2"></div>
+      <a href="#services" class="mobile-nav-link px-4 py-2 text-xs text-slate-400 hover:text-white">Services Overview</a>
+      <a href="#portfolio" class="mobile-nav-link px-4 py-2 text-xs text-slate-400 hover:text-white">Portfolio &amp; Case Studies</a>
+      <a href="#quality" class="mobile-nav-link px-4 py-2 text-xs text-slate-400 hover:text-white">Quality &amp; Tolerances</a>
+      <a href="#business" class="mobile-nav-link px-4 py-2 text-xs text-slate-400 hover:text-white">B2B Rapid Prototyping</a>
+      <a href="#about" class="mobile-nav-link px-4 py-2 text-xs text-slate-400 hover:text-white">About &amp; Philosophy</a>
+      <a href="#faq" class="mobile-nav-link px-4 py-2 text-xs text-slate-400 hover:text-white">Frequently Asked Questions</a>
+      <a href="#contact" class="mobile-nav-link px-4 py-2 text-xs text-slate-400 hover:text-white">Contact &amp; Workshop</a>
+    </nav>
+    <div class="mt-auto pt-6 border-t border-slate-800 space-y-3">
+      <a href="/quote" class="block w-full text-center py-3.5 rounded-xl bg-blue-500 hover:bg-blue-400 text-white font-bold text-sm shadow-lg shadow-blue-500/25">Get a Quote &rarr;</a>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       2. HERO SECTION WITH REAL-TIME 3D CAD SLICER VIEW
+  ═══════════════════════════════════════════════════════════════════ -->
+  <section id="hero" class="relative pt-32 pb-20 lg:pt-36 lg:pb-28 overflow-hidden">
+    <!-- Subtle Ambient Glows -->
+    <div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] bg-blue-600/10 blur-[130px] pointer-events-none -z-10"></div>
+    <div class="absolute top-1/2 right-10 w-96 h-96 bg-indigo-600/10 blur-[120px] pointer-events-none -z-10"></div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+        
+        <!-- Left: Studio Copy & Badges -->
+        <div class="lg:col-span-7 space-y-7 text-left">
+          
+          <div class="inline-flex items-center space-x-2.5 px-3.5 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span>Studio open in Portugal &bull; EU delivery in 24–48h</span>
+          </div>
+
+          <h1 class="text-4xl sm:text-6xl font-black text-white tracking-tight leading-[1.08]">
+            You imagine it.<br>
+            <span class="text-gradient">We print it.</span>
+          </h1>
+
+          <p class="text-lg sm:text-xl text-slate-300 leading-relaxed max-w-2xl font-normal">
+            Precision 3D printing, rapid prototyping, and custom replacement parts made easy. Drop your CAD file or send us a sketch — we'll handle the slicing, materials, and delivery.
+          </p>
+
+          <!-- Primary CTAs -->
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-2">
+            <a href="/quote" class="inline-flex items-center justify-center px-8 py-4 rounded-2xl bg-blue-500 hover:bg-blue-400 text-white font-bold text-base shadow-xl shadow-blue-500/25 hover:shadow-blue-500/40 transition-all transform hover:-translate-y-0.5">
+              <span>Upload 3D File &bull; Instant Quote</span>
+              <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+            </a>
+            <a href="/store" class="inline-flex items-center justify-center px-7 py-4 rounded-2xl bg-slate-900/90 hover:bg-slate-800 text-slate-200 border border-slate-800 hover:border-slate-700 font-semibold text-base transition-all">
+              <span>Browse Store Catalog</span>
+            </a>
+          </div>
+
+          <!-- Feature Trust Badges -->
+          <div class="pt-6 border-t border-slate-800/80 grid grid-cols-3 gap-4 text-xs font-mono text-slate-400">
+            <div>
+              <span class="block text-white font-bold text-base">&plusmn;0.15 mm</span>
+              <span>Tolerance Accuracy</span>
+            </div>
+            <div>
+              <span class="block text-white font-bold text-base">256&sup3; mm</span>
+              <span>Build Volume</span>
+            </div>
+            <div>
+              <span class="block text-white font-bold text-base">24–48h</span>
+              <span>Standard Turnaround</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Right: Real-time 3D CAD Preview HUD (256³ mm Build Volume) -->
+        <div class="lg:col-span-5 relative">
+          <div class="rounded-3xl bg-slate-950/80 border border-slate-800/80 p-4 backdrop-blur-xl shadow-2xl relative overflow-hidden glass-panel">
+            
+            <!-- Viewer Header Bar -->
+            <div class="flex items-center justify-between pb-3 border-b border-slate-800/80 text-xs font-mono">
+              <div class="flex items-center space-x-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span class="text-slate-300 font-bold">3D Model Preview</span>
+                <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-800 text-slate-400 border border-slate-700">256³ mm</span>
+              </div>
+              <div class="flex items-center space-x-1.5">
+                <button id="hero-axes-btn" class="px-2 py-1 rounded bg-slate-900 border border-slate-800 text-slate-400 hover:text-white transition-colors text-[10px]" title="Toggle XYZ Axes">Axes</button>
+                <button id="hero-wireframe-btn" class="px-2 py-1 rounded bg-slate-900 border border-slate-800 text-slate-400 hover:text-white transition-colors text-[10px]" title="Toggle Wireframe">Wire</button>
+                <button id="hero-rotate-btn" class="px-2 py-1 rounded bg-slate-900 border border-blue-500/40 text-blue-400 transition-colors text-[10px]" title="Toggle Auto-Rotate">&circlearrowright; Auto</button>
+              </div>
+            </div>
+
+            <!-- 3D Canvas -->
+            <div class="relative w-full h-[360px] sm:h-[410px] rounded-2xl bg-[#09090b] overflow-hidden my-3 border border-slate-800/60">
+              <canvas id="hero-canvas" style="width:100%;height:100%;display:block;"></canvas>
+              
+              <!-- Fit-on-plate badge (shown dynamically) -->
+              <div id="hero-fit-badge" class="hidden absolute top-3 right-3 px-2.5 py-1 rounded-lg text-[10px] font-bold font-mono flex items-center space-x-1.5 backdrop-blur-sm border"></div>
+
+              <!-- Telemetry HUD -->
+              <div class="absolute bottom-3 left-3 right-3 p-3 rounded-xl bg-slate-950/90 border border-slate-800 backdrop-blur-md grid grid-cols-4 gap-2 text-[11px] font-mono">
+                <div>
+                  <span class="text-slate-500 block text-[9px] uppercase tracking-wider">Size (mm)</span>
+                  <span id="hero-telemetry-dims" class="text-slate-200 font-bold">84 &times; 52 &times; 38 mm</span>
+                </div>
+                <div>
+                  <span class="text-slate-500 block text-[9px] uppercase tracking-wider">Volume</span>
+                  <span id="hero-telemetry-vol" class="text-blue-400 font-bold">42.5 cm&sup3;</span>
+                </div>
+                <div>
+                  <span class="text-slate-500 block text-[9px] uppercase tracking-wider">Weight</span>
+                  <span id="hero-telemetry-weight" class="text-slate-200 font-bold">~34 g</span>
+                </div>
+                <div>
+                  <span class="text-slate-500 block text-[9px] uppercase tracking-wider">Print Time</span>
+                  <span id="hero-telemetry-time" class="text-slate-200 font-bold">1h 45m</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Slicer + Controls Row -->
+            <div class="space-y-3 pt-1">
+              <div class="flex items-center justify-between text-xs font-mono text-slate-400">
+                <span>Layer Slice</span>
+                <span id="hero-layer-val" class="text-blue-400 font-bold">Z: 38.0 mm (190 layers)</span>
+              </div>
+              <input id="hero-slicer-slider" type="range" min="5" max="100" value="100" class="w-full">
+
+              <div class="flex items-center justify-between pt-1">
+                <span class="text-[11px] font-mono text-slate-500 uppercase">Material:</span>
+                <div class="flex items-center space-x-1.5">
+                  <button type="button" class="hero-mat-btn w-6 h-6 rounded-full bg-blue-500 ring-2 ring-blue-400 transition-transform" data-mat="cyan" title="PLA+ Blue"></button>
+                  <button type="button" class="hero-mat-btn w-6 h-6 rounded-full bg-orange-500 transition-transform" data-mat="petg" title="PETG Amber"></button>
+                  <button type="button" class="hero-mat-btn w-6 h-6 rounded-full bg-slate-800 border border-slate-600 transition-transform" data-mat="obsidian" title="Carbon Stealth"></button>
+                  <button type="button" class="hero-mat-btn w-6 h-6 rounded-full bg-slate-500 transition-transform" data-mat="tpu" title="TPU 95A Flex"></button>
+                  <button type="button" class="hero-mat-btn w-6 h-6 rounded-full bg-slate-200 transition-transform" data-mat="white" title="White PLA"></button>
+                </div>
+              </div>
+
+              <!-- Build plate info bar -->
+              <div class="flex items-center justify-between pt-1 border-t border-slate-800/60 text-[10px] font-mono text-slate-500">
+                <span>Build Volume: <span class="text-slate-400">256 &times; 256 &times; 256 mm</span></span>
+                <span id="hero-layer-count" class="text-slate-500">190 layers @ 0.2mm</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       3. THREE CORE PILLARS
+  ═══════════════════════════════════════════════════════════════════ -->
+  <section class="py-12 border-y border-slate-800/80 bg-slate-950/40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        <div class="p-6 rounded-2xl bg-slate-900/60 border border-slate-800 flex items-start space-x-4">
+          <div class="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 shrink-0">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-white mb-1">24–48h Rapid Turnaround</h3>
+            <p class="text-xs text-slate-400 leading-relaxed">Local production in Portugal with express domestic shipping and fast EU courier delivery.</p>
+          </div>
+        </div>
+
+        <div class="p-6 rounded-2xl bg-slate-900/60 border border-slate-800 flex items-start space-x-4">
+          <div class="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 shrink-0">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-white mb-1">Industrial Tolerances</h3>
+            <p class="text-xs text-slate-400 leading-relaxed">Calibrated direct-drive motion systems achieving &plusmn;0.15mm accuracy and perfect layer bonding.</p>
+          </div>
+        </div>
+
+        <div class="p-6 rounded-2xl bg-slate-900/60 border border-slate-800 flex items-start space-x-4">
+          <div class="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 shrink-0">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-white mb-1">Friendly for Beginners</h3>
+            <p class="text-xs text-slate-400 leading-relaxed">No 3D experience needed. We inspect every model, fix manifold errors, and recommend the best settings.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       4. SERVICES OVERVIEW
+  ═══════════════════════════════════════════════════════════════════ -->
+  <section id="services" class="py-24 relative">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="text-center max-w-3xl mx-auto mb-16 space-y-4">
+        <span class="inline-block px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 text-xs font-semibold tracking-wide uppercase">Capabilities</span>
+        <h2 class="text-3xl sm:text-4xl font-extrabold text-white">Full-Spectrum Manufacturing &amp; CAD Design</h2>
+        <p class="text-slate-400 text-sm sm:text-base">Whether you have a ready CAD model or just a broken plastic part you need replicated, Layer Studios provides end-to-end service.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        
+        <!-- Service 1 -->
+        <div class="p-8 rounded-3xl bg-slate-900/70 border border-slate-800 glass-panel-hover flex flex-col justify-between">
+          <div class="space-y-4">
+            <div class="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-2xl">
+              ⚙️
+            </div>
+            <h3 class="text-xl font-bold text-white">Rapid Prototyping</h3>
+            <p class="text-sm text-slate-400 leading-relaxed">Turn digital CAD concepts into testable physical models in hours. Test ergonomic fit, mechanics, and form factor before investing in expensive tooling.</p>
+          </div>
+          <a href="/quote" class="inline-flex items-center text-xs font-semibold text-blue-400 hover:text-blue-300 mt-6 group">
+            <span>Request prototype quote</span>
+            <span class="ml-1 group-hover:translate-x-1 transition-transform">&rarr;</span>
+          </a>
+        </div>
+
+        <!-- Service 2 -->
+        <div class="p-8 rounded-3xl bg-slate-900/70 border border-slate-800 glass-panel-hover flex flex-col justify-between">
+          <div class="space-y-4">
+            <div class="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-2xl">
+              📦
+            </div>
+            <h3 class="text-xl font-bold text-white">Small-Batch Production</h3>
+            <p class="text-sm text-slate-400 leading-relaxed">Produce from 5 to 500+ end-use parts without injection mould upfront costs. Ideal for market testing, custom electronic enclosures, and bespoke hardware.</p>
+          </div>
+          <a href="/quote" class="inline-flex items-center text-xs font-semibold text-blue-400 hover:text-blue-300 mt-6 group">
+            <span>Calculate batch pricing</span>
+            <span class="ml-1 group-hover:translate-x-1 transition-transform">&rarr;</span>
+          </a>
+        </div>
+
+        <!-- Service 3 -->
+        <div class="p-8 rounded-3xl bg-slate-900/70 border border-slate-800 glass-panel-hover flex flex-col justify-between">
+          <div class="space-y-4">
+            <div class="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-2xl">
+              🔧
+            </div>
+            <h3 class="text-xl font-bold text-white">Replacement &amp; Obsolete Parts</h3>
+            <p class="text-sm text-slate-400 leading-relaxed">Discontinued appliance gears, broken car trim clips, drone arms, or vacuum mounts. Send us caliper measurements or fragments for 1:1 replacement.</p>
+          </div>
+          <a href="/quote" class="inline-flex items-center text-xs font-semibold text-blue-400 hover:text-blue-300 mt-6 group">
+            <span>Send broken part photo</span>
+            <span class="ml-1 group-hover:translate-x-1 transition-transform">&rarr;</span>
+          </a>
+        </div>
+
+        <!-- Service 4 -->
+        <div class="p-8 rounded-3xl bg-slate-900/70 border border-slate-800 glass-panel-hover flex flex-col justify-between">
+          <div class="space-y-4">
+            <div class="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-2xl">
+              📐
+            </div>
+            <h3 class="text-xl font-bold text-white">CAD &amp; Reverse Engineering</h3>
+            <p class="text-sm text-slate-400 leading-relaxed">No 3D file? We create precision STEP and STL solid CAD files from dimensioned sketches, technical drawings, or physical samples.</p>
+          </div>
+          <a href="/quote" class="inline-flex items-center text-xs font-semibold text-blue-400 hover:text-blue-300 mt-6 group">
+            <span>Request design service</span>
+            <span class="ml-1 group-hover:translate-x-1 transition-transform">&rarr;</span>
+          </a>
+        </div>
+
+        <!-- Service 5 -->
+        <div class="p-8 rounded-3xl bg-slate-900/70 border border-slate-800 glass-panel-hover flex flex-col justify-between">
+          <div class="space-y-4">
+            <div class="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-2xl">
+              🎨
+            </div>
+            <h3 class="text-xl font-bold text-white">Post-Processing &amp; Finishing</h3>
+            <p class="text-sm text-slate-400 leading-relaxed">Chemical vapour smoothing, multi-grit sanding, UV-stable priming, brass heat-set threaded inserts, and assembly bonding.</p>
+          </div>
+          <a href="/materials" class="inline-flex items-center text-xs font-semibold text-blue-400 hover:text-blue-300 mt-6 group">
+            <span>Explore finishing options</span>
+            <span class="ml-1 group-hover:translate-x-1 transition-transform">&rarr;</span>
+          </a>
+        </div>
+
+        <!-- Service 6 -->
+        <div class="p-8 rounded-3xl bg-slate-900/70 border border-slate-800 glass-panel-hover flex flex-col justify-between">
+          <div class="space-y-4">
+            <div class="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-2xl">
+              🧪
+            </div>
+            <h3 class="text-xl font-bold text-white">Material Selection Advisory</h3>
+            <p class="text-sm text-slate-400 leading-relaxed">Get expert engineering advice on selecting between PLA+, PETG, ABS, TPU 95A, and Carbon-Fiber Nylon based on heat, load, and chemical resistance.</p>
+          </div>
+          <a href="/materials" class="inline-flex items-center text-xs font-semibold text-blue-400 hover:text-blue-300 mt-6 group">
+            <span>Try Materials Advisor Quiz</span>
+            <span class="ml-1 group-hover:translate-x-1 transition-transform">&rarr;</span>
+          </a>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       5. HOW IT WORKS
+  ═══════════════════════════════════════════════════════════════════ -->
+  <section id="how-it-works" class="py-24 bg-slate-950/60 border-y border-slate-800/80 relative">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="text-center max-w-3xl mx-auto mb-16 space-y-4">
+        <span class="inline-block px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 text-xs font-semibold tracking-wide uppercase">Workflow</span>
+        <h2 class="text-3xl sm:text-4xl font-extrabold text-white">Simple 4-Step Production Process</h2>
+        <p class="text-slate-400 text-sm sm:text-base">We designed our studio workflow so you can go from digital idea to finished product seamlessly.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        
+        <div class="p-6 rounded-2xl bg-slate-900 border border-slate-800 relative">
+          <div class="w-10 h-10 rounded-xl bg-blue-500 text-white font-black text-lg flex items-center justify-center mb-4 shadow-lg shadow-blue-500/20">1</div>
+          <h3 class="text-lg font-bold text-white mb-2">Upload or Request</h3>
+          <p class="text-xs text-slate-400 leading-relaxed">Drop your STL/3MF/STEP file or upload sketches/photos. Choose your material, colour, and quantity.</p>
+        </div>
+
+        <div class="p-6 rounded-2xl bg-slate-900 border border-slate-800 relative">
+          <div class="w-10 h-10 rounded-xl bg-blue-500 text-white font-black text-lg flex items-center justify-center mb-4 shadow-lg shadow-blue-500/20">2</div>
+          <h3 class="text-lg font-bold text-white mb-2">Slicing Review</h3>
+          <p class="text-xs text-slate-400 leading-relaxed">Our engineers inspect your geometry, optimize layer orientation for strength, and confirm print time.</p>
+        </div>
+
+        <div class="p-6 rounded-2xl bg-slate-900 border border-slate-800 relative">
+          <div class="w-10 h-10 rounded-xl bg-blue-500 text-white font-black text-lg flex items-center justify-center mb-4 shadow-lg shadow-blue-500/20">3</div>
+          <h3 class="text-lg font-bold text-white mb-2">Precision Printing</h3>
+          <p class="text-xs text-slate-400 leading-relaxed">Manufactured on 256³ mm high-speed direct-drive machines with multi-point automated bed leveling.</p>
+        </div>
+
+        <div class="p-6 rounded-2xl bg-slate-900 border border-slate-800 relative">
+          <div class="w-10 h-10 rounded-xl bg-blue-500 text-white font-black text-lg flex items-center justify-center mb-4 shadow-lg shadow-blue-500/20">4</div>
+          <h3 class="text-lg font-bold text-white mb-2">Quality &amp; Delivery</h3>
+          <p class="text-xs text-slate-400 leading-relaxed">Caliper inspection, support removal, post-processing, and tracked express shipping straight to your door.</p>
+        </div>
+
+      </div>
+
+      <div class="mt-12 text-center">
+        <a href="/quote" class="inline-flex items-center px-8 py-4 rounded-2xl bg-blue-500 hover:bg-blue-400 text-white font-bold text-sm shadow-xl shadow-blue-500/25 transition-all transform hover:-translate-y-0.5">
+          Start Your Custom Order &rarr;
+        </a>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       6. PORTFOLIO SHOWCASE
+  ═══════════════════════════════════════════════════════════════════ -->
+  <section id="portfolio" class="py-24 relative">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+        <div>
+          <span class="inline-block px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 text-xs font-semibold tracking-wide uppercase mb-3">Case Studies</span>
+          <h2 class="text-3xl sm:text-4xl font-extrabold text-white">Recent Studio Projects</h2>
+          <p class="text-slate-400 text-sm mt-2 max-w-xl">Real parts manufactured for engineering teams, local businesses, and individuals.</p>
+        </div>
+
+        <!-- Filter buttons -->
+        <div id="portfolio-filters" class="flex flex-wrap gap-2">
+          <button class="portfolio-filter active px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-blue-500 text-white transition-all" data-category="all">All</button>
+          <button class="portfolio-filter px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 text-slate-400 hover:text-white border border-slate-800 transition-all" data-category="prototyping">Prototyping</button>
+          <button class="portfolio-filter px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 text-slate-400 hover:text-white border border-slate-800 transition-all" data-category="replacement">Replacement</button>
+          <button class="portfolio-filter px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 text-slate-400 hover:text-white border border-slate-800 transition-all" data-category="mechanical">Mechanical</button>
+        </div>
+      </div>
+
+      <!-- Portfolio Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        <!-- Project 1 -->
+        <div class="portfolio-card rounded-3xl bg-slate-900/80 border border-slate-800 overflow-hidden glass-panel-hover" data-category="prototyping">
+          <div class="h-48 bg-gradient-to-br from-slate-900 to-blue-950/40 p-6 flex flex-col justify-between relative border-b border-slate-800">
+            <span class="px-2.5 py-1 rounded-full bg-blue-500/20 text-blue-400 text-[10px] font-mono font-bold w-fit">Rapid Prototype</span>
+            <div class="text-3xl">📡</div>
+          </div>
+          <div class="p-6 space-y-3">
+            <h3 class="text-lg font-bold text-white">IoT Sensor Enclosure</h3>
+            <p class="text-xs text-slate-400 leading-relaxed">Weather-sealed IP65 enclosure with heat-set brass threaded inserts and custom silicone gasket channel in PETG.</p>
+            <div class="flex items-center justify-between pt-3 border-t border-slate-800/80 text-[11px] font-mono text-slate-500">
+              <span>Material: PETG Black</span>
+              <span>Lead: 24h</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Project 2 -->
+        <div class="portfolio-card rounded-3xl bg-slate-900/80 border border-slate-800 overflow-hidden glass-panel-hover" data-category="replacement">
+          <div class="h-48 bg-gradient-to-br from-slate-900 to-indigo-950/40 p-6 flex flex-col justify-between relative border-b border-slate-800">
+            <span class="px-2.5 py-1 rounded-full bg-indigo-500/20 text-indigo-400 text-[10px] font-mono font-bold w-fit">Replacement</span>
+            <div class="text-3xl">⚙️</div>
+          </div>
+          <div class="p-6 space-y-3">
+            <h3 class="text-lg font-bold text-white">Vintage Kitchen Mixer Gear</h3>
+            <p class="text-xs text-slate-400 leading-relaxed">Recreated a discontinued nylon helical planetary gear from broken fragments with precise involute tooth profile.</p>
+            <div class="flex items-center justify-between pt-3 border-t border-slate-800/80 text-[11px] font-mono text-slate-500">
+              <span>Material: CF-Nylon</span>
+              <span>Tolerance: &plusmn;0.08mm</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Project 3 -->
+        <div class="portfolio-card rounded-3xl bg-slate-900/80 border border-slate-800 overflow-hidden glass-panel-hover" data-category="mechanical">
+          <div class="h-48 bg-gradient-to-br from-slate-900 to-emerald-950/40 p-6 flex flex-col justify-between relative border-b border-slate-800">
+            <span class="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-mono font-bold w-fit">Functional Mount</span>
+            <div class="text-3xl">🏎️</div>
+          </div>
+          <div class="p-6 space-y-3">
+            <h3 class="text-lg font-bold text-white">Telemetry Camera Rig</h3>
+            <p class="text-xs text-slate-400 leading-relaxed">Lightweight vibration-dampened action camera mount with TPU isolation bushings for motorsport data logging.</p>
+            <div class="flex items-center justify-between pt-3 border-t border-slate-800/80 text-[11px] font-mono text-slate-500">
+              <span>Material: CF-Nylon + TPU</span>
+              <span>Weight: 42g</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       7. B2B & ENTERPRISE SECTION
+  ═══════════════════════════════════════════════════════════════════ -->
+  <section id="business" class="py-20 bg-slate-950/80 border-y border-slate-800/80 relative">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="rounded-3xl bg-gradient-to-r from-slate-900 via-slate-900 to-blue-950/50 border border-blue-500/20 p-8 lg:p-14 shadow-2xl relative overflow-hidden">
+        
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          <div class="lg:col-span-8 space-y-5">
+            <span class="inline-block px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 text-xs font-semibold tracking-wide uppercase">B2B Prototyping</span>
+            <h2 class="text-3xl sm:text-4xl font-extrabold text-white">Engineering Prototyping for Companies</h2>
+            <p class="text-slate-300 text-sm sm:text-base leading-relaxed">
+              We partner with hardware startups, engineering teams, architecture studios, and robotics developers across Portugal and Europe. Enjoy dedicated print capacity, strict mutual NDAs, volume pricing, and Net-30 invoicing.
+            </p>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-2 text-xs font-mono text-slate-400">
+              <div class="flex items-center space-x-2"><span class="text-emerald-400">✓</span><span>Standard Mutual NDA</span></div>
+              <div class="flex items-center space-x-2"><span class="text-emerald-400">✓</span><span>Volume Tier Discounts</span></div>
+              <div class="flex items-center space-x-2"><span class="text-emerald-400">✓</span><span>Certified Tax Invoices</span></div>
+            </div>
+          </div>
+          <div class="lg:col-span-4 flex flex-col gap-3">
+            <a href="/quote" class="w-full text-center py-4 rounded-2xl bg-blue-500 hover:bg-blue-400 text-white font-bold text-sm shadow-xl shadow-blue-500/25 transition-all">
+              Request B2B Consultation &rarr;
+            </a>
+            <a href="mailto:business@layerstudios.pt" class="w-full text-center py-3.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 text-xs font-semibold transition-all">
+              Email: business@layerstudios.pt
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       8. FREQUENTLY ASKED QUESTIONS
+  ═══════════════════════════════════════════════════════════════════ -->
+  <section id="faq" class="py-24 relative">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="text-center mb-14 space-y-3">
+        <span class="inline-block px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 text-xs font-semibold tracking-wide uppercase">FAQ</span>
+        <h2 class="text-3xl font-extrabold text-white">Frequently Asked Questions</h2>
+        <p class="text-slate-400 text-sm">Everything you need to know about ordering, files, materials, and delivery.</p>
+      </div>
+
+      <div class="space-y-3">
+        
+        <details class="group p-5 rounded-2xl bg-slate-900 border border-slate-800 cursor-pointer">
+          <summary class="flex justify-between items-center text-sm font-bold text-white list-none">
+            <span>What 3D file formats do you accept?</span>
+            <svg class="w-5 h-5 text-slate-400 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </summary>
+          <p class="mt-3 text-xs sm:text-sm text-slate-400 leading-relaxed">
+            We accept all standard 3D formats including STL, 3MF, STEP (.step/.stp), and OBJ. For CAD design or reverse-engineering, you can also upload dimensioned PDF drawings, sketches, or photos.
+          </p>
+        </details>
+
+        <details class="group p-5 rounded-2xl bg-slate-900 border border-slate-800 cursor-pointer">
+          <summary class="flex justify-between items-center text-sm font-bold text-white list-none">
+            <span>What is your maximum build volume?</span>
+            <svg class="w-5 h-5 text-slate-400 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </summary>
+          <p class="mt-3 text-xs sm:text-sm text-slate-400 leading-relaxed">
+            Our standard single-piece build volume is 256 &times; 256 &times; 256 mm. Larger models can be split with alignment pin joints and assembled seamlessly with structural bonding.
+          </p>
+        </details>
+
+        <details class="group p-5 rounded-2xl bg-slate-900 border border-slate-800 cursor-pointer">
+          <summary class="flex justify-between items-center text-sm font-bold text-white list-none">
+            <span>How fast is delivery within Portugal and the EU?</span>
+            <svg class="w-5 h-5 text-slate-400 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </summary>
+          <p class="mt-3 text-xs sm:text-sm text-slate-400 leading-relaxed">
+            Most orders print in 24–48 hours. Shipping in Portugal takes 24 hours via CTT Express (&euro;4.50, free over &euro;50). European Union deliveries take 2–4 business days via DHL/UPS.
+          </p>
+        </details>
+
+        <details class="group p-5 rounded-2xl bg-slate-900 border border-slate-800 cursor-pointer">
+          <summary class="flex justify-between items-center text-sm font-bold text-white list-none">
+            <span>I have never ordered a 3D print before. What should I do?</span>
+            <svg class="w-5 h-5 text-slate-400 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </summary>
+          <p class="mt-3 text-xs sm:text-sm text-slate-400 leading-relaxed">
+            It's completely painless! Head to our <a href="/quote" class="text-blue-400 underline">Get a Quote</a> page and drag your file into the box. If you don't have a 3D file, switch to "I need it designed" and write a description. We will guide you step by step.
+          </p>
+        </details>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       9. ABOUT & CONTACT SECTION
+  ═══════════════════════════════════════════════════════════════════ -->
+  <section id="contact" class="py-24 bg-slate-950/60 border-t border-slate-800/80 relative">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+        
+        <div id="about" class="lg:col-span-5 space-y-6">
+          <span class="inline-block px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 text-xs font-semibold tracking-wide uppercase">About Layer Studios</span>
+          <h2 class="text-3xl font-extrabold text-white">Precision Studio Based in Portugal</h2>
+          <p class="text-slate-400 text-sm leading-relaxed">
+            Layer Studios was founded with a clear mission: making custom manufacturing and functional prototyping accessible to everyone without friction.
+          </p>
+          <div class="space-y-3 text-xs text-slate-300">
+            <div class="flex items-center space-x-3">
+              <span class="text-blue-400 font-bold">&bull;</span>
+              <span><strong>Studio Location:</strong> Lisbon, Portugal</span>
+            </div>
+            <div class="flex items-center space-x-3">
+              <span class="text-blue-400 font-bold">&bull;</span>
+              <span><strong>Email:</strong> contact@layerstudios.pt</span>
+            </div>
+            <div class="flex items-center space-x-3">
+              <span class="text-blue-400 font-bold">&bull;</span>
+              <span><strong>Working Hours:</strong> Mon–Fri 09:00–18:30 WET</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="lg:col-span-7 p-8 rounded-3xl bg-slate-900 border border-slate-800 shadow-xl">
+          <h3 class="text-xl font-bold text-white mb-2">Send Us a Direct Message</h3>
+          <p class="text-xs text-slate-400 mb-6">Have a custom inquiry or engineering question? Our team responds within 2 hours.</p>
+
+          <form id="contact-form" class="space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">Your Name</label>
+                <input type="text" id="contact-name" required placeholder="Pedro Cardoso" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-3 text-sm text-white focus:border-blue-400 focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">Email Address</label>
+                <input type="email" id="contact-email" required placeholder="name@example.com" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-3 text-sm text-white focus:border-blue-400 focus:outline-none">
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Subject</label>
+              <input type="text" id="contact-subject" required placeholder="Project consultation / CAD inquiry" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-3 text-sm text-white focus:border-blue-400 focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Message</label>
+              <textarea id="contact-message" required rows="4" placeholder="Tell us about what you'd like to manufacture..." class="w-full rounded-xl bg-slate-950 border border-slate-800 p-3 text-sm text-white focus:border-blue-400 focus:outline-none resize-none"></textarea>
+            </div>
+            <button type="submit" class="w-full py-4 rounded-xl bg-blue-500 hover:bg-blue-400 text-white font-bold text-sm shadow-lg shadow-blue-500/25 transition-all">
+              Send Message &rarr;
+            </button>
+          </form>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       10. GLOBAL FOOTER
+  ═══════════════════════════════════════════════════════════════════ -->
+  <footer class="border-t border-slate-800/80 bg-slate-950 py-14 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
+        
+        <div class="col-span-2 md:col-span-1 space-y-3">
+          <div class="flex items-center space-x-2.5">
+            <img src="/static/assets/logo.svg" class="w-7 h-7" alt="Layer Studios">
+            <span class="text-base font-extrabold text-white">Layer<span class="text-blue-400">Studios</span></span>
+          </div>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Professional 3D printing, rapid prototyping, and CAD manufacturing studio in Portugal.
+          </p>
+          <p class="text-[11px] text-slate-500 font-mono">contact@layerstudios.pt</p>
+        </div>
+
+        <div>
+          <h4 class="text-xs font-bold text-white uppercase tracking-wider mb-4">Dedicated Pages</h4>
+          <ul class="space-y-2 text-xs text-slate-400 font-medium">
+            <li><a href="/quote" class="hover:text-blue-400 transition-colors">Instant 3D Quoting Studio</a></li>
+            <li><a href="/store" class="hover:text-blue-400 transition-colors">Ready-Made Product Store</a></li>
+            <li><a href="/materials" class="hover:text-blue-400 transition-colors">Engineering Materials Guide</a></li>
+            <li><a href="/track" class="hover:text-blue-400 transition-colors">Live Order Tracker</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="text-xs font-bold text-white uppercase tracking-wider mb-4">Services</h4>
+          <ul class="space-y-2 text-xs text-slate-400 font-medium">
+            <li><a href="/quote" class="hover:text-slate-200">Rapid Prototyping</a></li>
+            <li><a href="/quote" class="hover:text-slate-200">Small-Batch Production</a></li>
+            <li><a href="/quote" class="hover:text-slate-200">Replacement Parts</a></li>
+            <li><a href="/quote" class="hover:text-slate-200">CAD &amp; Reverse Engineering</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="text-xs font-bold text-white uppercase tracking-wider mb-4">Studio</h4>
+          <ul class="space-y-2 text-xs text-slate-400 font-medium">
+            <li><a href="#about" class="hover:text-slate-200">About Our Studio</a></li>
+            <li><a href="#portfolio" class="hover:text-slate-200">Recent Projects</a></li>
+            <li><a href="#business" class="hover:text-slate-200">B2B &amp; Enterprise</a></li>
+            <li><a href="#contact" class="hover:text-slate-200">Contact &amp; Workshop</a></li>
+          </ul>
+        </div>
+
+      </div>
+
+      <div class="pt-8 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500 font-mono">
+        <div>&copy; 2026 Layer Studios. All rights reserved. Portugal &bull; EU.</div>
+        <div class="flex space-x-6">
+          <span>You imagine it. We print it.</span>
+          
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="/static/js/viewer3d.js"></script>
+  <script src="/static/js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (typeof LayerStudiosApp !== 'undefined') {
+        window.LayerStudiosAppInstance = new LayerStudiosApp();
+      }
+
+      // Portfolio category filtering
+      const pFilters = document.querySelectorAll('.portfolio-filter');
+      const pCards = document.querySelectorAll('.portfolio-card');
+      pFilters.forEach(btn => {
+        btn.addEventListener('click', () => {
+          pFilters.forEach(b => {
+            b.classList.remove('bg-blue-500', 'text-white');
+            b.classList.add('bg-slate-900', 'text-slate-400');
+          });
+          btn.classList.remove('bg-slate-900', 'text-slate-400');
+          btn.classList.add('bg-blue-500', 'text-white');
+
+          const cat = btn.getAttribute('data-category');
+          pCards.forEach(card => {
+            if (cat === 'all' || card.getAttribute('data-category') === cat) {
+              card.classList.remove('hidden');
+            } else {
+              card.classList.add('hidden');
+            }
+          });
+        });
+      });
+    });
+  </script>
+  <script src="/static/js/i18n.js"></script>
+</body>
+</html>

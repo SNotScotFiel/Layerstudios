@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 350" fill="none">
+  <rect width="500" height="350" fill="#0B0F19" rx="16"/>
+  <g transform="translate(150, 60)">
+    <path d="M30,30 L170,30 L150,70 L110,70 L100,160 L70,160" stroke="#EF4444" stroke-width="1.5" stroke-dasharray="4 4" fill="none"/>
+    <path d="M40,50 L160,50 Q170,50 165,65 L145,95 L115,95 L110,180 Q100,195 90,195 Q80,195 70,180 L65,95 L35,95 L15,65 Q10,50 40,50 Z" fill="#1E293B" stroke="#38BDF8" stroke-width="2.5"/>
+    <circle cx="90" cy="72" r="8" fill="#0284C7"/>
+    <text x="90" y="225" fill="#38BDF8" font-family="monospace" font-size="12" text-anchor="middle">CAD Recreated - PETG High-Temp</text>
+  </g>
+</svg>

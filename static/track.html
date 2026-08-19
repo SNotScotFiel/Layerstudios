@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Order & Production Tracker — Layer Studios</title>
+  <meta name="description" content="Track your 3D print order in real time: slicing verification, printbed queue, manufacturing progress, quality control, and CTT Express tracking.">
+
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: { dark: '#09090b', card: '#111114', blue: '#3b82f6' }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+
+  <link rel="stylesheet" href="/static/css/styles.css">
+  <link rel="icon" type="image/svg+xml" href="/static/assets/logo.svg">
+</head>
+<body class="bg-[#09090b] text-slate-100 antialiased selection:bg-blue-500 selection:text-white relative overflow-x-hidden cad-grid">
+
+  <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col space-y-3 pointer-events-none"></div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       1. GLOBAL STICKY NAVBAR (Clean, Single-Line, Aligned)
+  ═══════════════════════════════════════════════════════════════════ -->
+  <header id="main-header" class="fixed top-0 left-0 right-0 z-40 bg-slate-950/85 backdrop-blur-xl border-b border-slate-800/80 transition-all duration-300">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-18 py-3.5 gap-6">
+        
+        <!-- Brand Logo -->
+        <a href="/" class="flex items-center space-x-3 group shrink-0">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 p-0.5 shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform flex items-center justify-center">
+            <img src="/static/assets/logo.svg" alt="Layer Studios" class="w-6 h-6">
+          </div>
+          <div class="flex flex-col">
+            <span class="text-lg font-black tracking-tight text-white leading-none flex items-center">
+              Layer<span class="text-blue-400">Studios</span>
+            </span>
+            <span class="text-[9px] text-slate-400 tracking-wider uppercase font-semibold mt-0.5 leading-none">3D Printing Studio</span>
+          </div>
+        </a>
+
+        <!-- Desktop Navigation Links -->
+        <nav class="hidden md:flex items-center space-x-1 lg:space-x-2 text-sm font-medium text-slate-300">
+          <a href="/" class="px-3.5 py-2 rounded-xl hover:text-white hover:bg-slate-900/60 whitespace-nowrap transition-colors">Home</a>
+          <a href="/quote" class="px-3.5 py-2 rounded-xl hover:text-white hover:bg-slate-900/60 whitespace-nowrap transition-colors">Get a Quote</a>
+          <a href="/store" class="px-3.5 py-2 rounded-xl hover:text-white hover:bg-slate-900/60 whitespace-nowrap transition-colors">Store</a>
+          <a href="/materials" class="px-3.5 py-2 rounded-xl hover:text-white hover:bg-slate-900/60 whitespace-nowrap transition-colors">Materials</a>
+          <a href="/track" class="px-3.5 py-2 rounded-xl text-white font-semibold bg-slate-900 border border-slate-800 whitespace-nowrap transition-colors">Track Order</a>
+        </nav>
+
+        <!-- Right Quick Actions -->
+        <div class="flex items-center space-x-3 shrink-0">
+          <a href="/track" class="hidden sm:inline-flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-900/90 hover:bg-slate-800 text-slate-300 border border-slate-800 transition-all whitespace-nowrap">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span>Live Status</span>
+          </a>
+          <a href="/quote" class="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-blue-500 hover:bg-blue-400 text-white shadow-md shadow-blue-500/20 hover:shadow-blue-500/35 transition-all whitespace-nowrap">
+            <span>New Quote &rarr;</span>
+          </a>
+          <button id="mobile-menu-toggle" type="button" class="md:hidden p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile Drawer -->
+  <div id="mobile-menu-backdrop" class="hidden fixed inset-0 z-40 bg-black/70 backdrop-blur-sm"></div>
+  <div id="mobile-menu-drawer" class="fixed top-0 right-0 bottom-0 z-50 w-80 bg-slate-950 border-l border-slate-800 translate-x-full transition-transform duration-300 flex flex-col p-6">
+    <div class="flex items-center justify-between pb-6 border-b border-slate-800">
+      <span class="font-bold text-white">Menu</span>
+      <button id="mobile-menu-close" class="p-2 text-slate-400"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+    </div>
+    <nav class="flex flex-col space-y-2 py-6">
+      <a href="/" class="px-4 py-3 rounded-xl text-slate-300 hover:text-white font-semibold">Home</a>
+      <a href="/quote" class="px-4 py-3 rounded-xl text-slate-300 hover:text-white font-semibold">Get a Quote</a>
+      <a href="/store" class="px-4 py-3 rounded-xl text-slate-300 hover:text-white font-semibold">Store</a>
+      <a href="/materials" class="px-4 py-3 rounded-xl text-slate-300 hover:text-white font-semibold">Materials Guide</a>
+      <a href="/track" class="px-4 py-3 rounded-xl text-white font-bold bg-blue-500/10 border border-blue-500/20">Track Order</a>
+    </nav>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       TRACKER HEADER & SEARCH
+  ═══════════════════════════════════════════════════════════════════ -->
+  <div class="pt-32 pb-12 px-4 sm:px-6 lg:px-8 border-b border-slate-800/80">
+    <div class="max-w-4xl mx-auto text-center space-y-4">
+      <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 text-xs font-semibold">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span>Real-Time Manufacturing Telemetry</span>
+      </div>
+      <h1 class="text-3xl sm:text-5xl font-black text-white">Live Production Tracker</h1>
+      <p class="text-sm sm:text-base text-slate-400 max-w-xl mx-auto leading-relaxed">
+        Enter your 8-digit Order Reference (e.g. <span class="font-mono text-white">LS-84920</span>) or Quote ID to monitor print status, slicing review, and shipping dispatch.
+      </p>
+
+      <!-- Search Box -->
+      <form id="tracker-search-form" class="max-w-xl mx-auto pt-6">
+        <div class="flex flex-col sm:flex-row gap-3">
+          <div class="relative flex-1">
+            <input id="tracker-input-id" type="text" required placeholder="LS-84920 or QT-8831" class="w-full pl-11 pr-4 py-3.5 rounded-2xl bg-slate-900 border border-slate-800 text-white font-mono text-sm uppercase focus:border-blue-400 focus:outline-none placeholder-slate-600">
+            <svg class="w-5 h-5 text-slate-500 absolute left-3.5 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          </div>
+          <button type="submit" class="px-8 py-3.5 rounded-2xl bg-blue-500 hover:bg-blue-400 text-white font-bold text-sm shadow-lg shadow-blue-500/25 transition-all whitespace-nowrap">
+            Track Order &rarr;
+          </button>
+        </div>
+
+        <!-- Helper hint -->
+        <p class="text-xs text-slate-500 font-mono text-center pt-2">Enter your Quote ID (e.g. LS-XXXX) or Order Reference to view live production status</p>
+      </form>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       TRACKER RESULTS SECTION
+  ═══════════════════════════════════════════════════════════════════ -->
+  <section class="py-12 px-4 sm:px-6 lg:px-8 min-h-[500px]">
+    <div class="max-w-4xl mx-auto space-y-8">
+      
+      <!-- Loading State -->
+      <div id="tracker-loading" class="hidden text-center py-16 space-y-3">
+        <div class="w-10 h-10 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+        <p class="text-xs font-mono text-slate-400">Connecting to Layer Studios telemetry node...</p>
+      </div>
+
+      <!-- Not Found State -->
+      <div id="tracker-not-found" class="hidden text-center py-16 rounded-3xl bg-slate-900/60 border border-slate-800 p-8 space-y-3">
+        <div class="text-3xl">🔍</div>
+        <h3 class="text-lg font-bold text-white">Reference <span id="tracker-searched-id" class="font-mono text-blue-400"></span> Not Found</h3>
+        <p class="text-xs text-slate-400 max-w-md mx-auto">Please verify your order confirmation email or invoice. Note that custom quotes can take up to 15 minutes to register in the live queue.</p>
+      </div>
+
+      <!-- Result Container (Populated by tracker.js) -->
+      <div id="tracker-result-container" class="hidden space-y-6">
+        
+        <!-- Summary Card -->
+        <div class="p-6 sm:p-8 rounded-3xl bg-slate-900 border border-slate-800 shadow-xl space-y-6">
+          
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-800">
+            <div>
+              <span class="text-[10px] font-mono text-slate-500 uppercase tracking-wider block">Order Reference</span>
+              <span id="track-res-id" class="text-2xl font-black font-mono text-white mt-0.5 block"></span>
+              <span id="track-res-title" class="text-xs text-slate-400 mt-1 block"></span>
+            </div>
+            <div id="track-res-status-badge" class="self-start sm:self-auto"></div>
+          </div>
+
+          <!-- Metadata Grid -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs font-mono">
+            <div class="p-3 rounded-xl bg-slate-950 border border-slate-800">
+              <span class="text-slate-500 block text-[9px] uppercase">Material</span>
+              <span id="track-res-material" class="text-white font-bold block mt-1"></span>
+            </div>
+            <div class="p-3 rounded-xl bg-slate-950 border border-slate-800">
+              <span class="text-slate-500 block text-[9px] uppercase">Quantity</span>
+              <span id="track-res-qty" class="text-white font-bold block mt-1"></span>
+            </div>
+            <div class="p-3 rounded-xl bg-slate-950 border border-slate-800">
+              <span class="text-slate-500 block text-[9px] uppercase">Carrier</span>
+              <span id="track-res-carrier" class="text-blue-400 font-bold block mt-1"></span>
+            </div>
+            <div class="p-3 rounded-xl bg-slate-950 border border-slate-800">
+              <span class="text-slate-500 block text-[9px] uppercase">Order Value</span>
+              <span id="track-res-total" class="text-white font-bold block mt-1"></span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- 10-Stage Progress Timeline Container -->
+        <div class="p-6 sm:p-8 rounded-3xl bg-slate-900 border border-slate-800 shadow-xl space-y-6">
+          <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+            <h3 class="text-base font-bold text-white">Manufacturing &amp; Logistics Timeline</h3>
+            <span class="text-[10px] font-mono text-slate-500 uppercase">Live Updates</span>
+          </div>
+
+          <div id="tracker-10-stages" class="space-y-4">
+            <!-- Rendered by tracker.js with stage status indicators -->
+          </div>
+        </div>
+
+        <!-- Customer Action Area -->
+        <div id="tracker-customer-action-area"></div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-slate-800/80 bg-slate-950 py-10 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500 font-mono">
+      <div>&copy; 2026 Layer Studios. Order Tracking &bull; Portugal.</div>
+      <div class="flex space-x-6">
+        <a href="/" class="hover:text-white">Home</a>
+        <a href="/quote" class="hover:text-white">Get a Quote</a>
+        <a href="/store" class="hover:text-white">Store</a>
+        <a href="/materials" class="hover:text-white">Materials</a>
+              </div>
+    </div>
+  </footer>
+
+  <script src="/static/js/tracker.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Mobile drawer
+      const mobBtn = document.getElementById('mobile-menu-toggle');
+      const mobDrawer = document.getElementById('mobile-menu-drawer');
+      const mobBack = document.getElementById('mobile-menu-backdrop');
+      const mobClose = document.getElementById('mobile-menu-close');
+      const openM = () => { mobBack.classList.remove('hidden'); mobDrawer.classList.remove('translate-x-full'); };
+      const shutM = () => { mobDrawer.classList.add('translate-x-full'); setTimeout(() => mobBack.classList.add('hidden'), 250); };
+      if (mobBtn) mobBtn.addEventListener('click', openM);
+      if (mobClose) mobClose.addEventListener('click', shutM);
+      if (mobBack) mobBack.addEventListener('click', shutM);
+
+      // Initialize tracker controller
+      if (typeof LayerStudiosTracker !== 'undefined') {
+        window.LayerStudiosTrackerInstance = new LayerStudiosTracker();
+      }
+
+      // Demo button handlers
+      document.querySelectorAll('.demo-track-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const input = document.getElementById('tracker-input-id');
+          if (input) {
+            input.value = btn.getAttribute('data-id');
+            document.getElementById('tracker-search-form')?.dispatchEvent(new Event('submit'));
+          }
+        });
+      });
+    });
+  </script>
+  <script src="/static/js/i18n.js"></script>
+</body>
+</html>

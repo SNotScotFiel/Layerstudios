@@ -1,0 +1,497 @@
+{
+  "quotes": [],
+  "orders": [],
+  "products": [
+    {
+      "id": "prod-1",
+      "title": "Modular Hex Desk Organizer System",
+      "category": "Desk & Workspace",
+      "price": 18.5,
+      "description": "Minimalist hexagonal organizing cells with interlocking edges for pens, cables, SD cards, and tools.",
+      "dimensions": "120 x 105 x 45 mm",
+      "defaultMaterial": "PLA+ Matte",
+      "materials": [
+        "PLA+ Matte",
+        "PETG",
+        "Carbon-Fiber PETG"
+      ],
+      "colors": [
+        "Matte Black",
+        "Gunmetal Grey",
+        "Signal White",
+        "Electric Blue",
+        "Olive Green"
+      ],
+      "inStock": true,
+      "leadTime": "1-2 business days",
+      "image": "/static/assets/prod_hex_organizer.svg",
+      "customizable": true,
+      "customizationField": "Optional custom name/initials on front cell"
+    },
+    {
+      "id": "prod-2",
+      "title": "Under-Desk Headphone & Cable Anchor",
+      "category": "Desk & Workspace",
+      "price": 12.0,
+      "description": "Heavy-duty screw-mount or adhesive under-desk hanger engineered with TPU padded contact area to protect headphone headbands.",
+      "dimensions": "95 x 50 x 60 mm",
+      "defaultMaterial": "PETG / TPU Hybrid",
+      "materials": [
+        "PETG / TPU Hybrid",
+        "Carbon-Fiber PETG"
+      ],
+      "colors": [
+        "Matte Black",
+        "Signal White"
+      ],
+      "inStock": true,
+      "leadTime": "1-2 business days",
+      "image": "/static/assets/prod_headphone_mount.svg",
+      "customizable": false
+    },
+    {
+      "id": "prod-3",
+      "title": "Precision Multi-Angle Phone & Tablet Dock",
+      "category": "Accessories",
+      "price": 14.5,
+      "description": "Ergonomic desktop stand with dual viewing angles (45° and 65°) and integrated cable routing channel.",
+      "dimensions": "85 x 75 x 90 mm",
+      "defaultMaterial": "PLA+ Matte",
+      "materials": [
+        "PLA+ Matte",
+        "PETG"
+      ],
+      "colors": [
+        "Matte Black",
+        "Gunmetal Grey",
+        "Signal White",
+        "Signal Orange"
+      ],
+      "inStock": true,
+      "leadTime": "1-2 business days",
+      "image": "/static/assets/prod_phone_stand.svg",
+      "customizable": true,
+      "customizationField": "Add your logo or name"
+    },
+    {
+      "id": "prod-4",
+      "title": "1/4 Inch Camera Rig Cold-Shoe Adapter Bracket",
+      "category": "Replacement & Functional",
+      "price": 9.5,
+      "description": "Reinforced functional adapter for camera cages, monitors, and microphones with brass threaded heat-set insert.",
+      "dimensions": "42 x 30 x 24 mm",
+      "defaultMaterial": "Carbon-Fiber PETG",
+      "materials": [
+        "Carbon-Fiber PETG",
+        "PETG"
+      ],
+      "colors": [
+        "Matte Black"
+      ],
+      "inStock": true,
+      "leadTime": "1 business day",
+      "image": "/static/assets/prod_camera_rig.svg",
+      "customizable": false
+    },
+    {
+      "id": "prod-5",
+      "title": "Custom 3D Raised Lettering Desk Sign",
+      "category": "Customizable & Gifts",
+      "price": 16.0,
+      "description": "Dual-color 3D printed desk nameplate or company slogan with weighted base and crisp contrasting typography.",
+      "dimensions": "160 x 35 x 40 mm",
+      "defaultMaterial": "PLA+ Matte",
+      "materials": [
+        "PLA+ Matte"
+      ],
+      "colors": [
+        "Black / White",
+        "White / Cyan",
+        "Grey / Orange",
+        "Black / Gold"
+      ],
+      "inStock": true,
+      "leadTime": "2-3 business days",
+      "image": "/static/assets/prod_custom_sign.svg",
+      "customizable": true,
+      "customizationField": "Exact text to print (Up to 24 characters)"
+    },
+    {
+      "id": "prod-6",
+      "title": "Magnetic Wire & Cable Clip Pack (6-Pack)",
+      "category": "Organization",
+      "price": 8.0,
+      "description": "Set of 6 snap-fit cable organizers designed for USB-C, Lightning, and HDMI cables with neodymium magnet slots.",
+      "dimensions": "18 x 18 x 14 mm each",
+      "defaultMaterial": "PETG",
+      "materials": [
+        "PETG",
+        "TPU 95A"
+      ],
+      "colors": [
+        "Matte Black",
+        "Signal White",
+        "Signal Orange",
+        "Electric Blue"
+      ],
+      "inStock": true,
+      "leadTime": "1 business day",
+      "image": "/static/assets/prod_cable_clips.svg",
+      "customizable": false
+    }
+  ],
+  "materials": [
+    {
+      "id": "pla",
+      "name": "PLA / PLA+",
+      "subtitle": "Polylactic Acid (Biopolymer)",
+      "tagline": "Best for visual prototypes, display models, and cost-effective general parts.",
+      "strength": 7,
+      "flexibility": 2,
+      "heatResistance": 4,
+      "heatTemp": "55°C",
+      "outdoorResistance": 4,
+      "surfaceQuality": 10,
+      "priceLevel": "€ (Affordable)",
+      "density": 1.24,
+      "colorsAvailable": [
+        "Matte Black",
+        "Signal White",
+        "Gunmetal Grey",
+        "Electric Blue",
+        "Signal Orange",
+        "Olive Green",
+        "Fire Red",
+        "Silver Metallic"
+      ],
+      "advantages": [
+        "Crisp surface finish with near-invisible layer lines at fine settings",
+        "High dimensional accuracy and low shrinkage",
+        "Most cost-effective material for rapid iterations",
+        "Bio-sourced and eco-friendly printing process"
+      ],
+      "limitations": [
+        "Deforms in hot car interiors or prolonged direct sunlight above 55°C",
+        "Brittle under sudden high impact loads"
+      ],
+      "bestFor": [
+        "Concept models",
+        "Enclosures",
+        "Desk accessories",
+        "Decorative items",
+        "Fitting test prototypes"
+      ]
+    },
+    {
+      "id": "petg",
+      "name": "PETG",
+      "subtitle": "Polyethylene Terephthalate Glycol",
+      "tagline": "The ultimate everyday engineering material: tough, heat-resistant, and weather-proof.",
+      "strength": 9,
+      "flexibility": 5,
+      "heatResistance": 8,
+      "heatTemp": "75°C - 80°C",
+      "outdoorResistance": 9,
+      "surfaceQuality": 8,
+      "priceLevel": "€€ (Standard)",
+      "density": 1.27,
+      "colorsAvailable": [
+        "Matte Black",
+        "Solid White",
+        "Translucent Amber",
+        "Industrial Grey",
+        "Deep Blue",
+        "Safety Orange"
+      ],
+      "advantages": [
+        "Exceptional layer adhesion and impact resistance",
+        "Resists outdoor UV exposure, moisture, and mild chemicals",
+        "Higher thermal threshold (stable up to 75°C)",
+        "Food-contact safe resin base"
+      ],
+      "limitations": [
+        "Slightly more stringing on tiny overhangs than PLA",
+        "Glossier surface unless printed in matte variant"
+      ],
+      "bestFor": [
+        "Functional mechanical parts",
+        "Automotive interior brackets",
+        "Outdoor sensor housings",
+        "Replacement appliance parts",
+        "Water-resistant enclosures"
+      ]
+    },
+    {
+      "id": "tpu",
+      "name": "TPU 95A",
+      "subtitle": "Thermoplastic Polyurethane (Elastomer)",
+      "tagline": "Rubber-like flexibility, extreme impact absorption, and tear resistance.",
+      "strength": 8,
+      "flexibility": 10,
+      "heatResistance": 7,
+      "heatTemp": "80°C",
+      "outdoorResistance": 9,
+      "surfaceQuality": 7,
+      "priceLevel": "€€€ (Specialized)",
+      "density": 1.21,
+      "colorsAvailable": [
+        "Matte Black",
+        "Translucent Clear",
+        "Signal Orange",
+        "Electric Blue",
+        "Grey"
+      ],
+      "advantages": [
+        "Bendable, shock-absorbing, and virtually unbreakable under drops",
+        "Excellent abrasion and chemical resistance against grease and oils",
+        "Great grip and vibration dampening properties"
+      ],
+      "limitations": [
+        "Requires slow direct-drive print speeds",
+        "Cannot bridge large gaps without support"
+      ],
+      "bestFor": [
+        "Gaskets and seals",
+        "Vibration dampeners",
+        "Protective bumpers",
+        "Drone landing skids",
+        "Flexible couplings"
+      ]
+    },
+    {
+      "id": "abs_asa",
+      "name": "ABS / ASA",
+      "subtitle": "Acrylonitrile Styrene Acrylate / ABS",
+      "tagline": "Industrial-grade thermal resistance and extreme UV stability for automotive & outdoor use.",
+      "strength": 8,
+      "flexibility": 4,
+      "heatResistance": 10,
+      "heatTemp": "95°C - 100°C",
+      "outdoorResistance": 10,
+      "surfaceQuality": 8,
+      "priceLevel": "€€€ (Technical)",
+      "density": 1.07,
+      "colorsAvailable": [
+        "Matte Black",
+        "Cool White",
+        "Industrial Grey"
+      ],
+      "advantages": [
+        "Withstands extreme heat up to 95-100°C without warping",
+        "ASA is 100% UV resistant (does not yellow in continuous sun)",
+        "Can be post-processed, sanded, and acetone vapor smoothed"
+      ],
+      "limitations": [
+        "Requires heated chamber and specialized ventilation",
+        "Higher shrinkage factor requires calibrated CAD scaling"
+      ],
+      "bestFor": [
+        "Automotive exterior parts",
+        "Outdoor fixtures",
+        "High-temperature machinery guards",
+        "Marine components"
+      ]
+    },
+    {
+      "id": "petg_cf",
+      "name": "Carbon-Fiber PETG",
+      "subtitle": "Carbon Fiber Reinforced Composite",
+      "tagline": "Maximum rigidity, lightweight performance, and a stunning matte textured finish.",
+      "strength": 10,
+      "flexibility": 1,
+      "heatResistance": 9,
+      "heatTemp": "85°C",
+      "outdoorResistance": 9,
+      "surfaceQuality": 10,
+      "priceLevel": "€€€€ (Premium)",
+      "density": 1.3,
+      "colorsAvailable": [
+        "Stealth Carbon Black",
+        "Dark Charcoal"
+      ],
+      "advantages": [
+        "Infused with chopped micro-carbon fibers for extreme stiffness",
+        "Zero visible layer lines thanks to matte micro-texture",
+        "High strength-to-weight ratio and dimensional stability"
+      ],
+      "limitations": [
+        "Requires hardened steel nozzle",
+        "Reduced impact flexibility compared to pure PETG"
+      ],
+      "bestFor": [
+        "Drone arms & frames",
+        "Camera rig mounts",
+        "Robotics structural parts",
+        "High-rigidity tooling and jigs"
+      ]
+    }
+  ],
+  "portfolio": [
+    {
+      "id": "port-1",
+      "title": "Automotive Hood Insulation Clip",
+      "category": "Replacement Parts",
+      "material": "PETG High-Temp",
+      "printTime": "45 minutes",
+      "quantity": "Set of 12",
+      "image": "/static/assets/case_auto_clip.svg",
+      "shortDescription": "A discontinued automotive clip recreated to replace an unavailable OEM component.",
+      "challenge": "The vehicle manufacturer discontinued the specialized plastic retention clips for the engine hood soundproofing blanket. Purchasing aftermarket clips resulted in loose fitment and rattling.",
+      "solution": "We measured the surviving broken clip with digital calipers, modeled the exact snap-fit locking tabs in CAD with reinforced fillet geometry, and printed a batch of 12 in heat-resistant PETG.",
+      "result": "Perfect snug fitment, resisting engine bay temperatures with zero deformation after thousands of kilometers.",
+      "isPlaceholder": true
+    },
+    {
+      "id": "port-2",
+      "title": "Custom Equipment Mounting Bracket",
+      "category": "Functional Parts",
+      "material": "PETG Matte Black",
+      "printTime": "2 hours 15 mins",
+      "quantity": "4 units",
+      "image": "/static/assets/case_bracket.svg",
+      "shortDescription": "A functional mounting bracket designed around bespoke customer dimensions for an industrial sensor rig.",
+      "challenge": "A local automation client needed to mount optical barcode scanners onto 4040 aluminum profiles at a precise 32-degree tilt angle that standard off-the-shelf brackets could not accommodate.",
+      "solution": "Engineered a custom dual-clamp bracket with integrated M5 hex nut pockets and internal cable routing channels, printed with 50% gyroid infill for maximum torsional stiffness.",
+      "result": "Eliminated custom CNC machining lead time from 3 weeks to just 24 hours, at 80% lower cost.",
+      "isPlaceholder": true
+    },
+    {
+      "id": "port-3",
+      "title": "Flexible Protective Impact Insert",
+      "category": "Custom Designs",
+      "material": "TPU 95A Elastomer",
+      "printTime": "1 hour 30 mins",
+      "quantity": "2 units",
+      "image": "/static/assets/case_tpu_insert.svg",
+      "shortDescription": "A flexible part manufactured for impact protection and vibration isolation on precision measuring tools.",
+      "challenge": "Sensitive laser measuring instruments were incurring edge damage during field deployments in rugged construction environments.",
+      "solution": "Created an ergonomic snug-fit protective bumper sleeve in flexible 95A TPU featuring corner air-cushion cavities for drop shock absorption.",
+      "result": "Full drop protection without adding bulky weight or impeding access to optical sensors.",
+      "isPlaceholder": true
+    },
+    {
+      "id": "port-4",
+      "title": "Smart Home Hub Prototype Enclosure",
+      "category": "Prototypes",
+      "material": "PLA+ Fine (0.12mm)",
+      "printTime": "6 hours 20 mins",
+      "quantity": "1 prototype",
+      "image": "/static/assets/case_enclosure.svg",
+      "shortDescription": "A rapid prototype created for dimensional PCB fitment and industrial design validation.",
+      "challenge": "A hardware startup needed to validate physical ergonomics, internal PCB clearance, and snap-fit battery doors before committing to 15,000 EUR injection molding tooling.",
+      "solution": "Printed the two-piece enclosure in ultra-fine 0.12mm layer height with smooth matte surface finish and precise internal PCB standoffs.",
+      "result": "Identified a 1.2mm USB-C port alignment discrepancy early, saving thousands in potential mold re-tooling costs.",
+      "isPlaceholder": true
+    },
+    {
+      "id": "port-5",
+      "title": "Heavy-Lift Drone Landing Gear Dampener",
+      "category": "Automotive & Aerospace",
+      "material": "TPU 95A & Carbon-Fiber PETG",
+      "printTime": "3 hours 10 mins",
+      "quantity": "Set of 4",
+      "image": "/static/assets/case_drone_gear.svg",
+      "shortDescription": "Dual-density landing assembly combining rigid carbon-fiber struts with shock-absorbing elastomer feet.",
+      "challenge": "Heavy camera gimbals on surveying drones were transmitting landing vibrations into sensitive sensor payloads.",
+      "solution": "Designed a hybrid landing foot with a stiff carbon-composite top collar and a hollow honeycomb TPU base foot.",
+      "result": "Over 65% reduction in landing shock telemetry and 0 cracked drone legs during field testing.",
+      "isPlaceholder": true
+    },
+    {
+      "id": "port-6",
+      "title": "Cinema Camera Rig Quick-Release Adapter",
+      "category": "Mechanical Parts",
+      "material": "Carbon-Fiber PETG",
+      "printTime": "1 hour 50 mins",
+      "quantity": "2 units",
+      "image": "/static/assets/case_camera_mount.svg",
+      "shortDescription": "Lightweight, ultra-rigid custom accessory mount with heat-set brass threaded inserts.",
+      "challenge": "Cinematographer required an ultralight monitor bracket compatible with both NATO rails and 1/4 inch locating pins.",
+      "solution": "Fabricated using carbon-fiber reinforced PETG with press-fitted M4 and 1/4 brass inserts for repeated rugged clamping without thread wear.",
+      "result": "Weighed 40% less than aluminum equivalent while maintaining zero deflection under heavy field monitors.",
+      "isPlaceholder": true
+    }
+  ],
+  "faqs": [
+    {
+      "category": "Getting Started & Files",
+      "question": "What 3D file formats do you accept?",
+      "answer": "We accept all standard 3D formats including STL, STEP (.step / .stp), 3MF, and OBJ. For CAD design or reverse-engineering projects, you can also upload dimensioned 2D drawings (PDF), sketches, or high-resolution photos with caliper measurements."
+    },
+    {
+      "category": "Getting Started & Files",
+      "question": "What if I don't have a 3D model?",
+      "answer": "No problem! Layer Studios offers full CAD & 3D Design services. You can describe your idea, send us a broken part to reverse-engineer, or share simple sketches with measurements. We will create the 3D model, send you renders for approval, and print the finished part."
+    },
+    {
+      "category": "Production & Quality",
+      "question": "How long does 3D printing and delivery take?",
+      "answer": "Standard production typically takes 2 to 4 business days depending on model complexity and batch volume. We also offer an Express Rush option (24–48h). Shipping within continental Portugal takes 24h via CTT Expresso, and 2–5 days across Europe."
+    },
+    {
+      "category": "Production & Quality",
+      "question": "How accurate and strong are 3D printed parts?",
+      "answer": "Our calibrated precision printers achieve dimensional tolerances within approximately ±0.15mm for standard features. Part strength depends on material choice and infill orientation — with PETG, ASA, or Carbon-Fiber PETG at 50–100% infill, parts easily replace injection-molded or machined plastic components for demanding mechanical uses."
+    },
+    {
+      "category": "Materials & Safety",
+      "question": "Which material should I choose?",
+      "answer": "For prototypes and decorative pieces: PLA+ is ideal. For functional mechanical, outdoor, or automotive interior parts: PETG is our recommended workhorse. For flexible, impact-absorbing parts: TPU 95A is unbeatable. For extreme heat (>90°C) or UV sun exposure: ABS/ASA. You can also use our interactive Material Advisor on the Materials page or ask our team."
+    },
+    {
+      "category": "Materials & Safety",
+      "question": "Are 3D printed parts food safe or watertight?",
+      "answer": "While the raw resins like PETG or PLA are non-toxic, standard FDM 3D printing creates microscopic layer lines where bacteria can harbor, and brass nozzles may contain trace lead. Layer Studios advises against using standard FDM prints for long-term food-contact or sterile medical applications without specialized food-safe epoxy post-coating. For watertight containers, we optimize wall counts and slicer flow rates upon request."
+    },
+    {
+      "category": "Business & Ordering",
+      "question": "Can I order multiple copies or small batches?",
+      "answer": "Yes! We specialize in small-batch manufacturing from 10 to 100+ units. We offer automated tiered volume discounts (10% off for 10+ units, 18% off for 25+, 25% off for 50+, and up to 35% off for 100+ units) with consistent quality control across every part."
+    },
+    {
+      "category": "Business & Ordering",
+      "question": "Can you print copyrighted or branded models?",
+      "answer": "We respect intellectual property rights. We cannot manufacture models that infringe upon registered trademarks, patented mechanisms, or copyrighted character merchandise without verifiable authorization from the rights holder."
+    },
+    {
+      "category": "Shipping & Payment",
+      "question": "Do you ship internationally and what payment methods do you accept?",
+      "answer": "We ship across all of Portugal (continental & autonomous islands), throughout the European Union, and worldwide. We accept MB WAY, Multibanco reference, Credit/Debit cards (Visa, Mastercard, Amex), and Bank Transfer."
+    }
+  ],
+  "promoCodes": [
+    {
+      "code": "FIRST10",
+      "discountPercent": 10,
+      "description": "10% off your first quote or store order"
+    },
+    {
+      "code": "BATCH20",
+      "discountPercent": 20,
+      "description": "20% off batch orders over €100"
+    },
+    {
+      "code": "STUDIO2026",
+      "discountPercent": 15,
+      "description": "15% off launch special discount"
+    }
+  ],
+  "settings": {
+    "brandName": "Layer Studios",
+    "tagline": "You imagine it. We print it.",
+    "location": "Lisbon / Porto, Portugal",
+    "email": "hello@layerstudios.pt",
+    "phone": "+351 210 000 000",
+    "businessHours": "Mon - Fri: 09:00 - 18:30 (WET / GMT+0)",
+    "currency": "EUR",
+    "currencySymbol": "€",
+    "shippingRates": {
+      "portugalContinental": 4.5,
+      "portugalIslands": 6.9,
+      "europeanUnion": 9.9,
+      "international": 18.0,
+      "freeShippingThreshold": 50.0
+    },
+    "defaultAdminPin": "admin123"
+  }
+}

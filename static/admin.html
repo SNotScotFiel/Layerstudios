@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Studio Management Portal — Layer Studios</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { darkMode:'class', theme:{ extend:{ fontFamily:{ sans:['Inter','system-ui','sans-serif'], mono:['JetBrains Mono','monospace'] } } } }</script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+  <link rel="stylesheet" href="/static/css/styles.css">
+  <link rel="icon" type="image/svg+xml" href="/static/assets/logo.svg">
+</head>
+<body class="bg-[#09090b] text-slate-100 antialiased selection:bg-blue-500 selection:text-white min-h-screen">
+
+<div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col space-y-3 pointer-events-none"></div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     1. LOGIN / AUTHENTICATION GATE (Visible if not logged in)
+═══════════════════════════════════════════════════════════════════ -->
+<div id="admin-auth-screen" class="min-h-screen flex items-center justify-center p-4">
+  <div class="max-w-md w-full p-8 rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl space-y-6 text-center">
+    <div class="w-16 h-16 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mx-auto text-3xl">
+      🔒
+    </div>
+    
+    <div>
+      <h1 class="text-xl font-bold text-white">Studio Management Portal</h1>
+      <p class="text-xs text-slate-400 mt-1">Restricted access for Layer Studios administrators.</p>
+    </div>
+
+    <form id="admin-login-form" class="space-y-4 text-left">
+      <div>
+        <label class="block text-xs font-semibold text-slate-400 mb-1.5 font-mono">Admin Password / PIN</label>
+        <input type="password" id="admin-password-input" placeholder="Enter studio password..." required autofocus class="w-full rounded-xl bg-slate-950 border border-slate-800 p-3 text-sm text-white focus:border-blue-400 focus:outline-none placeholder-slate-600 font-mono">
+      </div>
+
+      <p id="admin-login-error" class="hidden text-xs text-red-400 font-mono text-center">Incorrect password. Please try again.</p>
+
+      <button type="submit" class="w-full py-3.5 rounded-xl bg-blue-500 hover:bg-blue-400 text-white font-bold text-sm shadow-lg shadow-blue-500/25 transition-all">
+        Sign In to Portal →
+      </button>
+    </form>
+
+    <div class="pt-4 border-t border-slate-800/80">
+      <a href="/" class="text-xs text-slate-500 hover:text-slate-300 font-mono transition-colors">
+        ← Return to main website
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     2. SECURE DASHBOARD (Visible only after successful login)
+═══════════════════════════════════════════════════════════════════ -->
+<div id="admin-dashboard-container" class="hidden">
+
+  <!-- TOP HEADER -->
+  <header class="border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-md sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <a href="/" class="flex items-center gap-2">
+          <img src="/static/assets/logo.svg" alt="Layer Studios" class="w-7 h-7">
+          <span class="font-bold text-base text-white tracking-tight">Layer<span class="text-blue-400">Studios</span></span>
+        </a>
+        <span class="px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20 text-xs font-mono font-semibold">Studio Lead</span>
+      </div>
+      
+      <div class="flex items-center gap-4 text-xs font-mono">
+        <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-950/40 border border-emerald-500/30 text-emerald-400">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span>Live Farm Online</span>
+        </div>
+        <button id="admin-logout-btn" type="button" class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 hover:text-red-400 hover:border-red-500/30 transition-colors">
+          🔒 Lock &amp; Logout
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN ADMIN CONTAINER -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+
+    <!-- KPI SUMMARY CARDS -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="p-5 rounded-2xl bg-slate-900/70 border border-slate-800">
+        <span class="text-xs font-mono text-slate-400 uppercase tracking-wider block mb-1">Total Revenue</span>
+        <span id="admin-kpi-revenue" class="text-2xl sm:text-3xl font-black text-white font-mono">€0.00</span>
+      </div>
+      <div class="p-5 rounded-2xl bg-slate-900/70 border border-slate-800">
+        <span class="text-xs font-mono text-slate-400 uppercase tracking-wider block mb-1">Active Quotes</span>
+        <span id="admin-kpi-quotes" class="text-2xl sm:text-3xl font-black text-blue-400 font-mono">—</span>
+      </div>
+      <div class="p-5 rounded-2xl bg-slate-900/70 border border-slate-800">
+        <span class="text-xs font-mono text-slate-400 uppercase tracking-wider block mb-1">Store Orders</span>
+        <span id="admin-kpi-orders" class="text-2xl sm:text-3xl font-black text-white font-mono">—</span>
+      </div>
+      <div class="p-5 rounded-2xl bg-slate-900/70 border border-slate-800">
+        <span class="text-xs font-mono text-slate-400 uppercase tracking-wider block mb-1">Printer Status</span>
+        <span id="admin-kpi-prints" class="text-2xl sm:text-3xl font-black text-emerald-400 font-mono">Online</span>
+      </div>
+    </div>
+
+    <!-- NAVIGATION TABS -->
+    <div class="flex items-center gap-2 border-b border-slate-800 pb-4 overflow-x-auto">
+      <button class="admin-tab-btn px-4 py-2 rounded-xl text-sm font-semibold bg-blue-500 text-white transition-all whitespace-nowrap" data-admin-view="quotes">
+        📋 Incoming Quotes
+      </button>
+      <button class="admin-tab-btn px-4 py-2 rounded-xl text-sm font-semibold text-slate-400 hover:text-slate-200 transition-all whitespace-nowrap" data-admin-view="orders">
+        📦 Store Orders
+      </button>
+      <button class="admin-tab-btn px-4 py-2 rounded-xl text-sm font-semibold text-slate-400 hover:text-slate-200 transition-all whitespace-nowrap" data-admin-view="analytics">
+        📊 Production Analytics
+      </button>
+    </div>
+
+    <!-- VIEW 1: QUOTES TABLE -->
+    <section id="admin-view-quotes" class="admin-subview space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-lg font-bold text-white">Custom 3D Printing Quote Requests</h2>
+          <p class="text-xs text-slate-400">Incoming client requests with 3D model telemetry and pricing.</p>
+        </div>
+        <button id="admin-refresh-quotes" class="px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-300 hover:text-white hover:border-slate-700 transition-all flex items-center gap-2 self-start sm:self-auto">
+          <svg class="w-3.5 h-3.5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          Refresh Data
+        </button>
+      </div>
+
+      <div class="rounded-2xl bg-slate-900/60 border border-slate-800 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm">
+            <thead class="bg-slate-950/80 text-xs font-mono text-slate-400 uppercase tracking-wider border-b border-slate-800">
+              <tr>
+                <th class="py-3 px-4">Quote ID</th>
+                <th class="py-3 px-4">Project &amp; Customer</th>
+                <th class="py-3 px-4">Material &amp; Infill</th>
+                <th class="py-3 px-4 text-center">Qty</th>
+                <th class="py-3 px-4 text-right">Estimate</th>
+                <th class="py-3 px-4 text-center">Status</th>
+                <th class="py-3 px-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="admin-quotes-tbody">
+              <tr>
+                <td colspan="7" class="py-8 text-center text-slate-500 font-mono text-xs">Loading quote records...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 2: ORDERS TABLE -->
+    <section id="admin-view-orders" class="admin-subview hidden space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-lg font-bold text-white">Store Orders</h2>
+          <p class="text-xs text-slate-400">Direct catalog orders placed via the online store checkout.</p>
+        </div>
+      </div>
+
+      <div class="rounded-2xl bg-slate-900/60 border border-slate-800 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm">
+            <thead class="bg-slate-950/80 text-xs font-mono text-slate-400 uppercase tracking-wider border-b border-slate-800">
+              <tr>
+                <th class="py-3 px-4">Order ID</th>
+                <th class="py-3 px-4">Customer</th>
+                <th class="py-3 px-4">Items</th>
+                <th class="py-3 px-4 text-center">Payment</th>
+                <th class="py-3 px-4 text-right">Total</th>
+                <th class="py-3 px-4 text-center">Status</th>
+                <th class="py-3 px-4 text-right">Track Link</th>
+              </tr>
+            </thead>
+            <tbody id="admin-orders-tbody">
+              <tr>
+                <td colspan="7" class="py-8 text-center text-slate-500 font-mono text-xs">Loading store orders...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 3: ANALYTICS -->
+    <section id="admin-view-analytics" class="admin-subview hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="p-6 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-4">
+          <h3 class="text-sm font-bold text-white uppercase font-mono tracking-wider">Revenue Growth Trend (€)</h3>
+          <div class="h-64">
+            <canvas id="admin-chart-revenue"></canvas>
+          </div>
+        </div>
+        <div class="p-6 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-4">
+          <h3 class="text-sm font-bold text-white uppercase font-mono tracking-wider">Material Share (% of volume)</h3>
+          <div class="h-64 flex items-center justify-center">
+            <canvas id="admin-chart-materials"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+</div>
+
+<!-- QUOTE INSPECTOR & STATUS MODAL -->
+<div id="admin-quote-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+  <div class="bg-slate-900 border border-slate-700 rounded-3xl p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto space-y-6 shadow-2xl">
+    <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+      <div>
+        <span id="inspect-quote-id" class="text-xs font-mono font-bold text-blue-400 px-2 py-0.5 rounded bg-blue-500/10 border border-blue-500/20">LS-XXXX</span>
+        <h3 id="inspect-project-name" class="text-lg font-bold text-white mt-1">Project Details</h3>
+      </div>
+      <button type="button" id="admin-close-modal" class="text-slate-400 hover:text-white p-2 rounded-xl bg-slate-800 transition-colors">✕</button>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-mono">
+      <div class="p-4 rounded-xl bg-slate-950/60 border border-slate-800 space-y-2">
+        <span class="text-slate-500 uppercase block font-bold">Customer Contact</span>
+        <p class="text-white font-semibold" id="inspect-customer-name">—</p>
+        <p class="text-slate-300" id="inspect-email">—</p>
+        <p class="text-slate-400" id="inspect-phone">—</p>
+        <p class="text-slate-400" id="inspect-company">—</p>
+      </div>
+
+      <div class="p-4 rounded-xl bg-slate-950/60 border border-slate-800 space-y-2">
+        <span class="text-slate-500 uppercase block font-bold">Manufacturing Specs</span>
+        <p class="text-slate-300">Material: <strong class="text-white" id="inspect-material">—</strong></p>
+        <p class="text-slate-300">Quality: <strong class="text-white" id="inspect-quality">—</strong></p>
+        <p class="text-slate-300">Infill: <strong class="text-white" id="inspect-strength">—</strong></p>
+        <p class="text-slate-300">Quantity: <strong class="text-white" id="inspect-qty">—</strong></p>
+      </div>
+    </div>
+
+    <!-- 3D MODEL TELEMETRY & NOTES -->
+    <div class="p-4 rounded-xl bg-slate-950/60 border border-slate-800 space-y-2 text-xs">
+      <span class="text-slate-500 uppercase font-mono block font-bold">3D Geometry &amp; Files</span>
+      <div id="inspect-files-list" class="space-y-1 text-slate-300 font-mono"></div>
+      <div class="pt-2 border-t border-slate-800/80 text-slate-400">
+        <span class="block text-slate-500 text-[10px] uppercase font-mono">Customer Notes:</span>
+        <p id="inspect-notes" class="italic text-slate-300 mt-0.5">No additional notes.</p>
+      </div>
+    </div>
+
+    <!-- COST BREAKDOWN -->
+    <div class="p-4 rounded-xl bg-blue-950/20 border border-blue-500/30 flex items-center justify-between text-xs font-mono">
+      <div>
+        <span class="text-slate-400 block">Calculated Total Estimate:</span>
+        <span id="inspect-total" class="text-xl font-bold text-blue-400">€0.00</span>
+      </div>
+      <a id="inspect-track-link" href="#" target="_blank" class="px-3.5 py-2 rounded-xl bg-blue-500 hover:bg-blue-400 text-white font-semibold transition-all">
+        Open Live Tracker ↗
+      </a>
+    </div>
+
+    <!-- QUICK ACTIONS (EMAIL, WHATSAPP, DELETE) -->
+    <div class="flex flex-wrap items-center gap-3 pt-2">
+      <a id="inspect-email-btn" href="#" class="flex-1 inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-400 hover:bg-blue-500 hover:text-white text-xs font-semibold transition-all">
+        <span>✉️ Email Customer</span>
+      </a>
+      <a id="inspect-phone-btn" href="#" target="_blank" class="flex-1 inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500 hover:text-white text-xs font-semibold transition-all">
+        <span>💬 Contact WhatsApp</span>
+      </a>
+      <button type="button" id="inspect-delete-btn" class="px-4 py-2.5 rounded-xl bg-red-950/40 border border-red-500/30 text-red-400 hover:bg-red-900/60 hover:text-white text-xs font-semibold transition-all">
+        🗑️ Delete
+      </button>
+    </div>
+
+    <!-- STATUS UPDATER -->
+    <div class="space-y-2 pt-4 border-t border-slate-800">
+      <label class="block text-xs font-semibold text-slate-300">Update Production Status</label>
+      <div class="flex items-center gap-3">
+        <select id="inspect-status-select" class="flex-1 rounded-xl bg-slate-950 border border-slate-800 p-2.5 text-xs text-white focus:border-blue-400 focus:outline-none">
+          <option value="Quote Requested">Quote Requested</option>
+          <option value="Under Review">Under Review</option>
+          <option value="Quote Sent">Quote Sent</option>
+          <option value="Awaiting Payment">Awaiting Payment</option>
+          <option value="Preparing">Preparing</option>
+          <option value="Printing">Printing</option>
+          <option value="Quality Inspection">Quality Inspection</option>
+          <option value="Ready to Ship">Ready to Ship</option>
+          <option value="Shipped">Shipped</option>
+          <option value="Completed">Completed</option>
+        </select>
+        <button type="button" id="inspect-update-status-btn" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition-all">
+          Save Status
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/static/js/admin.js"></script>
+<script>
+// Authentication & Dashboard Controller
+document.addEventListener('DOMContentLoaded', () => {
+  const authScreen = document.getElementById('admin-auth-screen');
+  const dashboardContainer = document.getElementById('admin-dashboard-container');
+  const loginForm = document.getElementById('admin-login-form');
+  const passwordInput = document.getElementById('admin-password-input');
+  const loginError = document.getElementById('admin-login-error');
+  const logoutBtn = document.getElementById('admin-logout-btn');
+
+  // Master Studio Password
+  const ADMIN_PASS = 'cavalao123';
+
+  const unlockPortal = () => {
+    authScreen.classList.add('hidden');
+    dashboardContainer.classList.remove('hidden');
+    if (typeof LayerStudiosAdmin !== 'undefined') {
+      window.adminPortal = new LayerStudiosAdmin();
+      window.adminPortal.isAuthenticated = true;
+      window.adminPortal.loadAdminData();
+    }
+  };
+
+  const lockPortal = () => {
+    sessionStorage.removeItem('ls_admin_authenticated');
+    dashboardContainer.classList.add('hidden');
+    authScreen.classList.remove('hidden');
+    if (passwordInput) {
+      passwordInput.value = '';
+      passwordInput.focus();
+    }
+  };
+
+  // Check existing session
+  if (sessionStorage.getItem('ls_admin_authenticated') === 'true') {
+    unlockPortal();
+  }
+
+  // Handle Login submission
+  if (loginForm) {
+    loginForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const entered = passwordInput ? passwordInput.value.trim() : '';
+      if (entered === ADMIN_PASS) {
+        loginError.classList.add('hidden');
+        sessionStorage.setItem('ls_admin_authenticated', 'true');
+        unlockPortal();
+      } else {
+        loginError.classList.remove('hidden');
+        if (passwordInput) {
+          passwordInput.select();
+        }
+      }
+    });
+  }
+
+  // Handle Logout
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', lockPortal);
+  }
+
+  // Auto-poll quotes while logged in
+  setInterval(() => {
+    if (sessionStorage.getItem('ls_admin_authenticated') === 'true' && window.adminPortal) {
+      window.adminPortal.loadAdminData();
+    }
+  }, 5000);
+
+  // Refresh button
+  document.getElementById('admin-refresh-quotes')?.addEventListener('click', () => {
+    window.adminPortal && window.adminPortal.loadAdminData();
+  });
+
+  // Close modal
+  document.getElementById('admin-close-modal')?.addEventListener('click', () => {
+    document.getElementById('admin-quote-modal')?.classList.add('hidden');
+  });
+});
+</script>
+<script src="/static/js/i18n.js"></script>
+</body>
+</html>

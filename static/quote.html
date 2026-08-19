@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Get a Quote — Layer Studios</title>
+  <meta name="description" content="Upload your 3D file or describe your part. Get an instant estimate for 3D printing.">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { darkMode:'class', theme:{ extend:{ fontFamily:{ sans:['Inter','system-ui','sans-serif'], mono:['JetBrains Mono','monospace'] } } } }</script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <link rel="stylesheet" href="/static/css/styles.css">
+  <link rel="icon" type="image/svg+xml" href="/static/assets/logo.svg">
+</head>
+<body class="bg-[#09090b] text-slate-100 antialiased selection:bg-blue-500 selection:text-white overflow-x-hidden">
+
+<div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col space-y-3 pointer-events-none"></div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     GLOBAL STICKY NAVBAR (Clean, Single-Line, Aligned)
+═══════════════════════════════════════════════════════════════════ -->
+<header id="main-header" class="fixed top-0 left-0 right-0 z-40 bg-slate-950/85 backdrop-blur-xl border-b border-slate-800/80 transition-all duration-300">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between h-18 py-3.5 gap-6">
+      
+      <!-- Brand Logo -->
+      <a href="/" class="flex items-center space-x-3 group shrink-0">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 p-0.5 shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform flex items-center justify-center">
+          <img src="/static/assets/logo.svg" alt="Layer Studios" class="w-6 h-6">
+        </div>
+        <div class="flex flex-col">
+          <span class="text-lg font-black tracking-tight text-white leading-none flex items-center">
+            Layer<span class="text-blue-400">Studios</span>
+          </span>
+          <span class="text-[9px] text-slate-400 tracking-wider uppercase font-semibold mt-0.5 leading-none">3D Printing Studio</span>
+        </div>
+      </a>
+
+      <!-- Desktop Navigation Links -->
+      <nav class="hidden md:flex items-center space-x-1 lg:space-x-2 text-sm font-medium text-slate-300">
+        <a href="/" class="px-3.5 py-2 rounded-xl hover:text-white hover:bg-slate-900/60 whitespace-nowrap transition-colors">Home</a>
+        <a href="/quote" class="px-3.5 py-2 rounded-xl text-white font-semibold bg-slate-900 border border-slate-800 whitespace-nowrap transition-colors">Get a Quote</a>
+        <a href="/store" class="px-3.5 py-2 rounded-xl hover:text-white hover:bg-slate-900/60 whitespace-nowrap transition-colors">Store</a>
+        <a href="/materials" class="px-3.5 py-2 rounded-xl hover:text-white hover:bg-slate-900/60 whitespace-nowrap transition-colors">Materials</a>
+        <a href="/track" class="px-3.5 py-2 rounded-xl hover:text-white hover:bg-slate-900/60 whitespace-nowrap transition-colors">Track Order</a>
+      </nav>
+
+      <!-- Right Quick Actions -->
+      <div class="flex items-center space-x-3 shrink-0">
+        <a href="/track" class="hidden sm:inline-flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-900/90 hover:bg-slate-800 text-slate-300 border border-slate-800 transition-all whitespace-nowrap">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span>Live Status</span>
+        </a>
+        <a href="/quote" class="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-blue-500 hover:bg-blue-400 text-white shadow-md shadow-blue-500/20 hover:shadow-blue-500/35 transition-all whitespace-nowrap">
+          <span>Instant Quote &rarr;</span>
+        </a>
+        
+        <button id="mobile-menu-toggle" type="button" class="md:hidden p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white" aria-label="Toggle Menu">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+      </div>
+
+    </div>
+  </div>
+</header>
+
+<!-- Mobile drawer -->
+<div id="mobile-menu-backdrop" class="hidden fixed inset-0 z-30 bg-black/60 backdrop-blur-sm"></div>
+<div id="mobile-menu-drawer" class="fixed top-0 right-0 bottom-0 z-40 w-72 bg-slate-950 border-l border-slate-800 translate-x-full transition-transform duration-300 flex flex-col p-6">
+  <div class="flex items-center justify-between mb-8">
+    <span class="font-bold text-white">Menu</span>
+    <button id="mobile-menu-close" class="p-1 text-slate-400"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+  </div>
+  <nav class="flex flex-col space-y-1">
+    <a href="/" class="mobile-nav-link px-4 py-3 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">Home</a>
+    <a href="/quote" class="mobile-nav-link px-4 py-3 rounded-xl text-white font-semibold bg-blue-500/10 border border-blue-500/20">Get a Quote</a>
+    <a href="/store" class="mobile-nav-link px-4 py-3 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">Store</a>
+    <a href="/materials" class="mobile-nav-link px-4 py-3 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">Materials</a>
+    <a href="/track" class="mobile-nav-link px-4 py-3 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition-colors">Track Order</a>
+  </nav>
+  <div class="mt-auto pt-6 border-t border-slate-800">
+    <a href="/quote" class="block w-full text-center px-4 py-3 rounded-xl bg-blue-500 hover:bg-blue-400 text-white font-bold transition-colors">Get a Quote →</a>
+  </div>
+</div>
+
+<!-- PAGE HERO -->
+<div class="pt-24 pb-10 px-4 sm:px-6 border-b border-slate-800/60">
+  <div class="max-w-6xl mx-auto">
+    <span class="inline-block px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold mb-4">Instant Estimate</span>
+    <h1 class="text-3xl sm:text-4xl font-extrabold text-white mb-3">Get a Quote</h1>
+    <p class="text-slate-400 max-w-xl text-base">Upload your 3D file for an instant price estimate, or describe what you need and we'll design it for you. No account required.</p>
+  </div>
+</div>
+
+<!-- QUOTE FORM -->
+<section id="quote" class="py-12 px-4 sm:px-6">
+  <div class="max-w-6xl mx-auto">
+
+    <!-- Path Switcher -->
+    <div class="flex gap-2 mb-8 p-1 rounded-xl bg-slate-900 border border-slate-800 w-fit">
+      <button id="tab-have-model" type="button" class="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-blue-500 text-white font-semibold text-sm shadow transition-all">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"/></svg>
+        I have a 3D file
+      </button>
+      <button id="tab-need-design" type="button" class="flex items-center gap-2 px-5 py-2.5 rounded-lg text-slate-400 hover:text-white text-sm font-semibold transition-all">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+        I need it designed
+      </button>
+    </div>
+
+    <form id="quote-request-form" class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+      <!-- LEFT COLUMN -->
+      <div class="lg:col-span-7 space-y-5">
+
+        <!-- Upload area (model path) -->
+        <div id="upload-area-model" class="p-5 rounded-2xl bg-slate-900/80 border border-slate-800">
+          <div id="quote-dropzone" class="dropzone border-2 border-dashed border-slate-700 hover:border-blue-400 rounded-xl p-10 text-center transition-all bg-slate-950/40 cursor-pointer">
+            <input type="file" id="quote-file-input" class="hidden" multiple accept=".stl,.step,.stp,.3mf,.obj,.zip,.pdf,.png,.jpg,.jpeg">
+            <div class="flex flex-col items-center space-y-3">
+              <div class="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+              </div>
+              <div>
+                <p class="text-base font-bold text-white">Drop your 3D files here</p>
+                <p class="text-xs text-slate-400 mt-1">or <span class="text-blue-400 underline font-semibold">click to browse</span></p>
+              </div>
+              <p class="text-[11px] text-slate-500">STL · 3MF · STEP · OBJ · PDF drawings (max 50 MB)</p>
+            </div>
+          </div>
+          <div id="uploaded-files-list" class="mt-3 space-y-2"></div>
+        </div>
+
+        <!-- Design request (design path) -->
+        <div id="upload-area-design" class="hidden p-5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-4">
+          <div class="p-3.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-xs text-blue-300">
+            <strong>How it works:</strong> Upload a sketch, photo of the broken part, or a dimensioned PDF. We'll create the 3D model and share it for your approval before printing.
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1.5">What would you like us to design?</label>
+            <textarea id="quote-description" rows="4" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-3 text-sm text-white focus:border-blue-400 focus:outline-none resize-none" placeholder="Describe the part — dimensions, purpose, material preference, how it mounts or connects..."></textarea>
+          </div>
+        </div>
+
+        <!-- Print settings -->
+        <div class="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-5">
+          <h3 class="text-sm font-bold text-white">Print Settings</h3>
+
+          <!-- Material -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-2">Material</label>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              <label class="material-option flex items-center gap-2 p-2.5 rounded-lg bg-slate-950 border border-blue-500/50 cursor-pointer">
+                <input type="radio" name="quote-material" value="PLA+" class="sr-only" checked>
+                <span class="w-3 h-3 rounded-full bg-blue-400 flex-shrink-0"></span>
+                <div><span class="text-xs font-semibold text-white block">PLA+</span><span class="text-[10px] text-slate-500">Rigid · Affordable</span></div>
+              </label>
+              <label class="material-option flex items-center gap-2 p-2.5 rounded-lg bg-slate-950 border border-slate-800 cursor-pointer hover:border-slate-700">
+                <input type="radio" name="quote-material" value="PETG" class="sr-only">
+                <span class="w-3 h-3 rounded-full bg-orange-400 flex-shrink-0"></span>
+                <div><span class="text-xs font-semibold text-white block">PETG</span><span class="text-[10px] text-slate-500">Strong · Heat resistant</span></div>
+              </label>
+              <label class="material-option flex items-center gap-2 p-2.5 rounded-lg bg-slate-950 border border-slate-800 cursor-pointer hover:border-slate-700">
+                <input type="radio" name="quote-material" value="ABS" class="sr-only">
+                <span class="w-3 h-3 rounded-full bg-yellow-500 flex-shrink-0"></span>
+                <div><span class="text-xs font-semibold text-white block">ABS</span><span class="text-[10px] text-slate-500">Tough · High temp</span></div>
+              </label>
+              <label class="material-option flex items-center gap-2 p-2.5 rounded-lg bg-slate-950 border border-slate-800 cursor-pointer hover:border-slate-700">
+                <input type="radio" name="quote-material" value="TPU" class="sr-only">
+                <span class="w-3 h-3 rounded-full bg-slate-400 flex-shrink-0"></span>
+                <div><span class="text-xs font-semibold text-white block">TPU</span><span class="text-[10px] text-slate-500">Flexible · Impact</span></div>
+              </label>
+              <label class="material-option flex items-center gap-2 p-2.5 rounded-lg bg-slate-950 border border-slate-800 cursor-pointer hover:border-slate-700">
+                <input type="radio" name="quote-material" value="CF-Nylon" class="sr-only">
+                <span class="w-3 h-3 rounded-full bg-slate-800 border border-slate-600 flex-shrink-0"></span>
+                <div><span class="text-xs font-semibold text-white block">CF-Nylon</span><span class="text-[10px] text-slate-500">Premium · Ultra strong</span></div>
+              </label>
+              <a href="/materials" class="flex items-center gap-2 p-2.5 rounded-lg bg-slate-950 border border-dashed border-slate-700 cursor-pointer hover:border-slate-600">
+                <span class="w-3 h-3 rounded-full bg-slate-700 flex-shrink-0"></span>
+                <div><span class="text-xs font-semibold text-blue-400 block">More →</span><span class="text-[10px] text-slate-500">See all materials</span></div>
+              </a>
+            </div>
+          </div>
+
+          <!-- Quality + Infill -->
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-400 mb-2">Print Quality</label>
+              <select id="quote-quality" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-2.5 text-sm text-white focus:border-blue-400 focus:outline-none">
+                <option value="fine">Fine (0.1mm)</option>
+                <option value="standard" selected>Standard (0.2mm)</option>
+                <option value="draft">Draft (0.3mm)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-400 mb-2">Infill Strength</label>
+              <select id="quote-infill" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-2.5 text-sm text-white focus:border-blue-400 focus:outline-none">
+                <option value="15">Light (15%) — Display</option>
+                <option value="30" selected>Standard (30%)</option>
+                <option value="60">Strong (60%)</option>
+                <option value="100">Solid (100%)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Quantity + Colour -->
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-400 mb-2">Quantity</label>
+              <input id="quote-quantity" type="number" min="1" max="500" value="1" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-2.5 text-sm text-white focus:border-blue-400 focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-400 mb-2">Preferred Colour</label>
+              <input id="quote-color" type="text" placeholder="e.g. Black, White, RAL 5015..." class="w-full rounded-xl bg-slate-950 border border-slate-800 p-2.5 text-sm text-white focus:border-blue-400 focus:outline-none placeholder-slate-600">
+            </div>
+          </div>
+        </div>
+
+        <!-- Contact -->
+        <div class="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-4">
+          <h3 class="text-sm font-bold text-white">Your Details</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-400 mb-1.5">Name</label>
+              <input id="quote-name" type="text" placeholder="Your full name" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-2.5 text-sm text-white focus:border-blue-400 focus:outline-none placeholder-slate-600">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-400 mb-1.5">Email</label>
+              <input id="quote-email" type="email" placeholder="your@email.com" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-2.5 text-sm text-white focus:border-blue-400 focus:outline-none placeholder-slate-600">
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1.5">Shipping Country</label>
+            <select id="quote-shipping-country" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-2.5 text-sm text-white focus:border-blue-400 focus:outline-none">
+              <option value="Portugal" selected>Portugal (€4.50 · Free over €50)</option>
+              <option value="European Union">European Union (€9.90)</option>
+              <option value="International">International Tracked (€18.00)</option>
+            </select>
+          </div>
+          <div class="flex items-start gap-3">
+            <input id="quote-confidential" type="checkbox" class="mt-1 rounded bg-slate-950 border-slate-700 text-blue-500 focus:ring-blue-400">
+            <label for="quote-confidential" class="text-xs text-slate-400">
+              <strong class="text-slate-300">NDA / Confidential project:</strong> Do not photograph or display my part in Layer Studios portfolio.
+            </label>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1.5">Additional notes</label>
+            <input id="quote-notes" type="text" placeholder="e.g. M4 brass inserts required, smooth top surface..." class="w-full rounded-xl bg-slate-950 border border-slate-800 p-2.5 text-sm text-white focus:border-blue-400 focus:outline-none placeholder-slate-600">
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN: 3D Viewer + Price -->
+      <div class="lg:col-span-5 space-y-5 lg:sticky lg:top-20">
+
+        <!-- 3D Viewer -->
+        <div class="p-5 rounded-2xl bg-slate-900/90 border border-slate-800">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-800 text-xs font-mono mb-4">
+            <span class="text-blue-400 font-bold flex items-center gap-2">
+              <span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+              Model Analysis
+              <span class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-500 text-[9px] border border-slate-700">256³ mm</span>
+            </span>
+            <span class="text-slate-500 text-[10px]">Live 3D Preview</span>
+          </div>
+
+          <div class="w-full h-56 rounded-xl bg-[#09090b] border border-slate-800 overflow-hidden relative">
+            <canvas id="quote-3d-canvas" style="width:100%;height:100%;display:block;"></canvas>
+            <div id="quote-fit-badge" class="hidden absolute top-2 right-2 px-2 py-1 rounded-lg text-[9px] font-bold font-mono flex items-center gap-1 backdrop-blur-sm border"></div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2.5 mt-4 text-xs font-mono">
+            <div class="p-2 rounded-lg bg-slate-950/60 border border-slate-800">
+              <span class="text-slate-500 block text-[9px] uppercase mb-0.5">Size (mm)</span>
+              <span id="telemetry-dimensions" class="text-slate-200 font-bold">—</span>
+            </div>
+            <div class="p-2 rounded-lg bg-slate-950/60 border border-slate-800">
+              <span class="text-slate-500 block text-[9px] uppercase mb-0.5">Volume</span>
+              <span id="telemetry-volume" class="text-blue-400 font-bold">— cm³</span>
+            </div>
+            <div class="p-2 rounded-lg bg-slate-950/60 border border-slate-800">
+              <span class="text-slate-500 block text-[9px] uppercase mb-0.5">Est. Filament</span>
+              <span id="telemetry-weight" class="text-slate-200 font-bold">— g</span>
+            </div>
+            <div class="p-2 rounded-lg bg-slate-950/60 border border-slate-800">
+              <span class="text-slate-500 block text-[9px] uppercase mb-0.5">Print Time</span>
+              <span id="telemetry-time" class="text-slate-200 font-bold">—</span>
+            </div>
+          </div>
+          <div class="flex items-center justify-between mt-3 pt-2 border-t border-slate-800/60 text-[9px] font-mono text-slate-600">
+            <span>Build: <span class="text-slate-500">256 × 256 × 256 mm</span></span>
+            <span id="quote-layer-count">— layers @ 0.2mm</span>
+          </div>
+        </div>
+
+        <!-- Price Breakdown -->
+        <div class="p-5 rounded-2xl bg-slate-900/80 border border-blue-500/20 shadow-lg shadow-blue-500/5 space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-white">Estimated Cost</h3>
+            <span class="text-xs text-blue-400">Transparent pricing</span>
+          </div>
+          <div class="space-y-2 text-xs font-mono border-t border-slate-800 pt-3">
+            <div class="flex justify-between text-slate-300"><span>Material cost</span><span id="price-material">—</span></div>
+            <div class="flex justify-between text-slate-300"><span>Print time</span><span id="price-time">—</span></div>
+            <div class="flex justify-between text-slate-300"><span>Post-processing</span><span id="price-post">—</span></div>
+            <div class="flex justify-between text-slate-400"><span>Quantity ×<span id="price-qty-label">1</span></span><span id="price-qty">—</span></div>
+            <div class="flex justify-between text-slate-400"><span>Shipping</span><span id="price-shipping">€4.50</span></div>
+          </div>
+          <div class="flex items-center justify-between pt-3 border-t border-slate-700">
+            <span class="text-sm font-bold text-white">Total Estimate</span>
+            <span id="price-total" class="text-2xl font-black text-blue-400">—</span>
+          </div>
+          <p class="text-[10px] text-slate-600 italic">Instant estimate only. Final price confirmed after slicing review.</p>
+        </div>
+
+        <!-- Submit -->
+        <button type="submit" form="quote-request-form" class="w-full py-4 rounded-2xl bg-blue-500 hover:bg-blue-400 text-white font-bold text-base shadow-lg shadow-blue-500/25 transition-all transform hover:-translate-y-0.5">
+          Send Quote Request →
+        </button>
+
+        <div class="flex items-center justify-center gap-6 text-xs text-slate-500">
+          <span class="flex items-center gap-1"><span class="text-emerald-400">✓</span> No account needed</span>
+          <span class="flex items-center gap-1"><span class="text-emerald-400">✓</span> Reply within 2h</span>
+        </div>
+      </div>
+    </form>
+  </div>
+</section>
+
+<!-- FAQ MINI -->
+<section class="py-16 px-4 sm:px-6 border-t border-slate-800/60">
+  <div class="max-w-3xl mx-auto">
+    <h2 class="text-xl font-bold text-white mb-8 text-center">Quick answers</h2>
+    <div class="space-y-3">
+      <details class="group p-4 rounded-xl bg-slate-900 border border-slate-800 cursor-pointer">
+        <summary class="flex justify-between items-center text-sm font-semibold text-slate-200 list-none">
+          What formats do you accept?
+          <svg class="w-4 h-4 text-slate-400 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </summary>
+        <p class="mt-3 text-sm text-slate-400">STL, 3MF, STEP (.step/.stp), OBJ, and ZIP archives. For design requests, we also accept PDF drawings, photos, and sketches.</p>
+      </details>
+      <details class="group p-4 rounded-xl bg-slate-900 border border-slate-800 cursor-pointer">
+        <summary class="flex justify-between items-center text-sm font-semibold text-slate-200 list-none">
+          How long does it take?
+          <svg class="w-4 h-4 text-slate-400 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </summary>
+        <p class="mt-3 text-sm text-slate-400">Most orders are printed and shipped within 24–48 hours after payment. Complex or large parts may take 3–5 business days. We'll confirm the timeline when we review your quote.</p>
+      </details>
+      <details class="group p-4 rounded-xl bg-slate-900 border border-slate-800 cursor-pointer">
+        <summary class="flex justify-between items-center text-sm font-semibold text-slate-200 list-none">
+          What's the maximum part size?
+          <svg class="w-4 h-4 text-slate-400 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </summary>
+        <p class="mt-3 text-sm text-slate-400">Our build volume is 256 × 256 × 256 mm. Larger parts can be split and glued together — just mention it in the notes.</p>
+      </details>
+      <details class="group p-4 rounded-xl bg-slate-900 border border-slate-800 cursor-pointer">
+        <summary class="flex justify-between items-center text-sm font-semibold text-slate-200 list-none">
+          I don't have a 3D file — can you still help?
+          <svg class="w-4 h-4 text-slate-400 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </summary>
+        <p class="mt-3 text-sm text-slate-400">Absolutely. Switch to "I need it designed" above, describe what you need, and optionally upload a photo, sketch, or PDF. Our team will create the 3D model and share it for your approval.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- SUCCESS MODAL -->
+<div id="quote-success-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
+  <div class="bg-slate-900 border border-slate-700 rounded-3xl p-8 max-w-md w-full text-center space-y-4 shadow-2xl">
+    <div class="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mx-auto text-3xl">✓</div>
+    <h3 class="text-xl font-extrabold text-white">Quote request sent!</h3>
+    <p class="text-slate-400 text-sm">We'll review your request and get back to you within 2 business hours with a final quote and payment link.</p>
+    <p id="quote-order-id" class="text-xs font-mono text-slate-500 bg-slate-950 rounded-lg p-2"></p>
+    <div class="flex gap-3 justify-center pt-2">
+      <button id="close-success-modal" class="px-6 py-3 rounded-xl bg-blue-500 hover:bg-blue-400 text-white font-bold">Done</button>
+      <a href="/track" class="px-6 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold">Track Order →</a>
+    </div>
+  </div>
+</div>
+
+<!-- SIMPLE FOOTER -->
+<footer class="border-t border-slate-800/60 bg-slate-950/60 py-10 px-4 sm:px-6">
+  <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-500">
+    <div class="flex items-center gap-2">
+      <img src="/static/assets/logo.svg" class="w-5 h-5" alt="">
+      <span class="font-bold text-slate-400">LayerStudios</span>
+      <span>· contact@layerstudios.pt</span>
+    </div>
+    <nav class="flex flex-wrap gap-4 justify-center">
+      <a href="/" class="hover:text-slate-300">Home</a>
+      <a href="/store" class="hover:text-slate-300">Store</a>
+      <a href="/materials" class="hover:text-slate-300">Materials</a>
+      <a href="/track" class="hover:text-slate-300">Track Order</a>
+          </nav>
+    <span>© 2026 Layer Studios · Portugal</span>
+  </div>
+</footer>
+
+<script src="/static/js/viewer3d.js"></script>
+<script src="/static/js/quote.js"></script>
+<script>
+// Mobile menu
+(function() {
+  const t = document.getElementById('mobile-menu-toggle');
+  const d = document.getElementById('mobile-menu-drawer');
+  const b = document.getElementById('mobile-menu-backdrop');
+  const c = document.getElementById('mobile-menu-close');
+  const open = () => { b.classList.remove('hidden'); d.classList.remove('translate-x-full'); };
+  const shut = () => { d.classList.add('translate-x-full'); setTimeout(() => b.classList.add('hidden'), 250); };
+  if (t) t.addEventListener('click', open);
+  if (c) c.addEventListener('click', shut);
+  if (b) b.addEventListener('click', shut);
+  document.querySelectorAll('.mobile-nav-link').forEach(l => l.addEventListener('click', shut));
+
+  // Material option visual selection
+  document.querySelectorAll('.material-option input').forEach(radio => {
+    radio.addEventListener('change', () => {
+      document.querySelectorAll('.material-option').forEach(l => {
+        l.classList.remove('border-blue-500/50');
+        l.classList.add('border-slate-800');
+      });
+      radio.closest('.material-option').classList.remove('border-slate-800');
+      radio.closest('.material-option').classList.add('border-blue-500/50');
+    });
+  });
+
+  // Close success modal
+  document.getElementById('close-success-modal')?.addEventListener('click', () => {
+    document.getElementById('quote-success-modal').classList.add('hidden');
+  });
+
+  // Init quote engine
+  const QuoteClass = window.LayerStudiosQuote || window.LayerStudiosQuoteEngine;
+  if (QuoteClass) {
+    window.quoteEngine = new QuoteClass();
+  }
+})();
+</script>
+  <script src="/static/js/i18n.js"></script>
+</body>
+</html>

@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Materials & Capabilities — Layer Studios | 3D Printing Materials</title>
+  <meta name="description" content="Explore and compare 3D printing engineering materials: PLA+, PETG, ABS, TPU 95A, Carbon-Fiber CF-Nylon, and Precision Resin. Full technical specs, thermal limits, and interactive advisor quiz.">
+
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: { dark: '#09090b', card: '#111114', blue: '#3b82f6' }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+
+  <link rel="stylesheet" href="/static/css/styles.css">
+  <link rel="icon" type="image/svg+xml" href="/static/assets/logo.svg">
+</head>
+<body class="bg-[#09090b] text-slate-100 antialiased selection:bg-blue-500 selection:text-white relative overflow-x-hidden cad-grid">
+
+  <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col space-y-3 pointer-events-none"></div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       1. GLOBAL STICKY NAVBAR (Clean, Single-Line, Aligned)
+  ═══════════════════════════════════════════════════════════════════ -->
+  <header id="main-header" class="fixed top-0 left-0 right-0 z-40 bg-slate-950/85 backdrop-blur-xl border-b border-slate-800/80 transition-all duration-300">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-18 py-3.5 gap-6">
+        
+        <!-- Brand Logo -->
+        <a href="/" class="flex items-center space-x-3 group shrink-0">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 p-0.5 shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform flex items-center justify-center">
+            <img src="/static/assets/logo.svg" alt="Layer Studios" class="w-6 h-6">
+          </div>
+          <div class="flex flex-col">
+            <span class="text-lg font-black tracking-tight text-white leading-none flex items-center">
+              Layer<span class="text-blue-400">Studios</span>
+            </span>
+            <span class="text-[9px] text-slate-400 tracking-wider uppercase font-semibold mt-0.5 leading-none">3D Printing Studio</span>
+          </div>
+        </a>
+
+        <!-- Desktop Navigation Links -->
+        <nav class="hidden md:flex items-center space-x-1 lg:space-x-2 text-sm font-medium text-slate-300">
+          <a href="/" class="px-3.5 py-2 rounded-xl hover:text-white hover:bg-slate-900/60 whitespace-nowrap transition-colors">Home</a>
+          <a href="/quote" class="px-3.5 py-2 rounded-xl hover:text-white hover:bg-slate-900/60 whitespace-nowrap transition-colors">Get a Quote</a>
+          <a href="/store" class="px-3.5 py-2 rounded-xl hover:text-white hover:bg-slate-900/60 whitespace-nowrap transition-colors">Store</a>
+          <a href="/materials" class="px-3.5 py-2 rounded-xl text-white font-semibold bg-slate-900 border border-slate-800 whitespace-nowrap transition-colors">Materials</a>
+          <a href="/track" class="px-3.5 py-2 rounded-xl hover:text-white hover:bg-slate-900/60 whitespace-nowrap transition-colors">Track Order</a>
+        </nav>
+
+        <!-- Right Quick Actions -->
+        <div class="flex items-center space-x-3 shrink-0">
+          <a href="/track" class="hidden sm:inline-flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-900/90 hover:bg-slate-800 text-slate-300 border border-slate-800 transition-all whitespace-nowrap">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span>Live Status</span>
+          </a>
+          <a href="/quote" class="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-blue-500 hover:bg-blue-400 text-white shadow-md shadow-blue-500/20 hover:shadow-blue-500/35 transition-all whitespace-nowrap">
+            <span>Instant Quote &rarr;</span>
+          </a>
+          <button id="mobile-menu-toggle" type="button" class="md:hidden p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile Drawer -->
+  <div id="mobile-menu-backdrop" class="hidden fixed inset-0 z-40 bg-black/70 backdrop-blur-sm"></div>
+  <div id="mobile-menu-drawer" class="fixed top-0 right-0 bottom-0 z-50 w-80 bg-slate-950 border-l border-slate-800 translate-x-full transition-transform duration-300 flex flex-col p-6">
+    <div class="flex items-center justify-between pb-6 border-b border-slate-800">
+      <span class="font-bold text-white">Menu</span>
+      <button id="mobile-menu-close" class="p-2 text-slate-400"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+    </div>
+    <nav class="flex flex-col space-y-2 py-6">
+      <a href="/" class="px-4 py-3 rounded-xl text-slate-300 hover:text-white font-semibold">Home</a>
+      <a href="/quote" class="px-4 py-3 rounded-xl text-slate-300 hover:text-white font-semibold">Get a Quote</a>
+      <a href="/store" class="px-4 py-3 rounded-xl text-slate-300 hover:text-white font-semibold">Store</a>
+      <a href="/materials" class="px-4 py-3 rounded-xl text-white font-bold bg-blue-500/10 border border-blue-500/20">Materials Guide</a>
+      <a href="/track" class="px-4 py-3 rounded-xl text-slate-300 hover:text-white font-semibold">Track Order</a>
+    </nav>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       PAGE HERO
+  ═══════════════════════════════════════════════════════════════════ -->
+  <div class="pt-32 pb-12 px-4 sm:px-6 lg:px-8 border-b border-slate-800/80">
+    <div class="max-w-7xl mx-auto">
+      <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 text-xs font-semibold mb-3">
+        <span>Engineering Thermoplastics &bull; High Performance Composites</span>
+      </div>
+      <h1 class="text-3xl sm:text-5xl font-black text-white">Engineering Materials Center</h1>
+      <p class="text-sm sm:text-base text-slate-400 mt-2 max-w-2xl leading-relaxed">
+        From rigid aesthetic biopolymers and impact-resistant co-polyesters to flexible rubber elastomers and ultra-stiff carbon-fiber composites. Compare mechanical ratings, thermal limits, and find the perfect filament for your design.
+      </p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       INTERACTIVE MATERIAL ADVISOR QUIZ
+  ═══════════════════════════════════════════════════════════════════ -->
+  <section class="py-12 px-4 sm:px-6 lg:px-8 bg-slate-950/60 border-b border-slate-800/80">
+    <div class="max-w-7xl mx-auto">
+      
+      <div class="rounded-3xl bg-slate-900 border border-slate-800 p-6 sm:p-10 shadow-xl">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-800">
+          <div>
+            <span class="text-[10px] font-mono text-blue-400 font-bold uppercase tracking-wider">Interactive Decision Tool</span>
+            <h2 class="text-xl sm:text-2xl font-bold text-white mt-1">Material Advisor Quiz</h2>
+            <p class="text-xs text-slate-400 mt-0.5">Answer 3 simple questions to receive an instant engineering recommendation.</p>
+          </div>
+          <span class="px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-mono font-semibold self-start md:self-auto">Instant Match</span>
+        </div>
+
+        <form id="material-advisor-form" class="grid grid-cols-1 md:grid-cols-3 gap-6 py-6 border-b border-slate-800 text-xs">
+          
+          <div class="space-y-2">
+            <label class="block font-bold text-slate-300 uppercase tracking-wider">1. Primary Application</label>
+            <div class="space-y-1.5 font-medium text-slate-300">
+              <label class="flex items-center space-x-2 p-2.5 rounded-xl bg-slate-950 border border-slate-800 hover:border-blue-500/50 cursor-pointer">
+                <input type="radio" name="advisor-useCase" value="visual" class="text-blue-500">
+                <span>Display / Visual Prototype / Figurine</span>
+              </label>
+              <label class="flex items-center space-x-2 p-2.5 rounded-xl bg-slate-950 border border-slate-800 hover:border-blue-500/50 cursor-pointer">
+                <input type="radio" name="advisor-useCase" value="mechanical" checked class="text-blue-500">
+                <span>Functional Bracket / Mechanism / Enclosure</span>
+              </label>
+              <label class="flex items-center space-x-2 p-2.5 rounded-xl bg-slate-950 border border-slate-800 hover:border-blue-500/50 cursor-pointer">
+                <input type="radio" name="advisor-useCase" value="flexible" class="text-blue-500">
+                <span>Grip / Gasket / Bumper / Flexible Cover</span>
+              </label>
+              <label class="flex items-center space-x-2 p-2.5 rounded-xl bg-slate-950 border border-slate-800 hover:border-blue-500/50 cursor-pointer">
+                <input type="radio" name="advisor-useCase" value="automotive" class="text-blue-500">
+                <span>Automotive / High Load / Drone Rig</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <label class="block font-bold text-slate-300 uppercase tracking-wider">2. Operating Temperature</label>
+            <div class="space-y-1.5 font-medium text-slate-300">
+              <label class="flex items-center space-x-2 p-2.5 rounded-xl bg-slate-950 border border-slate-800 hover:border-blue-500/50 cursor-pointer">
+                <input type="radio" name="advisor-temp" value="standard" checked class="text-blue-500">
+                <span>Room Temperature (Under 50&deg;C / Indoor)</span>
+              </label>
+              <label class="flex items-center space-x-2 p-2.5 rounded-xl bg-slate-950 border border-slate-800 hover:border-blue-500/50 cursor-pointer">
+                <input type="radio" name="advisor-temp" value="sun" class="text-blue-500">
+                <span>Outdoor / Direct Sunlight / Mild Heat (50–75&deg;C)</span>
+              </label>
+              <label class="flex items-center space-x-2 p-2.5 rounded-xl bg-slate-950 border border-slate-800 hover:border-blue-500/50 cursor-pointer">
+                <input type="radio" name="advisor-temp" value="hot" class="text-blue-500">
+                <span>Under-the-Hood / High Heat (80–120&deg;C+)</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <label class="block font-bold text-slate-300 uppercase tracking-wider">3. Mechanical Stress</label>
+            <div class="space-y-1.5 font-medium text-slate-300">
+              <label class="flex items-center space-x-2 p-2.5 rounded-xl bg-slate-950 border border-slate-800 hover:border-blue-500/50 cursor-pointer">
+                <input type="radio" name="advisor-stress" value="low" class="text-blue-500">
+                <span>Low / Static weight only</span>
+              </label>
+              <label class="flex items-center space-x-2 p-2.5 rounded-xl bg-slate-950 border border-slate-800 hover:border-blue-500/50 cursor-pointer">
+                <input type="radio" name="advisor-stress" value="moderate" checked class="text-blue-500">
+                <span>Moderate / Repeated handling &amp; impacts</span>
+              </label>
+              <label class="flex items-center space-x-2 p-2.5 rounded-xl bg-slate-950 border border-slate-800 hover:border-blue-500/50 cursor-pointer">
+                <input type="radio" name="advisor-stress" value="heavy" class="text-blue-500">
+                <span>Heavy mechanical load / Extreme stiffness</span>
+              </label>
+            </div>
+          </div>
+
+        </form>
+
+        <!-- Result Box -->
+        <div id="advisor-result-box" class="pt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <span class="text-[10px] font-mono text-slate-500 uppercase tracking-wider block">Recommended Material:</span>
+            <span id="advisor-result-name" class="text-xl font-black text-blue-400 block mt-0.5">PETG Co-Polyester</span>
+            <p id="advisor-result-text" class="text-xs text-slate-400 mt-1 max-w-xl">
+              Ideal balance of mechanical tensile strength, impact absorption, and temperature resistance up to 75&deg;C.
+            </p>
+          </div>
+          <a href="/quote" id="advisor-apply-btn" class="px-6 py-3 rounded-xl bg-blue-500 hover:bg-blue-400 text-white font-bold text-xs shadow-lg shadow-blue-500/25 transition-all whitespace-nowrap">
+            Use in Quote Request &rarr;
+          </a>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       MATERIAL CARDS GRID (RENDERED BY MATERIALS.JS)
+  ═══════════════════════════════════════════════════════════════════ -->
+  <section class="py-16 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto space-y-8">
+      
+      <div>
+        <h2 class="text-2xl font-black text-white">Full Material Specifications</h2>
+        <p class="text-xs text-slate-400 mt-1">Detailed performance ratings, typical applications, and material properties.</p>
+      </div>
+
+      <div id="materials-cards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Rendered dynamically by materials.js via /api/materials -->
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       TECHNICAL COMPARISON MATRIX TABLE
+  ═══════════════════════════════════════════════════════════════════ -->
+  <section class="py-16 px-4 sm:px-6 lg:px-8 bg-slate-950/60 border-t border-slate-800/80">
+    <div class="max-w-7xl mx-auto space-y-6">
+      
+      <div>
+        <h2 class="text-2xl font-black text-white">Engineering Comparison Matrix</h2>
+        <p class="text-xs text-slate-400 mt-1">Direct side-by-side technical reference table.</p>
+      </div>
+
+      <div class="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-900/60">
+        <table class="w-full text-left text-xs font-mono">
+          <thead class="bg-slate-950 text-slate-400 border-b border-slate-800 uppercase text-[10px]">
+            <tr>
+              <th class="p-4">Material</th>
+              <th class="p-4">Max Temp</th>
+              <th class="p-4">Tensile Strength</th>
+              <th class="p-4">Impact / Flex</th>
+              <th class="p-4">UV / Outdoor</th>
+              <th class="p-4">Cost Tier</th>
+              <th class="p-4 text-right">Action</th>
+            </tr>
+          </thead>
+          <tbody id="materials-table-body" class="divide-y divide-slate-800 text-slate-300">
+            <!-- Rendered dynamically by materials.js -->
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-slate-800/80 bg-slate-950 py-10 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500 font-mono">
+      <div>&copy; 2026 Layer Studios. Materials Center &bull; Portugal.</div>
+      <div class="flex space-x-6">
+        <a href="/" class="hover:text-white">Home</a>
+        <a href="/quote" class="hover:text-white">Get a Quote</a>
+        <a href="/store" class="hover:text-white">Store</a>
+        <a href="/track" class="hover:text-white">Track Order</a>
+              </div>
+    </div>
+  </footer>
+
+  <script src="/static/js/materials.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Mobile drawer
+      const mobBtn = document.getElementById('mobile-menu-toggle');
+      const mobDrawer = document.getElementById('mobile-menu-drawer');
+      const mobBack = document.getElementById('mobile-menu-backdrop');
+      const mobClose = document.getElementById('mobile-menu-close');
+      const openM = () => { mobBack.classList.remove('hidden'); mobDrawer.classList.remove('translate-x-full'); };
+      const shutM = () => { mobDrawer.classList.add('translate-x-full'); setTimeout(() => mobBack.classList.add('hidden'), 250); };
+      if (mobBtn) mobBtn.addEventListener('click', openM);
+      if (mobClose) mobClose.addEventListener('click', shutM);
+      if (mobBack) mobBack.addEventListener('click', shutM);
+
+      // Initialize materials controller
+      if (typeof LayerStudiosMaterials !== 'undefined') {
+        window.LayerStudiosMaterialsInstance = new LayerStudiosMaterials();
+      }
+    });
+  </script>
+  <script src="/static/js/i18n.js"></script>
+</body>
+</html>
