@@ -41,14 +41,7 @@ class LayerStudiosQuoteEngine {
       }
     };
 
-    this.currentTelemetry = {
-      volumeCm3: 42.5,
-      weightGrams: 35,
-      x: 84,
-      y: 52,
-      z: 38,
-      dimensionsStr: '84 × 52 × 38 mm'
-    };
+    this.currentTelemetry = null;
 
     this.init();
   }
@@ -95,11 +88,6 @@ class LayerStudiosQuoteEngine {
         }
       }
     });
-
-    // Load initial sample mechanical bracket
-    setTimeout(() => {
-      if (this.viewer) this.viewer.loadDefaultPart();
-    }, 150);
   }
 
   setupPathSwitchers() {
@@ -354,10 +342,18 @@ class LayerStudiosQuoteEngine {
     const weightEl = document.getElementById('telemetry-weight');
     const timeEl = document.getElementById('telemetry-time');
 
-    if (dimEl) dimEl.textContent = telemetry.dimensionsStr;
+    if (!telemetry) {
+      if (dimEl) dimEl.textContent = '—';
+      if (volEl) volEl.textContent = '— cm³';
+      if (weightEl) weightEl.textContent = '— g';
+      if (timeEl) timeEl.textContent = '—';
+      return;
+    }
+
+    if (dimEl) dimEl.textContent = telemetry.dimensionsStr || `${telemetry.x} × ${telemetry.y} × ${telemetry.z} mm`;
     if (volEl) volEl.textContent = `${telemetry.volumeCm3} cm³`;
     if (weightEl) weightEl.textContent = `~${telemetry.weightGrams} g`;
-    if (timeEl) timeEl.textContent = telemetry.estimatedDuration;
+    if (timeEl) timeEl.textContent = telemetry.estimatedDuration || '—';
   }
 
   setupDynamicRecalculation() {
@@ -410,49 +406,123 @@ class LayerStudiosQuoteEngine {
     const infillVal = infillEl ? infillEl.value : '30';
     const quantity = qtyEl ? Math.max(1, parseInt(qtyEl.value) || 1) : 1;
     const country = shipEl ? shipEl.value : 'Portugal';
+    const setTxt = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
 
-    // Pricing rates per gram based on filament type (includes spool handling & purge waste)
+    let shippingCost = this.pricingModel.shippingRates[country] || 4.50;
+
+    // STATE 1: User has 3D file option selected, but NO model is uploaded yet
+    if (this.hasModel && (!this.uploadedFiles || this.uploadedFiles.length === 0 || !this.currentTelemetry)) {
+      this.updateTelemetryUI(null);
+      const lc = document.getElementById('quote-layer-count');
+      if (lc) lc.textContent = 'Upload 3D model to preview';
+      const badge = document.getElementById('quote-fit-badge');
+      if (badge) badge.classList.add('hidden');
+
+      setTxt('price-material', '—');
+      setTxt('price-time', '—');
+      setTxt('price-post', '—');
+      setTxt('price-qty-label', `${quantity}`);
+      setTxt('price-qty', '—');
+      setTxt('price-shipping', `€${shippingCost.toFixed(2)}`);
+      setTxt('price-total', '—');
+
+      setTxt('calc-unit-price', '—');
+      setTxt('calc-quantity-multiplier', `× ${quantity}`);
+      setTxt('calc-shipping-amount', `€${shippingCost.toFixed(2)}`);
+      setTxt('calc-total-amount', '—');
+
+      const priceDiscountEl = document.getElementById('calc-discount-row');
+      const batchBadge = document.getElementById('batch-discount-badge');
+      if (priceDiscountEl) priceDiscountEl.classList.add('hidden');
+      if (batchBadge) batchBadge.classList.add('hidden');
+
+      this.calculatedBreakdown = {
+        unitPrice: 0,
+        materialCost: 0,
+        machineCost: 0,
+        designCost: 0,
+        shippingCost: shippingCost,
+        discount: 0,
+        discountPercent: 0,
+        subtotal: 0,
+        finalPrice: 0
+      };
+      return;
+    }
+
+    // STATE 2: User chose "I need it designed" (CAD service)
+    if (!this.hasModel) {
+      const designFee = 25.00;
+      const totalRaw = (designFee * quantity);
+      const finalTotal = +(totalRaw + shippingCost).toFixed(2);
+
+      const dimEl = document.getElementById('telemetry-dimensions');
+      const volEl = document.getElementById('telemetry-volume');
+      const weightEl = document.getElementById('telemetry-weight');
+      const timeEl = document.getElementById('telemetry-time');
+      const lc = document.getElementById('quote-layer-count');
+      if (dimEl) dimEl.textContent = 'CAD Design Service';
+      if (volEl) volEl.textContent = 'Custom Spec';
+      if (weightEl) weightEl.textContent = 'To be modeled';
+      if (timeEl) timeEl.textContent = '24–48h Drafting';
+      if (lc) lc.textContent = 'Custom 3D CAD modeling by our team';
+
+      setTxt('price-material', 'Included');
+      setTxt('price-time', `€${(designFee * quantity).toFixed(2)} (CAD)`);
+      setTxt('price-post', 'Included');
+      setTxt('price-qty-label', `${quantity}`);
+      setTxt('price-qty', `€${(designFee * quantity).toFixed(2)}`);
+      setTxt('price-shipping', `€${shippingCost.toFixed(2)}`);
+      setTxt('price-total', `€${finalTotal.toFixed(2)}`);
+
+      setTxt('calc-unit-price', `€${designFee.toFixed(2)}`);
+      setTxt('calc-quantity-multiplier', `× ${quantity}`);
+      setTxt('calc-shipping-amount', `€${shippingCost.toFixed(2)}`);
+      setTxt('calc-total-amount', `€${finalTotal.toFixed(2)}`);
+
+      this.calculatedBreakdown = {
+        unitPrice: designFee,
+        materialCost: 0,
+        machineCost: 0,
+        designCost: designFee * quantity,
+        shippingCost: shippingCost,
+        discount: 0,
+        discountPercent: 0,
+        subtotal: totalRaw,
+        finalPrice: finalTotal
+      };
+      return;
+    }
+
+    // STATE 3: Model is loaded -> Real geometric calculation
     let gramPrice = 0.10;
     if (material.includes('PETG')) gramPrice = 0.12;
     else if (material.includes('TPU')) gramPrice = 0.20;
     else if (material.includes('ABS')) gramPrice = 0.15;
     else if (material.includes('CF') || material.includes('Nylon')) gramPrice = 0.28;
 
-    // Infill multiplier
     let infillFactor = 1.0;
     if (infillVal.includes('15') || infillVal === '15') infillFactor = 0.55;
     else if (infillVal.includes('60') || infillVal === '60') infillFactor = 1.50;
     else if (infillVal.includes('100') || infillVal === '100') infillFactor = 2.20;
 
-    // Quality multiplier (finer layers take longer machine time)
     let qualFactor = 1.0;
     if (quality === 'fine' || quality.includes('0.1')) qualFactor = 1.60;
     else if (quality === 'draft' || quality.includes('0.3')) qualFactor = 0.75;
 
-    // Dynamic Telemetry: use actual parsed geometry telemetry
-    const volCm3 = this.currentTelemetry?.volumeCm3 || 30.0;
-    const heightZ = this.currentTelemetry?.z || (this.currentTelemetry?.y || 30.0);
+    const volCm3 = this.currentTelemetry?.volumeCm3 || 25.0;
+    const heightZ = this.currentTelemetry?.z || (this.currentTelemetry?.y || 25.0);
     const rawGrams = this.currentTelemetry?.weightGrams || Math.max(1, Math.round(volCm3 * 1.24 * 0.45));
     const adjustedGrams = Math.max(0.5, +(rawGrams * infillFactor).toFixed(1));
 
-    // Dynamic Material Cost (base €0.50 minimum to cover nozzle purge line & spool setup)
     const unitMaterialCost = Math.max(0.50, +(0.35 + (adjustedGrams * gramPrice)).toFixed(2));
-    
-    // Dynamic Machine Print Duration (minutes) & Cost
     const printMinutes = Math.max(8, Math.round((adjustedGrams * 2.5 * qualFactor) + (heightZ * 0.3)));
     const unitMachineCost = Math.max(0.40, +((printMinutes / 60) * 3.20).toFixed(2));
-
-    // Base Prep & QA Calibration (scales gently with object scale)
     const basePrep = Math.max(0.80, +(0.50 + Math.min(2.50, rawGrams * 0.03)).toFixed(2));
 
-    // CAD Design Fee (if customer requested design from scratch)
-    const designFee = this.hasModel ? 0.00 : 25.00;
-
-    // Unit Subtotal before volume discount
     const unitSubtotal = +(unitMaterialCost + unitMachineCost + basePrep).toFixed(2);
-    const totalRaw = (unitSubtotal * quantity) + designFee;
+    const totalRaw = (unitSubtotal * quantity);
 
-    // Volume Discount Tiers
     let discountPercent = 0;
     if (quantity >= 100) discountPercent = 40;
     else if (quantity >= 50) discountPercent = 30;
@@ -463,17 +533,12 @@ class LayerStudiosQuoteEngine {
     const discountAmount = +(totalRaw * (discountPercent / 100)).toFixed(2);
     const subtotalDiscounted = +(totalRaw - discountAmount).toFixed(2);
 
-    // Shipping Cost
-    let shippingCost = this.pricingModel.shippingRates[country] || 4.50;
     if (subtotalDiscounted >= 50.00 && country === 'Portugal') {
-      shippingCost = 0.00; // Free shipping over €50 in Portugal
+      shippingCost = 0.00;
     }
 
     const finalTotal = +(subtotalDiscounted + shippingCost).toFixed(2);
 
-    // Update Live Price Breakdown UI
-    const setTxt = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
-    
     setTxt('calc-unit-price', `€${unitSubtotal.toFixed(2)}`);
     setTxt('calc-quantity-multiplier', `× ${quantity}`);
     setTxt('calc-shipping-amount', shippingCost === 0.00 ? 'FREE' : `€${shippingCost.toFixed(2)}`);
@@ -507,7 +572,7 @@ class LayerStudiosQuoteEngine {
       unitPrice: unitSubtotal,
       materialCost: unitMaterialCost * quantity,
       machineCost: unitMachineCost * quantity,
-      designCost: designFee,
+      designCost: 0,
       shippingCost: shippingCost,
       discount: discountAmount,
       discountPercent: discountPercent,
