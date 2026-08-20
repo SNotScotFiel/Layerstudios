@@ -230,6 +230,9 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
                     'subtotal': float(quote.get('subtotal', 0)),
                     'finalPrice': float(quote.get('final_price', 0))
                 }
+                if not is_admin:
+                    quote.pop('internal_notes', None)
+                    quote.pop('admin_notes', None)
                 return self.send_json(200, quote)
             else:
                 return self.send_json(200, {
@@ -275,6 +278,9 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
                 order['quoteId'] = order.get('quote_id')
                 order['total'] = float(order.get('total', 0))
                 order['shippingAddress'] = {'city': order.get('city'), 'country': order.get('country'), 'address': order.get('shipping_address')}
+                if not is_admin:
+                    order.pop('internal_notes', None)
+                    order.pop('admin_notes', None)
                 return self.send_json(200, order)
             else:
                 return self.send_json(200, {
@@ -380,9 +386,15 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
                 q['projectName'] = q.get('project_name')
                 q['paymentStatus'] = q.get('payment_status')
                 q['pricing'] = {'finalPrice': float(q.get('final_price', 0))}
+                if not is_admin:
+                    q.pop('internal_notes', None)
+                    q.pop('admin_notes', None)
             for o in orders:
                 o['customerName'] = o.get('customer_name')
                 o['total'] = float(o.get('total', 0))
+                if not is_admin:
+                    o.pop('internal_notes', None)
+                    o.pop('admin_notes', None)
 
             return self.send_json(200, {
                 'success': True,
