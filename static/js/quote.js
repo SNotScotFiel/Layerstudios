@@ -536,33 +536,17 @@ class LayerStudiosQuoteEngine {
         `;
       }
 
-      let uploadedFilesData = [];
+      // Build file metadata (no base64 data — files are uploaded separately after quote creation)
+      let filesMetadata = [];
       if (this.uploadedFiles && this.uploadedFiles.length > 0) {
-        uploadedFilesData = await Promise.all(this.uploadedFiles.map(file => {
-          return new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onload = (evt) => {
-              resolve({
-                name: file.name,
-                size: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
-                data: evt.target.result,
-                dimensions: { x: this.currentTelemetry?.x || 45, y: this.currentTelemetry?.y || 35, z: this.currentTelemetry?.z || 25 },
-                volumeCm3: this.currentTelemetry?.volumeCm3 || 25.0
-              });
-            };
-            reader.onerror = () => {
-              resolve({
-                name: file.name,
-                size: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
-                dimensions: { x: this.currentTelemetry?.x || 45, y: this.currentTelemetry?.y || 35, z: this.currentTelemetry?.z || 25 },
-                volumeCm3: this.currentTelemetry?.volumeCm3 || 25.0
-              });
-            };
-            reader.readAsDataURL(file);
-          });
+        filesMetadata = this.uploadedFiles.map(file => ({
+          name: file.name,
+          size: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
+          dimensions: { x: this.currentTelemetry?.x || 45, y: this.currentTelemetry?.y || 35, z: this.currentTelemetry?.z || 25 },
+          volumeCm3: this.currentTelemetry?.volumeCm3 || 25.0
         }));
       } else {
-        uploadedFilesData = [{
+        filesMetadata = [{
           name: 'project_spec.stl',
           size: '1.8 MB',
           dimensions: { x: this.currentTelemetry?.x || 45, y: this.currentTelemetry?.y || 35, z: this.currentTelemetry?.z || 25 },
@@ -578,7 +562,7 @@ class LayerStudiosQuoteEngine {
         projectName: document.getElementById('quote-project-name')?.value || 'Custom 3D Print Request',
         description: document.getElementById('quote-description')?.value || '',
         hasModel: this.hasModel,
-        files: uploadedFilesData,
+        files: filesMetadata,
         material: document.getElementById('quote-material')?.value || 'PETG',
         color: document.getElementById('quote-selected-color')?.value || 'Matte Black',
         quality: document.getElementById('quote-quality')?.value || 'Standard (0.20mm)',
@@ -601,7 +585,23 @@ class LayerStudiosQuoteEngine {
         const data = await res.json();
 
         if (res.ok && data.success) {
-          this.showQuoteSuccessModal(data.quote || payload, data.quoteId || 'LS-1048');
+          const quoteId = data.quoteId || 'LS-1048';
+
+          // Upload actual binary files separately in the background (non-blocking)
+          if (this.uploadedFiles && this.uploadedFiles.length > 0) {
+            for (const file of this.uploadedFiles) {
+              try {
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('quoteId', quoteId);
+                fetch('/api/upload-file', { method: 'POST', body: formData }).catch(() => {});
+              } catch (uploadErr) {
+                console.warn('Background file upload failed:', uploadErr);
+              }
+            }
+          }
+
+          this.showQuoteSuccessModal(data.quote || payload, quoteId);
           form.reset();
           this.uploadedFiles = [];
           const listEl = document.getElementById('uploaded-files-list');

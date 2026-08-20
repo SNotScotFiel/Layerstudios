@@ -226,7 +226,7 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
             
             quote_id = f'LS-{next_num}'
             
-            # Process and persist uploaded 3D CAD files
+            # Build file metadata (binary uploads arrive separately via /api/upload-file)
             processed_files = []
             for f in payload.get('files', []):
                 fname = f.get('name', 'model.stl')
@@ -234,24 +234,6 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
                 if not safe_fname:
                     safe_fname = 'model.stl'
                 disk_filename = f'{quote_id}_{safe_fname}'
-                disk_path = os.path.join(UPLOADS_DIR, disk_filename)
-                
-                # Check if base64 payload exists
-                b64_data = f.get('data', '')
-                if b64_data:
-                    try:
-                        if ',' in b64_data:
-                            b64_data = b64_data.split(',', 1)[1]
-                        file_bytes = base64.b64decode(b64_data)
-                        with open(disk_path, 'wb') as out_f:
-                            out_f.write(file_bytes)
-                    except Exception as e:
-                        print(f'Error writing uploaded file: {e}')
-                else:
-                    # Create placeholder 3D spec file if raw bytes were omitted
-                    if not os.path.exists(disk_path):
-                        with open(disk_path, 'w', encoding='utf-8') as out_f:
-                            out_f.write(f'solid {safe_fname}\n  facet normal 0 0 0\n    outer loop\n      vertex 0 0 0\n      vertex 10 0 0\n      vertex 0 10 0\n    endloop\n  endfacet\nendsolid\n')
                 
                 processed_files.append({
                     'name': fname,
@@ -363,6 +345,79 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
                 })
             except Exception as e:
                 return self.send_json(400, {'error': f'Failed to upload file: {e}'})
+
+        # 3b. Multipart File Upload (FormData with quoteId)
+        if path == '/api/upload-file':
+            try:
+                content_type = self.headers.get('Content-Type', '')
+                if 'multipart/form-data' not in content_type:
+                    return self.send_json(400, {'error': 'Expected multipart/form-data'})
+                
+                # Parse multipart boundary
+                boundary = content_type.split('boundary=')[-1].strip()
+                content_length = int(self.headers.get('Content-Length', 0))
+                body = self.rfile.read(content_length)
+                
+                # Simple multipart parser
+                parts = body.split(('--' + boundary).encode())
+                quote_id = ''
+                file_data = b''
+                file_name = 'model.stl'
+                
+                for part in parts:
+                    if b'name="quoteId"' in part:
+                        # Extract quoteId value
+                        val = part.split(b'\r\n\r\n', 1)
+                        if len(val) > 1:
+                            quote_id = val[1].strip(b'\r\n-').decode('utf-8', errors='ignore').strip()
+                    elif b'name="file"' in part:
+                        # Extract filename
+                        header_section = part.split(b'\r\n\r\n', 1)
+                        if len(header_section) > 1:
+                            file_data = header_section[1].rstrip(b'\r\n-')
+                            # Get filename from Content-Disposition
+                            header_text = header_section[0].decode('utf-8', errors='ignore')
+                            if 'filename="' in header_text:
+                                file_name = header_text.split('filename="')[1].split('"')[0]
+                
+                if not quote_id:
+                    quote_id = f'LS-{int(time.time()) % 10000}'
+                
+                safe_name = ''.join(c for c in file_name if c.isalnum() or c in '._- ')
+                if not safe_name:
+                    safe_name = 'model.stl'
+                disk_filename = f'{quote_id}_{safe_name}'.replace(' ', '_')
+                save_path = os.path.join(UPLOADS_DIR, disk_filename)
+                
+                with open(save_path, 'wb') as f:
+                    f.write(file_data)
+                
+                # Update quote record with file URL
+                db = load_db()
+                for q in db.get('quotes', []):
+                    if q.get('id') == quote_id:
+                        for fentry in q.get('files', []):
+                            if fentry.get('name', '') == file_name:
+                                fentry['url'] = f'/uploads/{disk_filename}'
+                                break
+                        else:
+                            q.setdefault('files', []).append({
+                                'name': file_name,
+                                'size': f'{round(len(file_data) / (1024*1024), 2)} MB',
+                                'url': f'/uploads/{disk_filename}'
+                            })
+                        save_db(db)
+                        break
+                
+                return self.send_json(200, {
+                    'success': True,
+                    'url': f'/uploads/{disk_filename}',
+                    'filename': disk_filename,
+                    'sizeMB': round(len(file_data) / (1024 * 1024), 2)
+                })
+            except Exception as e:
+                print(f'Multipart upload error: {e}')
+                return self.send_json(400, {'error': f'Upload failed: {e}'})
 
         # 4. Contact Form Submission
         if path == '/api/contact':
