@@ -198,7 +198,7 @@ class LayerStudiosTracker {
             id: data.id,
             amount: price,
             title: data.projectName || '3D Printing Order',
-            phone: data.phone || '+351 912 345 678',
+            phone: data.phone || '+351 962 118 770',
             email: data.email || '',
             onSuccess: (method) => {
               window.location.reload();

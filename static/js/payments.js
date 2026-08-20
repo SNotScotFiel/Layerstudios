@@ -94,7 +94,7 @@ class LayerStudiosPayments {
         <div id="pay-view-mbway" class="hidden space-y-4">
           <div class="p-4 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-xs space-y-2 text-slate-300">
             <p class="font-semibold text-blue-300">📱 Pagamento MB WAY Direto:</p>
-            <p class="text-[11px] text-slate-400">Envie o montante para o número de contacto oficial Layer Studios: <strong class="text-white font-mono">+351 912 345 678</strong>. Indique a referência <strong id="pay-mbway-ref-desc" class="text-blue-400 font-mono">LS-XXXX</strong> no descritivo.</p>
+            <p class="text-[11px] text-slate-400">Envie o montante para o número de contacto oficial Layer Studios: <strong class="text-white font-mono">+351 962 118 770</strong>. Indique a referência <strong id="pay-mbway-ref-desc" class="text-blue-400 font-mono">LS-XXXX</strong> no descritivo.</p>
           </div>
 
           <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-2 text-center text-xs text-slate-400">
@@ -240,7 +240,7 @@ class LayerStudiosPayments {
     modal.querySelector('#pay-btn-track-mb').onclick = () => this.handleTrackPayment();
   }
 
-  openPayment({ type = 'order', id, amount, title, phone = '+351 912 345 678', email = '', onSuccess }) {
+  openPayment({ type = 'order', id, amount, title, phone = '+351 962 118 770', email = '', onSuccess }) {
     this.currentPayment = { type, id, amount, title, phone, email, onSuccess };
     const modal = this.modal || document.getElementById('ls-payment-gateway-modal');
     if (!modal) return;
