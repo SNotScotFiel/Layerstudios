@@ -93,46 +93,45 @@ class LayerStudiosPayments {
         <!-- TAB 2: MB WAY -->
         <div id="pay-view-mbway" class="hidden space-y-4">
           <div class="p-4 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-xs space-y-2 text-slate-300">
-            <p class="font-semibold text-blue-300">📱 Open your MB WAY app on your phone:</p>
-            <p class="text-[11px] text-slate-400">We've sent a payment request to <strong id="pay-mbway-phone-display" class="text-white font-mono">+351 9xx xxx xxx</strong>. You have <strong>04:59</strong> to approve the notification.</p>
+            <p class="font-semibold text-blue-300">📱 Pagamento MB WAY Direto:</p>
+            <p class="text-[11px] text-slate-400">Envie o montante para o número de contacto oficial Layer Studios: <strong class="text-white font-mono">+351 912 345 678</strong>. Indique a referência <strong id="pay-mbway-ref-desc" class="text-blue-400 font-mono">LS-XXXX</strong> no descritivo.</p>
           </div>
 
-          <div class="flex items-center justify-center p-6 rounded-2xl bg-slate-950 border border-slate-800 space-y-2 flex-col text-center">
-            <div class="w-10 h-10 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-            <p class="text-xs font-mono text-slate-400 pt-2">Waiting for confirmation in MB WAY app...</p>
+          <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-2 text-center text-xs text-slate-400">
+            <p>Assim que o montante for creditado na nossa conta, a encomenda avançará imediatamente para produção.</p>
           </div>
 
-          <button type="button" id="pay-btn-simulate-mbway" class="w-full py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/25 transition-all flex items-center justify-center gap-2">
-            <span>✓ Confirm MB WAY Payment</span>
+          <button type="button" id="pay-btn-track-mbway" class="w-full py-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs shadow-lg transition-all flex items-center justify-center gap-2">
+            <span>Acompanhar Encomenda (Aguardar Verificação) &rarr;</span>
           </button>
         </div>
 
-        <!-- TAB 3: MULTIBANCO REFERENCE -->
+        <!-- TAB 3: MULTIBANCO / TRANSFERÊNCIA BANCÁRIA -->
         <div id="pay-view-multibanco" class="hidden space-y-4 text-xs font-mono">
           <div class="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
             <div class="flex items-center justify-between pb-2 border-b border-slate-800">
-              <span class="text-slate-400">Entidade (Entity):</span>
-              <strong class="text-white text-sm">21094</strong>
+              <span class="text-slate-400">Beneficiário:</span>
+              <strong class="text-white text-sm">Layer Studios Portugal</strong>
             </div>
             <div class="flex items-center justify-between pb-2 border-b border-slate-800">
-              <span class="text-slate-400">Referência (Reference):</span>
+              <span class="text-slate-400">Referência:</span>
               <div class="flex items-center gap-2">
-                <strong id="pay-mb-ref" class="text-blue-400 text-sm tracking-wider">942 108 349</strong>
+                <strong id="pay-mb-ref" class="text-blue-400 text-sm tracking-wider">LS-XXXX</strong>
                 <button type="button" id="pay-mb-copy" class="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 hover:text-white">Copy</button>
               </div>
             </div>
             <div class="flex items-center justify-between pb-2 border-b border-slate-800">
-              <span class="text-slate-400">Montante (Amount):</span>
+              <span class="text-slate-400">Montante:</span>
               <strong id="pay-mb-amount" class="text-white text-sm">€0.00</strong>
             </div>
             <div class="flex items-center justify-between text-[11px] text-slate-500">
               <span>Validade:</span>
-              <span>3 dias (72h)</span>
+              <span>3 dias úteis</span>
             </div>
           </div>
 
-          <button type="button" id="pay-btn-submit-mb" class="w-full py-3.5 rounded-xl bg-blue-500 hover:bg-blue-400 text-white font-bold text-xs shadow-lg shadow-blue-500/25 transition-all">
-            <span>✓ I have completed Multibanco payment</span>
+          <button type="button" id="pay-btn-track-mb" class="w-full py-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs shadow-lg transition-all">
+            <span>Acompanhar Encomenda (Aguardar Verificação) &rarr;</span>
           </button>
         </div>
 
@@ -174,9 +173,9 @@ class LayerStudiosPayments {
       const ref = modal.querySelector('#pay-mb-ref').textContent;
       navigator.clipboard.writeText(ref.replace(/\s+/g, ''));
       if (window.LayerStudiosApp) {
-        window.LayerStudiosApp.showToast('Referência Multibanco copiada!', 'info');
+        window.LayerStudiosApp.showToast('Referência copiada!', 'info');
       } else {
-        alert('Referência Multibanco copiada!');
+        alert('Referência copiada!');
       }
     };
 
@@ -234,11 +233,11 @@ class LayerStudiosPayments {
       }
     };
 
-    // Simulate MB WAY
-    modal.querySelector('#pay-btn-simulate-mbway').onclick = () => this.handleSuccessPayment('MB WAY');
+    // Track MB WAY
+    modal.querySelector('#pay-btn-track-mbway').onclick = () => this.handleTrackPayment();
 
-    // Submit Multibanco
-    modal.querySelector('#pay-btn-submit-mb').onclick = () => this.handleSuccessPayment('Multibanco Reference');
+    // Track Multibanco
+    modal.querySelector('#pay-btn-track-mb').onclick = () => this.handleTrackPayment();
   }
 
   openPayment({ type = 'order', id, amount, title, phone = '+351 912 345 678', email = '', onSuccess }) {
@@ -249,45 +248,18 @@ class LayerStudiosPayments {
     modal.querySelector('#pay-modal-desc').textContent = `${title || 'Order'} (${id})`;
     modal.querySelector('#pay-modal-amount').textContent = `€${amount.toFixed(2)}`;
     modal.querySelector('#pay-mb-amount').textContent = `€${amount.toFixed(2)}`;
-    modal.querySelector('#pay-mbway-phone-display').textContent = phone;
-
-    // Generate pseudo MB reference from ID
-    const cleanNum = id.replace(/[^0-9]/g, '') || '84920';
-    const mbRef = `${cleanNum.padEnd(3, '9').slice(0,3)} ${cleanNum.padEnd(6, '4').slice(0,3)} ${cleanNum.padEnd(9, '1').slice(0,3)}`;
-    modal.querySelector('#pay-mb-ref').textContent = mbRef;
+    const mbwayRefDesc = modal.querySelector('#pay-mbway-ref-desc');
+    if (mbwayRefDesc) mbwayRefDesc.textContent = id;
+    modal.querySelector('#pay-mb-ref').textContent = id;
 
     modal.classList.remove('hidden');
   }
 
-  async handleSuccessPayment(method) {
+  handleTrackPayment() {
     if (!this.currentPayment) return;
-    const { type, id, onSuccess } = this.currentPayment;
-
-    try {
-      if (type === 'quote') {
-        await fetch('/api/quotes', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id, status: 'Preparing', paymentStatus: 'Paid', paymentMethod: method })
-        });
-      } else {
-        await fetch('/api/orders', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id, status: 'Preparing', paymentStatus: 'Paid', paymentMethod: method })
-        });
-      }
-    } catch (err) {
-      console.error('Payment sync error:', err);
-    }
-
+    const { id } = this.currentPayment;
     if (this.modal) this.modal.classList.add('hidden');
-
-    if (typeof onSuccess === 'function') {
-      onSuccess(method);
-    } else {
-      window.location.href = `/track?id=${id}&paid=true`;
-    }
+    window.location.href = `/track?id=${encodeURIComponent(id)}`;
   }
 }
 

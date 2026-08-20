@@ -6,7 +6,8 @@
 
 class LayerStudiosAdmin {
   constructor() {
-    this.isAuthenticated = false;
+    this.token = sessionStorage.getItem('ls_admin_token') || '';
+    this.isAuthenticated = Boolean(this.token);
     this.quotes = [];
     this.orders = [];
     this.currentEditingQuote = null;
@@ -18,13 +19,15 @@ class LayerStudiosAdmin {
     this.setupAuth();
     this.setupTabNavigation();
     this.setupEmailPreviewSandbox();
+    if (this.isAuthenticated) {
+      this.loadAdminData();
+    }
   }
 
   setupAuth() {
     const authModal = document.getElementById('admin-auth-modal');
     const authForm = document.getElementById('admin-auth-form');
     const authPinInput = document.getElementById('admin-auth-pin');
-    const dashboardSection = document.getElementById('admin-dashboard-view');
     const navAdminBtn = document.querySelectorAll('.admin-portal-trigger');
 
     navAdminBtn.forEach(btn => {
@@ -39,16 +42,36 @@ class LayerStudiosAdmin {
     });
 
     if (authForm) {
-      authForm.addEventListener('submit', (e) => {
+      authForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const pin = authPinInput ? authPinInput.value.trim() : '';
-        if (pin === 'cavalao123') {
-          this.isAuthenticated = true;
-          if (authModal) authModal.classList.add('hidden');
-          window.LayerStudiosApp && window.LayerStudiosApp.showToast('Admin Access Granted. Welcome back, Studio Lead.', 'success');
-          this.openDashboard();
-        } else {
-          window.LayerStudiosApp && window.LayerStudiosApp.showToast('Invalid Password.', 'error');
+        const submitBtn = authForm.querySelector('button[type="submit"]');
+        const origText = submitBtn ? submitBtn.textContent : 'Login';
+        if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Verifying...'; }
+
+        try {
+          const res = await fetch('/api/admin/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password: pin })
+          });
+          const data = await res.json();
+
+          if (res.ok && data.token) {
+            this.token = data.token;
+            this.isAuthenticated = true;
+            sessionStorage.setItem('ls_admin_token', data.token);
+            if (authModal) authModal.classList.add('hidden');
+            if (authPinInput) authPinInput.value = '';
+            window.LayerStudiosApp && window.LayerStudiosApp.showToast('Admin Access Granted. Welcome back, Studio Lead.', 'success');
+            this.openDashboard();
+          } else {
+            window.LayerStudiosApp && window.LayerStudiosApp.showToast(data.error || 'Invalid Password.', 'error');
+          }
+        } catch (err) {
+          window.LayerStudiosApp && window.LayerStudiosApp.showToast('Authentication error. Please try again.', 'error');
+        } finally {
+          if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = origText; }
         }
       });
     }
@@ -84,11 +107,20 @@ class LayerStudiosAdmin {
 
   async loadAdminData() {
     try {
+      const headers = this.token ? { 'Authorization': `Bearer ${this.token}` } : {};
       const [qRes, oRes, sRes] = await Promise.all([
-        fetch('/api/quotes'),
-        fetch('/api/orders'),
-        fetch('/api/stats')
+        fetch('/api/quotes', { headers }),
+        fetch('/api/orders', { headers }),
+        fetch('/api/stats', { headers })
       ]);
+
+      if (qRes.status === 403 || oRes.status === 403) {
+        this.isAuthenticated = false;
+        sessionStorage.removeItem('ls_admin_token');
+        const authModal = document.getElementById('admin-auth-modal');
+        if (authModal) authModal.classList.remove('hidden');
+        return;
+      }
 
       if (qRes.ok) this.quotes = await qRes.json();
       if (oRes.ok) this.orders = await oRes.json();
@@ -252,7 +284,8 @@ class LayerStudiosAdmin {
       if (quote.files && quote.files.length > 0) {
         filesContainer.innerHTML = quote.files.map(f => {
           const safeName = (f.name || 'model.stl').replace(/[^a-zA-Z0-9._-]/g, '');
-          const fileUrl = f.url || `/uploads/${quote.id}_${safeName}`;
+          const diskName = `${quote.id}_${safeName}`;
+          const fileUrl = `/api/files/${diskName}?admin_token=${encodeURIComponent(this.token)}`;
           return `
             <div class="flex items-center justify-between p-3 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition-all gap-3">
               <div class="flex items-center gap-2.5 overflow-hidden">
@@ -303,7 +336,10 @@ class LayerStudiosAdmin {
       deleteBtn.onclick = async () => {
         if (confirm(`Are you sure you want to permanently delete Quote ${quote.id}?`)) {
           try {
-            await fetch(`/api/quotes/${quote.id}`, { method: 'DELETE' });
+            await fetch(`/api/quotes/${quote.id}`, {
+              method: 'DELETE',
+              headers: { 'Authorization': `Bearer ${this.token}` }
+            });
             modal.classList.add('hidden');
             this.quotes = this.quotes.filter(q => q.id !== quote.id);
             this.renderQuotesTable();
@@ -320,9 +356,12 @@ class LayerStudiosAdmin {
       saveBtn.onclick = async () => {
         const updatedStatus = document.getElementById('inspect-status-select')?.value || 'Under Review';
         try {
-          const res = await fetch(`/api/quotes`, {
+          await fetch(`/api/quotes/${quote.id}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${this.token}`
+            },
             body: JSON.stringify({
               id: quote.id,
               status: updatedStatus
@@ -379,7 +418,10 @@ class LayerStudiosAdmin {
         try {
           await fetch(`/api/orders/${o.id}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${this.token}`
+            },
             body: JSON.stringify({ status: newStatus })
           });
           window.LayerStudiosApp && window.LayerStudiosApp.showToast(`Updated ${o.id} to ${newStatus}`, 'success');

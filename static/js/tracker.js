@@ -40,19 +40,19 @@ class LayerStudiosTracker {
       if (input) input.value = queryId;
 
       if (isPaid) {
-        // Sync payment status with backend
-        try {
-          const endpoint = queryId.startsWith('LS') ? '/api/quotes' : '/api/orders';
-          await fetch(endpoint, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: queryId, paymentStatus: 'Paid', status: 'Preparing', paymentMethod: 'Stripe (Apple Pay / Google Pay / Card)' })
-          });
-          if (window.LayerStudiosApp) {
-            window.LayerStudiosApp.showToast('🎉 Pagamento confirmado com sucesso! A produção foi iniciada.', 'success');
+        const sessionId = urlParams.get('session_id');
+        if (sessionId) {
+          try {
+            const verifyRes = await fetch(`/api/verify-payment?id=${encodeURIComponent(queryId)}&sessionId=${encodeURIComponent(sessionId)}`);
+            const verifyData = await verifyRes.json();
+            if (verifyRes.ok && verifyData.paid) {
+              if (window.LayerStudiosApp) {
+                window.LayerStudiosApp.showToast('🎉 Pagamento verificado com sucesso via Stripe! A produção foi iniciada.', 'success');
+              }
+            }
+          } catch (e) {
+            console.warn('Payment verification error:', e);
           }
-        } catch (e) {
-          console.warn('Auto-sync payment status error:', e);
         }
       }
 
