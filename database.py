@@ -757,7 +757,28 @@ class DatabaseManager:
 
         sql = f"UPDATE quotes SET {', '.join(fields)} WHERE id = ? OR public_reference = ?"
         self.execute(sql, params)
-        return self.get_quote_by_id_or_ref(quote_id)
+
+        quote = self.get_quote_by_id_or_ref(quote_id)
+        if quote and 'status' in updates:
+            new_status = updates['status']
+            q_id = quote.get('public_reference') or quote.get('id')
+            try:
+                self.execute(self.format_query('''
+                    INSERT INTO notifications (id, user_id, order_id, email, title, message, status, read, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?)
+                '''), (
+                    f'notif_{uuid.uuid4().hex[:8]}',
+                    quote.get('customer_id'),
+                    q_id,
+                    (quote.get('guest_email') or '').strip().lower(),
+                    f'Estado Atualizado ({q_id})',
+                    f'O seu pedido "{quote.get("project_name") or q_id}" avançou para: {new_status}.',
+                    new_status,
+                    now_str
+                ))
+            except Exception as ex:
+                pass
+        return quote
 
     def delete_quote(self, quote_id):
         self.execute('DELETE FROM quotes WHERE id = ? OR public_reference = ?', (quote_id, quote_id))
@@ -877,7 +898,28 @@ class DatabaseManager:
 
         sql = f"UPDATE orders SET {', '.join(fields)} WHERE id = ? OR public_reference = ?"
         self.execute(sql, params)
-        return self.get_order_by_id_or_ref(order_id)
+
+        order = self.get_order_by_id_or_ref(order_id)
+        if order and 'status' in updates:
+            new_status = updates['status']
+            o_id = order.get('public_reference') or order.get('id')
+            try:
+                self.execute(self.format_query('''
+                    INSERT INTO notifications (id, user_id, order_id, email, title, message, status, read, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?)
+                '''), (
+                    f'notif_{uuid.uuid4().hex[:8]}',
+                    order.get('customer_id'),
+                    o_id,
+                    (order.get('email') or '').strip().lower(),
+                    f'Estado da Encomenda Atualizado ({o_id})',
+                    f'A sua encomenda {o_id} avançou para: {new_status}.',
+                    new_status,
+                    now_str
+                ))
+            except Exception as ex:
+                pass
+        return order
 
     def delete_order(self, order_id):
         self.execute('DELETE FROM orders WHERE id = ? OR public_reference = ?', (order_id, order_id))

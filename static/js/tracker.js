@@ -213,8 +213,75 @@ class LayerStudiosTracker {
     // 10-Stage Milestone Pipeline rendering
     this.render10StageTimeline(currentStatus, data);
 
+    // Auto-subscribe to live notifications for this order/quote
+    if (window.LayerStudiosNotifications) {
+      window.LayerStudiosNotifications.addTrackedOrderId(data.id);
+      window.LayerStudiosNotifications.loadInitialNotifications();
+    }
+    this.renderNotificationAlertCard(data);
+
     container.classList.remove('hidden');
     container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  renderNotificationAlertCard(data) {
+    let card = document.getElementById('tracker-notif-alert-card');
+    if (!card) {
+      card = document.createElement('div');
+      card.id = 'tracker-notif-alert-card';
+      const container = document.getElementById('tracker-result-container');
+      if (container) {
+        container.insertBefore(card, container.children[1] || container.firstChild);
+      }
+    }
+
+    const hasPermission = ('Notification' in window) && Notification.permission === 'granted';
+
+    card.className = 'p-4 sm:p-5 rounded-2xl bg-slate-900/90 border border-slate-800 backdrop-blur-md flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg';
+    card.innerHTML = `
+      <div class="flex items-center gap-3.5 w-full sm:w-auto">
+        <div class="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/25 flex items-center justify-center text-blue-400 shrink-0">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+          </svg>
+        </div>
+        <div class="flex-1">
+          <div class="flex items-center gap-2">
+            <h4 class="text-xs sm:text-sm font-bold text-white leading-tight">Alertas em Tempo Real</h4>
+            <span class="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold ${hasPermission ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'}">
+              ${hasPermission ? '● Ativo' : '● Em Direto'}
+            </span>
+          </div>
+          <p class="text-[11px] text-slate-400 mt-0.5 leading-relaxed">
+            Receba notificações automáticas no sino do topo e no navegador sempre que a sua peça <strong class="text-white font-mono">${data.id}</strong> mudar de estado.
+          </p>
+        </div>
+      </div>
+      <button type="button" id="btn-subscribe-push-alerts" class="w-full sm:w-auto px-4 py-2.5 rounded-xl ${hasPermission ? 'bg-emerald-950/60 text-emerald-300 border border-emerald-500/30' : 'bg-slate-800 hover:bg-blue-600 text-white border border-slate-700 hover:border-blue-500'} font-semibold text-xs transition-all whitespace-nowrap flex items-center justify-center gap-2 shrink-0">
+        <span>${hasPermission ? '🔔 Notificações Ativas' : '🔔 Ativar Alertas no Navegador'}</span>
+      </button>
+    `;
+
+    const btn = card.querySelector('#btn-subscribe-push-alerts');
+    if (btn) {
+      btn.onclick = async () => {
+        if (window.LayerStudiosNotifications) {
+          window.LayerStudiosNotifications.addTrackedOrderId(data.id);
+          const granted = await window.LayerStudiosNotifications.requestBrowserNotificationPermission();
+          if (granted) {
+            btn.innerHTML = '<span>🔔 Notificações Ativas</span>';
+            btn.className = 'w-full sm:w-auto px-4 py-2.5 rounded-xl bg-emerald-950/60 text-emerald-300 border border-emerald-500/30 font-semibold text-xs transition-all whitespace-nowrap flex items-center justify-center gap-2 shrink-0';
+            if (window.LayerStudiosApp) {
+              window.LayerStudiosApp.showToast(`🔔 Notificações ativadas para ${data.id}!`, 'success');
+            }
+          } else {
+            if (window.LayerStudiosApp) {
+              window.LayerStudiosApp.showToast(`Alertas em direto registados no Centro de Notificações.`, 'info');
+            }
+          }
+        }
+      };
+    }
   }
 
   render10StageTimeline(currentStatus, data) {

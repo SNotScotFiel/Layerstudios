@@ -240,40 +240,83 @@ class LayerStudiosNotifications {
     } catch (e) {}
   }
 
+  async requestBrowserNotificationPermission() {
+    if (!('Notification' in window)) return false;
+    if (Notification.permission === 'granted') return true;
+    if (Notification.permission !== 'denied') {
+      const permission = await Notification.requestPermission();
+      return permission === 'granted';
+    }
+    return false;
+  }
+
   startLivePolling() {
     if (this.pollInterval) clearInterval(this.pollInterval);
 
-    // Poll every 15 seconds for live status updates
+    // Poll every 10 seconds for live status updates
     this.pollInterval = setInterval(async () => {
       const email = this.getUserEmail();
       const orderIds = this.getTrackedOrderIds();
       if (!email && orderIds.length === 0) return;
 
-      try {
-        const url = `/api/customer/orders?email=${encodeURIComponent(email)}&token=${encodeURIComponent(localStorage.getItem('ls_auth_token') || '')}`;
-        const res = await fetch(url);
-        if (!res.ok) return;
-        const data = await res.json();
+      // 1. If we have an email or account, query account orders
+      if (email) {
+        try {
+          const url = `/api/customer/orders?email=${encodeURIComponent(email)}&token=${encodeURIComponent(localStorage.getItem('ls_auth_token') || '')}`;
+          const res = await fetch(url);
+          if (res.ok) {
+            const data = await res.json();
+            const allItems = [...(data.quotes || []), ...(data.orders || [])];
+            allItems.forEach(item => {
+              const id = item.id;
+              const currentStatus = item.status || 'Quote Requested';
+              const previousStatus = this.knownStatuses[id];
 
-        const allItems = [...(data.quotes || []), ...(data.orders || [])];
-        allItems.forEach(item => {
-          const id = item.id;
-          const currentStatus = item.status || 'Quote Requested';
-          const previousStatus = this.knownStatuses[id];
-
-          if (previousStatus && previousStatus !== currentStatus) {
-            // Status changed! Trigger live toast popup on website
-            this.showLiveStatusToast(id, currentStatus, item.projectName || item.id);
-            this.loadInitialNotifications();
+              if (previousStatus && previousStatus !== currentStatus) {
+                this.showLiveStatusToast(id, currentStatus, item.projectName || item.id);
+                this.loadInitialNotifications();
+              }
+              this.knownStatuses[id] = currentStatus;
+            });
           }
+        } catch (e) {}
+      }
 
-          this.knownStatuses[id] = currentStatus;
-        });
-      } catch (e) {}
-    }, 15000);
+      // 2. Poll individual tracked order/quote IDs (for guests and direct trackers)
+      for (const id of orderIds) {
+        try {
+          const res = await fetch(`/api/track/${encodeURIComponent(id)}`);
+          if (res.ok) {
+            const data = await res.json();
+            const currentStatus = data.data?.status || 'Under Review';
+            const previousStatus = this.knownStatuses[id];
+
+            if (previousStatus && previousStatus !== currentStatus) {
+              this.showLiveStatusToast(id, currentStatus, data.data?.projectName || id);
+              this.loadInitialNotifications();
+            }
+            this.knownStatuses[id] = currentStatus;
+          }
+        } catch (e) {}
+      }
+
+      // Also refresh the notification badge & list
+      this.loadInitialNotifications();
+    }, 10000);
   }
 
   showLiveStatusToast(orderId, newStatus, title) {
+    // 1. Browser Native Push Notification (if granted)
+    if ('Notification' in window && Notification.permission === 'granted') {
+      try {
+        new Notification(`Layer Studios · ${orderId}`, {
+          body: `O estado da sua peça avançou para: ${newStatus}`,
+          icon: '/static/assets/logo.svg'
+        });
+      } catch (e) {}
+    }
+
+    // 2. In-App Floating Toast
     const toast = document.createElement('div');
     toast.className = 'fixed top-20 right-4 sm:right-6 z-50 p-4 rounded-2xl bg-slate-900 border-2 border-blue-500 text-white shadow-2xl shadow-blue-500/25 max-w-sm w-full animate-fade-in flex items-start gap-3 backdrop-blur-md';
     toast.innerHTML = `

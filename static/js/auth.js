@@ -358,6 +358,14 @@ class LayerStudiosAuth {
     const activeCount = allItems.filter(i => ['Preparing', 'Printing', 'Quality Inspection'].includes(i.status)).length;
     if (statActiveEl) statActiveEl.textContent = activeCount;
 
+    // Register all IDs for live tracking notifications
+    if (window.LayerStudiosNotifications) {
+      allItems.forEach(item => {
+        if (item.id) window.LayerStudiosNotifications.addTrackedOrderId(item.id);
+      });
+      window.LayerStudiosNotifications.loadInitialNotifications();
+    }
+
     if (!listEl) return;
 
     if (allItems.length === 0) {
