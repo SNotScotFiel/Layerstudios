@@ -106,9 +106,9 @@ class LayerStudiosAuth {
       localStorage.setItem('ls_user', JSON.stringify(data.user));
       localStorage.removeItem('ls_guest');
 
-      // Add to notifications
-      if (window.LayerStudiosNotifications) {
-        window.LayerStudiosNotifications.updateNavAccountUI();
+      // Update account status across navigation
+      this.updateNavAccountUI();
+      if (window.LayerStudiosNotifications?.loadInitialNotifications) {
         window.LayerStudiosNotifications.loadInitialNotifications();
       }
 
@@ -153,8 +153,8 @@ class LayerStudiosAuth {
       localStorage.setItem('ls_user', JSON.stringify(data.user));
       localStorage.removeItem('ls_guest');
 
-      if (window.LayerStudiosNotifications) {
-        window.LayerStudiosNotifications.updateNavAccountUI();
+      this.updateNavAccountUI();
+      if (window.LayerStudiosNotifications?.loadInitialNotifications) {
         window.LayerStudiosNotifications.loadInitialNotifications();
       }
 
@@ -192,12 +192,12 @@ class LayerStudiosAuth {
 
       localStorage.setItem('ls_guest', JSON.stringify({ query, email: query.includes('@') ? query : '' }));
       if (!query.includes('@')) {
-        // Track ID
-        if (window.LayerStudiosNotifications) {
+        if (window.LayerStudiosNotifications?.addTrackedOrderId) {
           window.LayerStudiosNotifications.addTrackedOrderId(query);
         }
       }
 
+      this.updateNavAccountUI();
       this.renderGuestDashboard(data);
     } catch (err) {
       if (errEl) {
@@ -209,6 +209,29 @@ class LayerStudiosAuth {
     }
   }
 
+  updateNavAccountUI() {
+    const userJson = localStorage.getItem('ls_user');
+    const guestJson = localStorage.getItem('ls_guest');
+    let label = 'Sign In / Sign Up';
+    if (userJson) {
+      try {
+        const u = JSON.parse(userJson);
+        label = u.name ? u.name.split(' ')[0] : 'Conta';
+      } catch (e) {
+        label = 'Conta';
+      }
+    } else if (guestJson) {
+      label = 'Convidado';
+    }
+
+    document.querySelectorAll('a[href="/login"]').forEach(link => {
+      const spans = link.querySelectorAll('span');
+      if (spans.length > 0) {
+        spans[spans.length - 1].textContent = label;
+      }
+    });
+  }
+
   handleLogout() {
     this.user = null;
     this.token = '';
@@ -216,9 +239,7 @@ class LayerStudiosAuth {
     localStorage.removeItem('ls_user');
     localStorage.removeItem('ls_guest');
 
-    if (window.LayerStudiosNotifications) {
-      window.LayerStudiosNotifications.updateNavAccountUI();
-    }
+    this.updateNavAccountUI();
 
     const authContainer = document.getElementById('auth-forms-container');
     const dashboardContainer = document.getElementById('auth-dashboard-container');
