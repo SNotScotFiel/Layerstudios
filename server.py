@@ -182,6 +182,9 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
             self.send_response(200)
             self.send_header('Content-Type', mime_type)
             self.send_header('Content-Length', str(len(content)))
+            if path.startswith('/uploads/'):
+                filename = os.path.basename(filepath)
+                self.send_header('Content-Disposition', f'attachment; filename="{filename}"')
             self.end_headers()
             self.wfile.write(content)
         else:
@@ -209,19 +212,55 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
             quotes = db.setdefault('quotes', [])
             
             # Generate LS-XXXX ID
-            existing_ids = [q.get('id', '') for q in quotes if q.get('id', '').startswith('LS-')]
-            next_num = 1051
-            if existing_ids:
+            next_num = 1050 + len(quotes) + 1
+            if quotes:
                 nums = []
-                for qid in existing_ids:
+                for q in quotes:
                     try:
-                        nums.append(int(qid.replace('LS-', '')))
+                        num_part = int(q.get('id', '').replace('LS-', ''))
+                        nums.append(num_part)
                     except ValueError:
                         pass
                 if nums:
                     next_num = max(nums) + 1
             
             quote_id = f'LS-{next_num}'
+            
+            # Process and persist uploaded 3D CAD files
+            processed_files = []
+            for f in payload.get('files', []):
+                fname = f.get('name', 'model.stl')
+                safe_fname = ''.join(c for c in fname if c.isalnum() or c in '._-')
+                if not safe_fname:
+                    safe_fname = 'model.stl'
+                disk_filename = f'{quote_id}_{safe_fname}'
+                disk_path = os.path.join(UPLOADS_DIR, disk_filename)
+                
+                # Check if base64 payload exists
+                b64_data = f.get('data', '')
+                if b64_data:
+                    try:
+                        if ',' in b64_data:
+                            b64_data = b64_data.split(',', 1)[1]
+                        file_bytes = base64.b64decode(b64_data)
+                        with open(disk_path, 'wb') as out_f:
+                            out_f.write(file_bytes)
+                    except Exception as e:
+                        print(f'Error writing uploaded file: {e}')
+                else:
+                    # Create placeholder 3D spec file if raw bytes were omitted
+                    if not os.path.exists(disk_path):
+                        with open(disk_path, 'w', encoding='utf-8') as out_f:
+                            out_f.write(f'solid {safe_fname}\n  facet normal 0 0 0\n    outer loop\n      vertex 0 0 0\n      vertex 10 0 0\n      vertex 0 10 0\n    endloop\n  endfacet\nendsolid\n')
+                
+                processed_files.append({
+                    'name': fname,
+                    'size': f.get('size', '1.2 MB'),
+                    'url': f'/uploads/{disk_filename}',
+                    'dimensions': f.get('dimensions', {'x': 45, 'y': 35, 'z': 25}),
+                    'volumeCm3': f.get('volumeCm3', 25.0)
+                })
+
             new_quote = {
                 'id': quote_id,
                 'createdAt': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
@@ -232,7 +271,7 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
                 'projectName': payload.get('projectName', 'Custom 3D Print Request'),
                 'description': payload.get('description', ''),
                 'hasModel': payload.get('hasModel', True),
-                'files': payload.get('files', []),
+                'files': processed_files,
                 'material': payload.get('material', 'PETG'),
                 'color': payload.get('color', 'Matte Black'),
                 'quality': payload.get('quality', 'Standard (0.20mm)'),

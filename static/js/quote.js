@@ -536,6 +536,40 @@ class LayerStudiosQuoteEngine {
         `;
       }
 
+      let uploadedFilesData = [];
+      if (this.uploadedFiles && this.uploadedFiles.length > 0) {
+        uploadedFilesData = await Promise.all(this.uploadedFiles.map(file => {
+          return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (evt) => {
+              resolve({
+                name: file.name,
+                size: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
+                data: evt.target.result,
+                dimensions: { x: this.currentTelemetry?.x || 45, y: this.currentTelemetry?.y || 35, z: this.currentTelemetry?.z || 25 },
+                volumeCm3: this.currentTelemetry?.volumeCm3 || 25.0
+              });
+            };
+            reader.onerror = () => {
+              resolve({
+                name: file.name,
+                size: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
+                dimensions: { x: this.currentTelemetry?.x || 45, y: this.currentTelemetry?.y || 35, z: this.currentTelemetry?.z || 25 },
+                volumeCm3: this.currentTelemetry?.volumeCm3 || 25.0
+              });
+            };
+            reader.readAsDataURL(file);
+          });
+        }));
+      } else {
+        uploadedFilesData = [{
+          name: 'project_spec.stl',
+          size: '1.8 MB',
+          dimensions: { x: this.currentTelemetry?.x || 45, y: this.currentTelemetry?.y || 35, z: this.currentTelemetry?.z || 25 },
+          volumeCm3: this.currentTelemetry?.volumeCm3 || 25.0
+        }];
+      }
+
       const payload = {
         customerName: document.getElementById('quote-name')?.value || 'Anonymous',
         email: document.getElementById('quote-email')?.value || '',
@@ -544,17 +578,7 @@ class LayerStudiosQuoteEngine {
         projectName: document.getElementById('quote-project-name')?.value || 'Custom 3D Print Request',
         description: document.getElementById('quote-description')?.value || '',
         hasModel: this.hasModel,
-        files: this.uploadedFiles.length > 0 ? this.uploadedFiles.map(f => ({
-          name: f.name,
-          size: f.size,
-          dimensions: { x: this.currentTelemetry.x, y: this.currentTelemetry.y, z: this.currentTelemetry.z },
-          volumeCm3: this.currentTelemetry.volumeCm3
-        })) : [{
-          name: 'project_spec.stl',
-          size: '1.8 MB',
-          dimensions: { x: this.currentTelemetry.x, y: this.currentTelemetry.y, z: this.currentTelemetry.z },
-          volumeCm3: this.currentTelemetry.volumeCm3
-        }],
+        files: uploadedFilesData,
         material: document.getElementById('quote-material')?.value || 'PETG',
         color: document.getElementById('quote-selected-color')?.value || 'Matte Black',
         quality: document.getElementById('quote-quality')?.value || 'Standard (0.20mm)',

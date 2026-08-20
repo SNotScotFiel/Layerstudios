@@ -248,14 +248,26 @@ class LayerStudiosAdmin {
     const filesContainer = document.getElementById('inspect-files-list');
     if (filesContainer) {
       if (quote.files && quote.files.length > 0) {
-        filesContainer.innerHTML = quote.files.map(f => `
-          <div class="flex items-center justify-between p-2 rounded bg-slate-900 border border-slate-800">
-            <span>📦 ${f.name} (${f.size || '3D Model'})</span>
-            <span class="text-blue-400">${f.dimensions ? `${f.dimensions.x}×${f.dimensions.y}×${f.dimensions.z}mm` : ''}</span>
-          </div>
-        `).join('');
+        filesContainer.innerHTML = quote.files.map(f => {
+          const safeName = (f.name || 'model.stl').replace(/[^a-zA-Z0-9._-]/g, '');
+          const fileUrl = f.url || `/uploads/${quote.id}_${safeName}`;
+          return `
+            <div class="flex items-center justify-between p-3 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition-all gap-3">
+              <div class="flex items-center gap-2.5 overflow-hidden">
+                <span class="text-xl shrink-0">📦</span>
+                <div class="truncate">
+                  <span class="font-bold text-white text-xs block truncate">${f.name}</span>
+                  <span class="text-[10px] text-slate-400 font-mono">${f.size || '3D Model'} ${f.dimensions ? `· ${f.dimensions.x}×${f.dimensions.y}×${f.dimensions.z}mm` : ''}</span>
+                </div>
+              </div>
+              <a href="${fileUrl}" download="${f.name}" target="_blank" class="px-3.5 py-1.5 rounded-lg bg-blue-500 hover:bg-blue-400 text-white font-bold text-xs shadow-md shadow-blue-500/20 transition-all flex items-center gap-1.5 shrink-0">
+                <span>⬇️ Download</span>
+              </a>
+            </div>
+          `;
+        }).join('');
       } else {
-        filesContainer.innerHTML = '<span class="text-slate-500 italic">No files attached</span>';
+        filesContainer.innerHTML = '<span class="text-slate-500 italic text-xs">No files attached</span>';
       }
     }
 
