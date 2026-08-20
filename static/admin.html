@@ -303,20 +303,17 @@ document.addEventListener('DOMContentLoaded', () => {
   const loginError = document.getElementById('admin-login-error');
   const logoutBtn = document.getElementById('admin-logout-btn');
 
-  // Master Studio Password
-  const ADMIN_PASS = 'cavalao123';
-
   const unlockPortal = () => {
     authScreen.classList.add('hidden');
     dashboardContainer.classList.remove('hidden');
     if (typeof LayerStudiosAdmin !== 'undefined') {
       window.adminPortal = new LayerStudiosAdmin();
-      window.adminPortal.isAuthenticated = true;
       window.adminPortal.loadAdminData();
     }
   };
 
   const lockPortal = () => {
+    sessionStorage.removeItem('ls_admin_token');
     sessionStorage.removeItem('ls_admin_authenticated');
     dashboardContainer.classList.add('hidden');
     authScreen.classList.remove('hidden');
@@ -327,24 +324,46 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   // Check existing session
-  if (sessionStorage.getItem('ls_admin_authenticated') === 'true') {
+  if (sessionStorage.getItem('ls_admin_token')) {
     unlockPortal();
   }
 
   // Handle Login submission
   if (loginForm) {
-    loginForm.addEventListener('submit', (e) => {
+    loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const entered = passwordInput ? passwordInput.value.trim() : '';
-      if (entered === ADMIN_PASS) {
-        loginError.classList.add('hidden');
-        sessionStorage.setItem('ls_admin_authenticated', 'true');
-        unlockPortal();
-      } else {
-        loginError.classList.remove('hidden');
-        if (passwordInput) {
-          passwordInput.select();
+      const submitBtn = loginForm.querySelector('button[type="submit"]');
+      const origText = submitBtn ? submitBtn.textContent : 'Sign In to Portal →';
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'A autenticar...'; }
+      if (loginError) loginError.classList.add('hidden');
+
+      try {
+        const res = await fetch('/api/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: entered })
+        });
+        const data = await res.json();
+
+        if (res.ok && data.token) {
+          sessionStorage.setItem('ls_admin_token', data.token);
+          sessionStorage.setItem('ls_admin_authenticated', 'true');
+          unlockPortal();
+        } else {
+          if (loginError) {
+            loginError.textContent = data.error || 'Password incorreta. Tente novamente.';
+            loginError.classList.remove('hidden');
+          }
+          if (passwordInput) passwordInput.select();
         }
+      } catch (err) {
+        if (loginError) {
+          loginError.textContent = 'Erro de autenticação ou rede. Tente novamente.';
+          loginError.classList.remove('hidden');
+        }
+      } finally {
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = origText; }
       }
     });
   }
@@ -356,10 +375,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Auto-poll quotes while logged in
   setInterval(() => {
-    if (sessionStorage.getItem('ls_admin_authenticated') === 'true' && window.adminPortal) {
+    if (sessionStorage.getItem('ls_admin_token') && window.adminPortal) {
       window.adminPortal.loadAdminData();
     }
-  }, 5000);
+  }, 10000);
 
   // Refresh button
   document.getElementById('admin-refresh-quotes')?.addEventListener('click', () => {

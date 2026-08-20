@@ -107,6 +107,7 @@ class LayerStudiosAdmin {
 
   async loadAdminData() {
     try {
+      this.token = sessionStorage.getItem('ls_admin_token') || this.token || '';
       const headers = this.token ? { 'Authorization': `Bearer ${this.token}` } : {};
       const [qRes, oRes, sRes] = await Promise.all([
         fetch('/api/quotes', { headers }),
@@ -117,8 +118,15 @@ class LayerStudiosAdmin {
       if (qRes.status === 403 || oRes.status === 403) {
         this.isAuthenticated = false;
         sessionStorage.removeItem('ls_admin_token');
+        sessionStorage.removeItem('ls_admin_authenticated');
         const authModal = document.getElementById('admin-auth-modal');
         if (authModal) authModal.classList.remove('hidden');
+        const authScreen = document.getElementById('admin-auth-screen');
+        const dashboardContainer = document.getElementById('admin-dashboard-container');
+        if (authScreen && dashboardContainer) {
+          dashboardContainer.classList.add('hidden');
+          authScreen.classList.remove('hidden');
+        }
         return;
       }
 
@@ -209,6 +217,17 @@ class LayerStudiosAdmin {
     if (!tbody) return;
 
     tbody.innerHTML = '';
+
+    if (!this.quotes || this.quotes.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7" class="py-12 text-center text-slate-500 font-mono text-xs">
+            Nenhum pedido de orçamento pendente de momento.
+          </td>
+        </tr>
+      `;
+      return;
+    }
 
     this.quotes.forEach(q => {
       const tr = document.createElement('tr');
@@ -388,6 +407,17 @@ class LayerStudiosAdmin {
     if (!tbody) return;
 
     tbody.innerHTML = '';
+
+    if (!this.orders || this.orders.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6" class="py-12 text-center text-slate-500 font-mono text-xs">
+            Nenhuma encomenda na loja registada de momento.
+          </td>
+        </tr>
+      `;
+      return;
+    }
 
     this.orders.forEach(o => {
       const tr = document.createElement('tr');
