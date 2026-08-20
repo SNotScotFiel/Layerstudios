@@ -1,5 +1,5 @@
 
-import os, sys, json, time, urllib.parse, mimetypes, uuid, base64
+import os, sys, json, time, urllib.parse, urllib.request, mimetypes, uuid, base64, ssl
 from http.server import HTTPServer, ThreadingHTTPServer, SimpleHTTPRequestHandler
 
 # Load local .env file if present
@@ -506,11 +506,11 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
 
                 encoded_data = urllib.parse.urlencode(form_data).encode('utf-8')
                 req = urllib.request.Request('https://api.stripe.com/v1/checkout/sessions', data=encoded_data, method='POST')
-                auth_val = 'Basic ' + base64.b64encode(f'{STRIPE_SECRET_KEY}:'.encode()).decode('utf-8')
-                req.add_header('Authorization', auth_val)
+                req.add_header('Authorization', f'Bearer {STRIPE_SECRET_KEY}')
                 req.add_header('Content-Type', 'application/x-www-form-urlencoded')
 
-                with urllib.request.urlopen(req) as response:
+                ssl_ctx = ssl.create_default_context()
+                with urllib.request.urlopen(req, context=ssl_ctx, timeout=20) as response:
                     session = json.loads(response.read().decode('utf-8'))
 
                 session_id = session.get('id', '')

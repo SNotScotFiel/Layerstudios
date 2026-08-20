@@ -209,11 +209,18 @@ class LayerStudiosPayments {
           })
         });
 
-        const data = await res.json();
+        let data = {};
+        try {
+          const text = await res.text();
+          data = text ? JSON.parse(text) : {};
+        } catch (e) {
+          data = {};
+        }
+
         if (res.ok && data.url) {
           window.location.href = data.url;
         } else {
-          throw new Error(data.error || 'Failed to create checkout session');
+          throw new Error(data.error || 'Servidor em reinicialização ou erro no Stripe. Por favor tente novamente em 15 segundos.');
         }
       } catch (err) {
         console.error('Stripe checkout redirect error:', err);
