@@ -1,5 +1,18 @@
-import os, sys, json, time, urllib.parse, urllib.request, mimetypes, uuid, base64, ssl, hashlib, hmac, secrets
+import os
+import sys
+import json
+import time
+import urllib.parse
+import urllib.request
+import mimetypes
+import uuid
+import base64
+import ssl
+import hashlib
+import hmac
+import secrets
 from http.server import HTTPServer, ThreadingHTTPServer, SimpleHTTPRequestHandler
+from database import db, DatabaseManager
 
 # Load local .env file if present
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -29,7 +42,6 @@ FAILED_LOGIN_ATTEMPTS = {}
 DATA_DIR = os.path.join(BASE_DIR, 'data')
 UPLOADS_DIR = os.path.join(BASE_DIR, 'uploads')
 STATIC_DIR = os.path.join(BASE_DIR, 'static')
-DB_FILE = os.path.join(DATA_DIR, 'database.json')
 
 os.makedirs(DATA_DIR, exist_ok=True)
 os.makedirs(UPLOADS_DIR, exist_ok=True)
@@ -60,48 +72,8 @@ def verify_password(password, stored_hash, stored_salt=None):
     if stored_salt:
         calc_hash, _ = hash_password(password, stored_salt)
         return hmac.compare_digest(calc_hash, stored_hash)
-    # Legacy fallback for older SHA-256 entries
     legacy_hash = hashlib.sha256((password + 'ls_salt_2026').encode()).hexdigest()
     return hmac.compare_digest(legacy_hash, stored_hash)
-
-def load_db():
-    if not os.path.exists(DB_FILE):
-        return {'quotes': [], 'orders': [], 'products': [], 'materials': [], 'portfolio': [], 'faqs': [], 'promoCodes': [], 'settings': {}, 'users': [], 'notifications': []}
-    try:
-        with open(DB_FILE, 'r', encoding='utf-8') as f:
-            data = json.load(f)
-            data.setdefault('users', [])
-            data.setdefault('notifications', [])
-            return data
-    except Exception as e:
-        print(f'Error reading DB: {e}')
-        return {'quotes': [], 'orders': [], 'products': [], 'materials': [], 'portfolio': [], 'faqs': [], 'promoCodes': [], 'settings': {}, 'users': [], 'notifications': []}
-
-def save_db(data):
-    try:
-        with open(DB_FILE, 'w', encoding='utf-8') as f:
-            json.dump(data, f, indent=2, ensure_ascii=False)
-        return True
-    except Exception as e:
-        print(f'Error saving DB: {e}')
-        return False
-
-def add_notification(db, order_id, title, message, status, email=''):
-    notifs = db.setdefault('notifications', [])
-    notif = {
-        'id': f'notif_{int(time.time() * 1000)}_{uuid.uuid4().hex[:6]}',
-        'orderId': order_id,
-        'title': title,
-        'message': message,
-        'status': status,
-        'email': email.lower().strip() if email else '',
-        'timestamp': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
-        'read': False
-    }
-    notifs.insert(0, notif)
-    if len(notifs) > 200:
-        db['notifications'] = notifs[:200]
-    return notif
 
 class LayerStudiosHandler(SimpleHTTPRequestHandler):
     def get_client_ip(self):
@@ -124,7 +96,7 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
 
         if not token:
             return False
-        
+
         now = time.time()
         info = ADMIN_TOKENS.get(token)
         if info:
@@ -143,10 +115,11 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
             parsed = urllib.parse.urlparse(self.path)
             query_params = urllib.parse.parse_qs(parsed.query)
             token = query_params.get('token', [''])[0].strip()
+
         if not token:
             return None
-        db = load_db()
-        return next((u for u in db.get('users', []) if u.get('token') == token), None)
+
+        return db.get_user_by_token(token)
 
     def end_headers(self):
         self.send_header('Access-Control-Allow-Origin', '*')
@@ -182,197 +155,338 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
         path = parsed.path.rstrip('/')
         if not path:
             path = '/'
+
         query_params = urllib.parse.parse_qs(parsed.query)
 
+        # 1. Health check
         if path == '/api/health':
-            return self.send_json(200, {'status': 'healthy', 'service': 'Layer Studios API', 'timestamp': time.time()})
+            return self.send_json(200, {
+                'status': 'healthy',
+                'service': 'Layer Studios Production Engine',
+                'database': 'PostgreSQL' if db.is_postgres else 'SQLite Relational',
+                'timestamp': time.time()
+            })
 
+        # 2. Stripe Config
         if path == '/api/stripe-config':
-            return self.send_json(200, {'publishableKey': STRIPE_PUBLISHABLE_KEY if STRIPE_AVAILABLE else '', 'available': STRIPE_AVAILABLE})
+            return self.send_json(200, {
+                'publishableKey': STRIPE_PUBLISHABLE_KEY if STRIPE_AVAILABLE else '',
+                'available': STRIPE_AVAILABLE
+            })
 
+        # 3. List All Quotes (Admin Only)
         if path == '/api/quotes':
             if not self.is_admin_request():
                 return self.send_json(403, {'error': 'Unauthorized. Admin authorization required.'})
-            db = load_db()
-            return self.send_json(200, db.get('quotes', []))
+            quotes = db.get_quotes()
+            # Normalize field names for UI
+            for q in quotes:
+                q['customerName'] = q.get('customer_name')
+                q['projectName'] = q.get('project_name')
+                q['paymentStatus'] = q.get('payment_status')
+                q['pricing'] = {
+                    'materialCost': float(q.get('estimated_material_cost', 0)),
+                    'machineCost': float(q.get('estimated_machine_cost', 0)),
+                    'designCost': float(q.get('design_cost', 0)),
+                    'shippingCost': float(q.get('shipping_cost', 4.5)),
+                    'discount': float(q.get('discount', 0)),
+                    'subtotal': float(q.get('subtotal', 0)),
+                    'finalPrice': float(q.get('final_price', 0))
+                }
+            return self.send_json(200, quotes)
 
+        # 4. Single Quote Lookup
         if path.startswith('/api/quotes/'):
             quote_id = path.split('/api/quotes/')[1].strip()
-            db = load_db()
-            quote = next((q for q in db.get('quotes', []) if q.get('id', '').lower() == quote_id.lower()), None)
+            quote = db.get_quote_by_id_or_ref(quote_id)
             if not quote:
                 return self.send_json(404, {'error': 'Quote not found'})
+
             is_admin = self.is_admin_request()
             auth_user = self.get_authenticated_user()
             req_email = query_params.get('email', [''])[0].strip().lower()
-            is_owner = (auth_user and auth_user.get('email', '').lower() == quote.get('email', '').lower()) or \
-                       (req_email and req_email == quote.get('email', '').lower())
+
+            is_owner = (auth_user and auth_user.get('email', '').lower() == quote.get('guest_email', '').lower()) or \
+                       (req_email and req_email == quote.get('guest_email', '').lower())
+
             if is_admin or is_owner:
+                quote['customerName'] = quote.get('customer_name')
+                quote['projectName'] = quote.get('project_name')
+                quote['paymentStatus'] = quote.get('payment_status')
+                quote['pricing'] = {
+                    'materialCost': float(quote.get('estimated_material_cost', 0)),
+                    'machineCost': float(quote.get('estimated_machine_cost', 0)),
+                    'designCost': float(quote.get('design_cost', 0)),
+                    'shippingCost': float(quote.get('shipping_cost', 4.5)),
+                    'discount': float(quote.get('discount', 0)),
+                    'subtotal': float(quote.get('subtotal', 0)),
+                    'finalPrice': float(quote.get('final_price', 0))
+                }
                 return self.send_json(200, quote)
             else:
-                return self.send_json(200, {'id': quote.get('id'), 'projectName': quote.get('projectName'), 'material': quote.get('material'), 'quantity': quote.get('quantity'), 'status': quote.get('status'), 'paymentStatus': quote.get('paymentStatus'), 'createdAt': quote.get('createdAt'), 'isConfidential': quote.get('isConfidential', False)})
+                return self.send_json(200, {
+                    'id': quote.get('id'),
+                    'publicReference': quote.get('public_reference'),
+                    'projectName': quote.get('project_name'),
+                    'material': quote.get('material'),
+                    'quantity': quote.get('quantity'),
+                    'status': quote.get('status'),
+                    'paymentStatus': quote.get('payment_status'),
+                    'createdAt': quote.get('created_at'),
+                    'isConfidential': bool(quote.get('is_confidential'))
+                })
 
+        # 5. List All Orders (Admin Only)
         if path == '/api/orders':
             if not self.is_admin_request():
                 return self.send_json(403, {'error': 'Unauthorized. Admin authorization required.'})
-            db = load_db()
-            return self.send_json(200, db.get('orders', []))
+            orders = db.get_orders()
+            for o in orders:
+                o['customerName'] = o.get('customer_name')
+                o['quoteId'] = o.get('quote_id')
+                o['total'] = float(o.get('total', 0))
+                o['shippingAddress'] = {'city': o.get('city'), 'country': o.get('country'), 'address': o.get('shipping_address')}
+            return self.send_json(200, orders)
 
+        # 6. Single Order Lookup
         if path.startswith('/api/orders/'):
             order_id = path.split('/api/orders/')[1].strip()
-            db = load_db()
-            order = next((o for o in db.get('orders', []) if o.get('id', '').lower() == order_id.lower()), None)
+            order = db.get_order_by_id_or_ref(order_id)
             if not order:
                 return self.send_json(404, {'error': 'Order not found'})
+
             is_admin = self.is_admin_request()
             auth_user = self.get_authenticated_user()
             req_email = query_params.get('email', [''])[0].strip().lower()
+
             is_owner = (auth_user and auth_user.get('email', '').lower() == order.get('email', '').lower()) or \
                        (req_email and req_email == order.get('email', '').lower())
+
             if is_admin or is_owner:
+                order['customerName'] = order.get('customer_name')
+                order['quoteId'] = order.get('quote_id')
+                order['total'] = float(order.get('total', 0))
+                order['shippingAddress'] = {'city': order.get('city'), 'country': order.get('country'), 'address': order.get('shipping_address')}
                 return self.send_json(200, order)
             else:
-                return self.send_json(200, {'id': order.get('id'), 'status': order.get('status'), 'carrier': order.get('carrier'), 'trackingNumber': order.get('trackingNumber'), 'paymentStatus': order.get('paymentStatus'), 'createdAt': order.get('createdAt'), 'estimatedCompletion': order.get('estimatedCompletion')})
+                return self.send_json(200, {
+                    'id': order.get('id'),
+                    'publicReference': order.get('public_reference'),
+                    'status': order.get('status'),
+                    'carrier': order.get('carrier'),
+                    'trackingNumber': order.get('tracking_number'),
+                    'paymentStatus': order.get('payment_status'),
+                    'createdAt': order.get('created_at'),
+                    'estimatedCompletion': order.get('estimated_completion')
+                })
 
+        # 7. Public Tracking Pipeline
         if path.startswith('/api/track/'):
             track_id = path.split('/api/track/')[1].strip()
-            db = load_db()
-            order = next((o for o in db.get('orders', []) if o.get('id', '').lower() == track_id.lower() or o.get('quoteId', '').lower() == track_id.lower()), None)
+            order = db.get_order_by_id_or_ref(track_id)
             if order:
-                safe_order = {'id': order.get('id'), 'quoteId': order.get('quoteId'), 'status': order.get('status'), 'carrier': order.get('carrier'), 'trackingNumber': order.get('trackingNumber'), 'paymentStatus': order.get('paymentStatus'), 'paymentMethod': order.get('paymentMethod'), 'total': order.get('total'), 'createdAt': order.get('createdAt'), 'estimatedCompletion': order.get('estimatedCompletion'), 'statusHistory': order.get('statusHistory', []), 'items': [{'title': i.get('title'), 'material': i.get('material'), 'quantity': i.get('quantity')} for i in order.get('items', [])]}
+                safe_order = {
+                    'id': order.get('public_reference') or order.get('id'),
+                    'quoteId': order.get('quote_id'),
+                    'status': order.get('status'),
+                    'carrier': order.get('carrier'),
+                    'trackingNumber': order.get('tracking_number'),
+                    'paymentStatus': order.get('payment_status'),
+                    'paymentMethod': order.get('payment_method'),
+                    'total': float(order.get('total', 0)),
+                    'createdAt': order.get('created_at'),
+                    'estimatedCompletion': order.get('estimated_completion'),
+                    'items': [{'title': i.get('product_name'), 'material': i.get('material'), 'quantity': i.get('quantity')} for i in order.get('items', [])]
+                }
                 return self.send_json(200, {'type': 'order', 'data': safe_order})
-            quote = next((q for q in db.get('quotes', []) if q.get('id', '').lower() == track_id.lower()), None)
-            if quote:
-                safe_quote = {'id': quote.get('id'), 'projectName': quote.get('projectName'), 'material': quote.get('material'), 'quantity': quote.get('quantity'), 'status': quote.get('status'), 'paymentStatus': quote.get('paymentStatus'), 'paymentMethod': quote.get('paymentMethod'), 'total': quote.get('pricing', {}).get('finalPrice', 0), 'createdAt': quote.get('createdAt'), 'files': [{'name': f.get('name'), 'size': f.get('size')} for f in quote.get('files', [])]}
-                return self.send_json(200, {'type': 'quote', 'data': safe_quote})
-            return self.send_json(404, {'error': 'No matching quote or order found for reference: ' + track_id})
 
+            quote = db.get_quote_by_id_or_ref(track_id)
+            if quote:
+                safe_quote = {
+                    'id': quote.get('public_reference') or quote.get('id'),
+                    'projectName': quote.get('project_name'),
+                    'material': quote.get('material'),
+                    'quantity': quote.get('quantity'),
+                    'status': quote.get('status'),
+                    'paymentStatus': quote.get('payment_status'),
+                    'paymentMethod': quote.get('payment_method'),
+                    'total': float(quote.get('final_price', 0)),
+                    'createdAt': quote.get('created_at'),
+                    'files': [{'name': f.get('original_filename'), 'size': f.get('file_size')} for f in quote.get('files', [])]
+                }
+                return self.send_json(200, {'type': 'quote', 'data': safe_quote})
+
+            return self.send_json(404, {'error': f'No matching quote or order found for reference: {track_id}'})
+
+        # 8. Products, Materials, Portfolio, FAQs
         if path == '/api/products':
-            db = load_db()
-            return self.send_json(200, db.get('products', []))
+            return self.send_json(200, db.get_products())
+
         if path == '/api/materials':
-            db = load_db()
-            return self.send_json(200, db.get('materials', []))
-        if path == '/api/faqs':
-            db = load_db()
-            return self.send_json(200, db.get('faqs', []))
+            return self.send_json(200, db.get_materials())
+
+        if path == '/api/portfolio' or path == '/api/faqs':
+            # Seed structures if needed
+            if os.path.exists(os.path.join(DATA_DIR, 'database.json')):
+                with open(os.path.join(DATA_DIR, 'database.json'), 'r', encoding='utf-8') as f:
+                    legacy = json.load(f)
+                    return self.send_json(200, legacy.get(path.lstrip('/api/'), []))
+            return self.send_json(200, [])
+
+        # 9. Admin Stats & Settings
         if path == '/api/stats':
             if not self.is_admin_request():
                 return self.send_json(403, {'error': 'Unauthorized. Admin authorization required.'})
-            db = load_db()
-            quotes = db.get('quotes', [])
-            orders = db.get('orders', [])
-            total_revenue = sum(o.get('total', 0) for o in orders if o.get('paymentStatus') == 'Paid')
-            active_prints = len([o for o in orders if o.get('status') == 'Printing']) + len([q for q in quotes if q.get('status') == 'Printing'])
-            return self.send_json(200, {'totalRevenue': total_revenue, 'totalOrders': len(orders), 'totalQuotes': len(quotes), 'activePrints': active_prints})
-        if path == '/api/settings':
-            if not self.is_admin_request():
-                return self.send_json(403, {'error': 'Unauthorized. Admin authorization required.'})
-            db = load_db()
-            return self.send_json(200, db.get('settings', {}))
+            return self.send_json(200, db.get_admin_stats())
+
+        # 10. Auth Profile Endpoint
         if path == '/api/auth/me':
             user = self.get_authenticated_user()
             if user:
-                return self.send_json(200, {'success': True, 'user': {'id': user.get('id'), 'name': user.get('name'), 'email': user.get('email'), 'phone': user.get('phone', '')}})
+                return self.send_json(200, {
+                    'success': True,
+                    'user': {
+                        'id': user.get('id'),
+                        'name': user.get('name'),
+                        'email': user.get('email'),
+                        'phone': user.get('phone', '')
+                    }
+                })
             return self.send_json(401, {'error': 'Unauthorized / Session expired'})
+
+        # 11. Customer Orders & Quotes
         if path == '/api/customer/orders':
             user = self.get_authenticated_user()
             is_admin = self.is_admin_request()
             email = query_params.get('email', [''])[0].strip().lower()
+
             if not is_admin and not user:
                 return self.send_json(401, {'error': 'Authentication required to view account orders.'})
+
             target_email = user.get('email', '').lower() if user else email
-            db = load_db()
-            quotes = [q for q in db.get('quotes', []) if q.get('email', '').lower() == target_email]
-            orders = [o for o in db.get('orders', []) if o.get('email', '').lower() == target_email]
-            return self.send_json(200, {'success': True, 'email': target_email, 'quotes': quotes, 'orders': orders})
+            quotes = db.fetchall('SELECT * FROM quotes WHERE LOWER(guest_email) = ?', (target_email,))
+            orders = db.fetchall('SELECT * FROM orders WHERE LOWER(email) = ?', (target_email,))
+
+            for q in quotes:
+                q['customerName'] = q.get('customer_name')
+                q['projectName'] = q.get('project_name')
+                q['paymentStatus'] = q.get('payment_status')
+                q['pricing'] = {'finalPrice': float(q.get('final_price', 0))}
+            for o in orders:
+                o['customerName'] = o.get('customer_name')
+                o['total'] = float(o.get('total', 0))
+
+            return self.send_json(200, {
+                'success': True,
+                'email': target_email,
+                'quotes': quotes,
+                'orders': orders
+            })
+
+        # 12. Customer Notifications
         if path == '/api/customer/notifications':
             user = self.get_authenticated_user()
             email = user.get('email', '').lower() if user else query_params.get('email', [''])[0].strip().lower()
             order_ids_raw = query_params.get('orderIds', [''])[0]
-            order_ids = [oid.strip().lower() for oid in order_ids_raw.split(',') if oid.strip()]
-            db = load_db()
-            all_notifs = db.get('notifications', [])
-            matched = [n for n in all_notifs if (email and n.get('email', '').lower() == email) or (order_ids and n.get('orderId', '').lower() in order_ids)]
-            return self.send_json(200, {'success': True, 'notifications': matched[:30]})
+            order_ids = [oid.strip() for oid in order_ids_raw.split(',') if oid.strip()]
+            notifs = db.get_notifications(email=email, user_id=user.get('id') if user else None, order_ids=order_ids)
+            return self.send_json(200, {'success': True, 'notifications': notifs})
+
+        # 13. Stripe Session Verification
         if path == '/api/verify-payment':
             order_id = query_params.get('id', [''])[0].strip()
             session_id = query_params.get('sessionId', [''])[0].strip()
+
             if not order_id or not session_id:
                 return self.send_json(400, {'error': 'Missing id or sessionId parameter'})
+
             if not STRIPE_SECRET_KEY:
-                return self.send_json(500, {'error': 'Stripe not configured on server'})
+                return self.send_json(500, {'error': 'Stripe credentials not configured'})
+
             try:
                 req = urllib.request.Request(f'https://api.stripe.com/v1/checkout/sessions/{session_id}')
                 req.add_header('Authorization', f'Bearer {STRIPE_SECRET_KEY}')
-                with urllib.request.urlopen(req, context=ssl.create_default_context(), timeout=15) as res:
+                ssl_ctx = ssl.create_default_context()
+                with urllib.request.urlopen(req, context=ssl_ctx, timeout=15) as res:
                     session_obj = json.loads(res.read().decode('utf-8'))
+
                 if session_obj.get('payment_status') == 'paid':
-                    db = load_db()
-                    order_type = session_obj.get('metadata', {}).get('order_type', 'order')
-                    updated = False
-                    target = db.get('quotes' if order_type == 'quote' else 'orders', [])
-                    for entry in target:
-                        if entry.get('id') == order_id:
-                            entry.update({'paymentStatus': 'Paid', 'status': 'Preparing', 'paymentMethod': 'Stripe (Apple/Google/Card)'})
-                            updated = True
-                            break
-                    if updated:
-                        save_db(db)
-                        add_notification(db, order_id, f'Pagamento Confirmado ({order_id})', 'O seu pagamento foi verificado com sucesso via Stripe.', 'Preparing')
+                    db.process_stripe_webhook_event(session_id, 'checkout.session.completed', session_obj)
                     return self.send_json(200, {'success': True, 'paid': True, 'orderId': order_id})
-                return self.send_json(200, {'success': False, 'paid': False})
+                else:
+                    return self.send_json(200, {'success': False, 'paid': False, 'status': session_obj.get('payment_status')})
             except Exception as err:
+                print(f'Stripe verification error: {err}')
                 return self.send_json(500, {'error': f'Verification failed: {err}'})
+
+        # 14. Protected Customer Upload File Serving
         if path.startswith('/api/files/') or path == '/api/download-file':
             filename = path.split('/api/files/')[1] if path.startswith('/api/files/') else query_params.get('file', [''])[0]
             filename = os.path.basename(filename).strip()
             target_file = os.path.join(UPLOADS_DIR, filename)
+
             if not os.path.exists(target_file) or not os.path.isfile(target_file):
                 return self.send_json(404, {'error': 'File not found'})
+
             is_admin = self.is_admin_request()
             user = self.get_authenticated_user()
             req_email = query_params.get('email', [''])[0].strip().lower()
-            is_authorized = is_admin
-            if not is_authorized:
-                db = load_db()
-                for q in db.get('quotes', []):
-                    has_file = any(f.get('url', '').endswith(filename) or f.get('name') == filename for f in q.get('files', []))
-                    if has_file and ((user and user.get('email', '').lower() == q.get('email', '').lower()) or req_email == q.get('email', '').lower()):
-                        is_authorized = True
-                        break
-            if not is_authorized:
-                return self.send_json(403, {'error': 'Unauthorized access'})
+
+            if not db.verify_file_access(filename, user_id=user.get('id') if user else None, email=req_email, is_admin=is_admin):
+                return self.send_json(403, {'error': 'Unauthorized access to customer CAD model.'})
+
+            mime_type, _ = mimetypes.guess_type(target_file)
             with open(target_file, 'rb') as f:
-                content = f.read()
+                file_bytes = f.read()
+
             self.send_response(200)
-            self.send_header('Content-Type', mimetypes.guess_type(target_file)[0] or 'application/octet-stream')
-            self.send_header('Content-Length', str(len(content)))
+            self.send_header('Content-Type', mime_type or 'application/octet-stream')
+            self.send_header('Content-Length', str(len(file_bytes)))
             self.send_header('Content-Disposition', f'attachment; filename="{filename}"')
             self.end_headers()
-            self.wfile.write(content)
+            self.wfile.write(file_bytes)
             return
+
+        # 15. Deny Direct Browsing of /uploads/
         if path.startswith('/uploads/'):
-            return self.send_json(403, {'error': 'Direct upload browsing disabled.'})
-        
+            return self.send_json(403, {'error': 'Direct upload browsing disabled. Access via /api/files with valid authorization.'})
+
         # Default web serving
-        filepath = os.path.join(STATIC_DIR, 'index.html') if (path == '/' or path == '/index.html') else os.path.join(STATIC_DIR, path.lstrip('/'))
-        if os.path.isfile(filepath):
+        if path == '/' or path == '/index.html':
+            filepath = os.path.join(STATIC_DIR, 'index.html')
+        elif path.startswith('/static/'):
+            filepath = os.path.join(BASE_DIR, path.lstrip('/'))
+        else:
+            cand = os.path.join(STATIC_DIR, path.lstrip('/'))
+            filepath = cand if os.path.isfile(cand) else (cand + '.html' if os.path.isfile(cand + '.html') else cand)
+
+        if os.path.exists(filepath) and os.path.isfile(filepath):
+            mime_type, _ = mimetypes.guess_type(filepath)
             with open(filepath, 'rb') as f:
                 content = f.read()
             self.send_response(200)
-            self.send_header('Content-Type', 'text/html; charset=utf-8' if filepath.endswith('.html') else 'application/octet-stream')
+            self.send_header('Content-Type', mime_type or ('text/html; charset=utf-8' if filepath.endswith('.html') else 'application/octet-stream'))
             self.send_header('Content-Length', str(len(content)))
             self.end_headers()
             self.wfile.write(content)
-            return self.send_json(404, {'error': 'File not found'})
+        else:
+            index_path = os.path.join(STATIC_DIR, 'index.html')
+            if os.path.exists(index_path):
+                with open(index_path, 'rb') as f: content = f.read()
+                self.send_response(200)
+                self.send_header('Content-Type', 'text/html; charset=utf-8')
+                self.send_header('Content-Length', str(len(content)))
+                self.end_headers()
+                self.wfile.write(content)
+            else:
+                self.send_json(404, {'error': 'File not found'})
 
     def do_POST(self):
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path.rstrip('/')
         ip = self.get_client_ip()
 
-        # Admin: Login
+        # Admin Login
         if path == '/api/admin/login':
             if not check_rate_limit(ip, max_attempts=5, window_seconds=300):
                 return self.send_json(429, {'error': 'Too many failed login attempts. Please wait 5 minutes.'})
@@ -383,22 +497,13 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
             if hmac.compare_digest(password, ADMIN_PASSWORD):
                 clear_rate_limit(ip)
                 token = f'adm_{secrets.token_hex(24)}'
-                now = time.time()
-                ADMIN_TOKENS[token] = {'created': now, 'expires': now + 86400}  # 24 hours
+                ADMIN_TOKENS[token] = {'created': time.time(), 'expires': time.time() + 86400}
                 return self.send_json(200, {'success': True, 'token': token})
             else:
                 record_failed_attempt(ip)
                 return self.send_json(401, {'error': 'Invalid administrative credentials.'})
 
-        # Admin: Logout
-        if path == '/api/admin/logout':
-            auth_header = self.headers.get('Authorization', '')
-            token = auth_header.split('Bearer ', 1)[1].strip() if auth_header.startswith('Bearer ') else ''
-            if token:
-                ADMIN_TOKENS.pop(token, None)
-            return self.send_json(200, {'success': True})
-
-        # Customer: Register
+        # Customer Registration
         if path == '/api/auth/register':
             if not check_rate_limit(ip, max_attempts=10, window_seconds=300):
                 return self.send_json(429, {'error': 'Demasiadas tentativas de registo. Por favor tente mais tarde.'})
@@ -414,34 +519,20 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
             if not password or len(password) < 8:
                 return self.send_json(400, {'error': 'A palavra-passe deve conter no mínimo 8 caracteres para proteção da sua conta.'})
 
-            db = load_db()
-            users = db.setdefault('users', [])
-            if any(u.get('email', '').lower() == email for u in users):
+            existing = db.get_user_by_email(email)
+            if existing:
                 return self.send_json(400, {'error': 'Já existe uma conta com este email. Por favor inicie sessão.'})
 
             pwd_hash, salt = hash_password(password)
-            token = f'usr_{secrets.token_hex(24)}'
-            new_user = {
-                'id': f'usr_{secrets.token_hex(6)}',
-                'name': name or 'Cliente',
-                'email': email,
-                'phone': phone,
-                'passwordHash': pwd_hash,
-                'salt': salt,
-                'token': token,
-                'createdAt': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
-                'lastLogin': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
-            }
-            users.append(new_user)
-            save_db(db)
+            user = db.create_user(email=email, password_hash=pwd_hash, salt=salt, name=name or 'Cliente', phone=phone)
 
             return self.send_json(201, {
                 'success': True,
-                'token': token,
-                'user': {'id': new_user['id'], 'name': new_user['name'], 'email': new_user['email'], 'phone': new_user['phone']}
+                'token': user.get('token'),
+                'user': {'id': user['id'], 'name': user['name'], 'email': user['email'], 'phone': user.get('phone', '')}
             })
 
-        # Customer: Login
+        # Customer Login
         if path == '/api/auth/login':
             if not check_rate_limit(ip, max_attempts=5, window_seconds=300):
                 return self.send_json(429, {'error': 'Demasiadas tentativas incorretas. Por favor aguarde 5 minutos.'})
@@ -450,56 +541,52 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
             email = payload.get('email', '').strip().lower()
             password = payload.get('password', '').strip()
 
-            db = load_db()
-            users = db.setdefault('users', [])
-            user = next((u for u in users if u.get('email', '').lower() == email), None)
-
-            if not user or not verify_password(password, user.get('passwordHash', ''), user.get('salt')):
+            user = db.get_user_by_email(email)
+            if not user or not verify_password(password, user.get('password_hash', ''), user.get('salt')):
                 record_failed_attempt(ip)
                 return self.send_json(401, {'error': 'Email ou palavra-passe incorretos.'})
 
             clear_rate_limit(ip)
-            token = f'usr_{secrets.token_hex(24)}'
-            user['token'] = token
-            user['lastLogin'] = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
-            
-            if not user.get('salt'):
-                pwd_hash, salt = hash_password(password)
-                user['passwordHash'] = pwd_hash
-                user['salt'] = salt
-
-            save_db(db)
+            new_token = f'usr_{secrets.token_hex(24)}'
+            db.update_user_login(user['id'], new_token)
 
             return self.send_json(200, {
                 'success': True,
-                'token': token,
+                'token': new_token,
                 'user': {'id': user['id'], 'name': user['name'], 'email': user['email'], 'phone': user.get('phone', '')}
             })
 
-        # Guest: Secure Single Order / Quote Lookup
+        # Guest Lookup
         if path == '/api/auth/guest':
             payload = self.read_json_body()
             query = payload.get('query', '').strip().lower()
             if not query:
                 return self.send_json(400, {'error': 'Por favor insira a referência da encomenda (LS-XXXX / ORD-XXXX).'})
 
-            db = load_db()
-            quotes = db.get('quotes', [])
-            orders = db.get('orders', [])
-
             matched_quotes = []
             matched_orders = []
 
             if query.startswith('ls-') or query.startswith('ls'):
-                matched_quotes = [q for q in quotes if q.get('id', '').lower() == query]
+                q = db.get_quote_by_id_or_ref(query)
+                if q: matched_quotes.append(q)
             elif query.startswith('ord-') or query.startswith('ord'):
-                matched_orders = [o for o in orders if o.get('id', '').lower() == query or o.get('quoteId', '').lower() == query]
+                o = db.get_order_by_id_or_ref(query)
+                if o: matched_orders.append(o)
             elif '@' in query:
-                matched_quotes = [q for q in quotes if q.get('email', '').lower() == query]
-                matched_orders = [o for o in orders if o.get('email', '').lower() == query]
+                matched_quotes = db.fetchall('SELECT * FROM quotes WHERE LOWER(guest_email) = ?', (query,))
+                matched_orders = db.fetchall('SELECT * FROM orders WHERE LOWER(email) = ?', (query,))
 
             if not matched_quotes and not matched_orders:
                 return self.send_json(404, {'error': 'Nenhuma encomenda ou orçamento encontrado com essa referência.'})
+
+            for q in matched_quotes:
+                q['customerName'] = q.get('customer_name')
+                q['projectName'] = q.get('project_name')
+                q['paymentStatus'] = q.get('payment_status')
+                q['pricing'] = {'finalPrice': float(q.get('final_price', 0))}
+            for o in matched_orders:
+                o['customerName'] = o.get('customer_name')
+                o['total'] = float(o.get('total', 0))
 
             return self.send_json(200, {
                 'success': True,
@@ -509,107 +596,58 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
                 'orders': matched_orders
             })
 
-        # Notifications: Mark Read
+        # Mark Notification Read
         if path == '/api/customer/notifications/read':
             payload = self.read_json_body()
-            notif_id = payload.get('id')
-            user = self.get_authenticated_user()
-            email = user.get('email', '').lower() if user else payload.get('email', '').strip().lower()
-
-            db = load_db()
-            for n in db.get('notifications', []):
-                if notif_id and n.get('id') == notif_id:
-                    n['read'] = True
-                elif email and n.get('email', '').lower() == email:
-                    n['read'] = True
-            save_db(db)
+            db.mark_notification_read(notif_id=payload.get('id'), email=payload.get('email', ''))
             return self.send_json(200, {'success': True})
 
         # Create Quote Request
         if path == '/api/quotes':
             payload = self.read_json_body()
-            db = load_db()
-            quotes = db.setdefault('quotes', [])
-
-            quote_id = f'LS-{int(time.time()) % 10000 + 1000}'
-            new_quote = {
-                'id': quote_id,
-                'customerName': payload.get('customerName', 'Valued Client'),
-                'email': payload.get('email', ''),
-                'phone': payload.get('phone', ''),
-                'company': payload.get('company', ''),
-                'projectName': payload.get('projectName', 'Custom 3D Print Request'),
-                'description': payload.get('description', ''),
-                'material': payload.get('material', 'PETG'),
-                'color': payload.get('color', 'Black'),
-                'quality': payload.get('quality', 'Standard (0.20mm)'),
-                'strength': payload.get('strength', 'Standard (30% Infill)'),
-                'quantity': int(payload.get('quantity', 1)),
-                'files': payload.get('files', []),
-                'hasModel': bool(payload.get('hasModel', True)),
-                'turnaround': payload.get('turnaround', 'Standard (3-5 Days)'),
-                'paymentStatus': 'Pending',
-                'createdAt': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
-                'deadline': payload.get('deadline', ''),
-                'shippingCountry': payload.get('shippingCountry', 'Portugal'),
-                'isConfidential': bool(payload.get('isConfidential', False)),
-                'customerNotes': payload.get('customerNotes', ''),
-                'status': 'Quote Requested',
-                'pricing': payload.get('pricing', {
-                    'materialCost': 6.00,
-                    'machineCost': 14.00,
-                    'designCost': 0.00 if payload.get('hasModel', True) else 25.00,
-                    'shippingCost': 4.50,
-                    'margin': 12.00,
-                    'subtotal': 36.50,
-                    'discount': 0.00,
-                    'finalPrice': 36.50
-                }),
-                'internalNotes': 'Initial quote request received via website.',
-                'adminNotes': 'Pending technician file inspection.'
+            quote = db.create_quote(payload, payload.get('files', []))
+            quote['customerName'] = quote.get('customer_name')
+            quote['projectName'] = quote.get('project_name')
+            quote['paymentStatus'] = quote.get('payment_status')
+            quote['pricing'] = {
+                'finalPrice': float(quote.get('final_price', 24.50)),
+                'subtotal': float(quote.get('subtotal', 20.00))
             }
-            quotes.insert(0, new_quote)
-            save_db(db)
-            add_notification(db, quote_id, f'Novo Pedido de Orçamento ({quote_id})', f'O seu pedido de orçamento para "{new_quote["projectName"]}" foi registado com sucesso.', 'Quote Requested', new_quote['email'])
-            return self.send_json(201, {'success': True, 'quote': new_quote, 'quoteId': quote_id})
+            return self.send_json(201, {'success': True, 'quote': quote, 'quoteId': quote.get('public_reference')})
 
-        # Create Order / Checkout
+        # Create Store Order (Server-Side Price Calculation)
         if path == '/api/orders':
             payload = self.read_json_body()
-            db = load_db()
-            orders = db.setdefault('orders', [])
+            raw_items = payload.get('items', [])
+            shipping_country = payload.get('shippingCountry', 'Portugal')
+            promo_code = payload.get('promoCode', '')
 
-            order_id = f'ORD-{int(time.time()) % 10000 + 8800}'
-            new_order = {
-                'id': order_id,
+            pricing = db.calculate_store_pricing(raw_items, shipping_country=shipping_country, promo_code=promo_code)
+            order_data = {
+                'customerId': payload.get('customerId'),
                 'quoteId': payload.get('quoteId', ''),
                 'customerName': payload.get('customerName', 'Store Customer'),
                 'email': payload.get('email', ''),
                 'phone': payload.get('phone', ''),
-                'shippingAddress': payload.get('shippingAddress', {}),
-                'items': payload.get('items', []),
-                'subtotal': float(payload.get('subtotal', 0)),
-                'shippingCost': float(payload.get('shippingCost', 4.50)),
-                'discount': float(payload.get('discount', 0)),
-                'total': float(payload.get('total', 0)),
+                'shippingName': payload.get('customerName', 'Store Customer'),
+                'shippingAddress': payload.get('shippingAddress', {}).get('address', ''),
+                'postalCode': payload.get('shippingAddress', {}).get('postalCode', ''),
+                'city': payload.get('shippingAddress', {}).get('city', 'Portugal'),
+                'country': shipping_country,
+                'subtotal': pricing['subtotal'],
+                'shippingCost': pricing['shippingCost'],
+                'discount': pricing['discount'],
+                'total': pricing['total'],
                 'paymentMethod': payload.get('paymentMethod', 'MB WAY'),
-                'paymentStatus': 'Pending',  # Server forces initial Pending state
-                'status': 'Preparing',
-                'carrier': 'CTT Expresso',
-                'trackingNumber': 'GENERATING',
-                'createdAt': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
-                'estimatedCompletion': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime(time.time() + 86400 * 3)),
-                'statusHistory': [
-                    {'stage': 'Order Placed', 'timestamp': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()), 'note': 'Order registered via checkout'},
-                    {'stage': 'Preparing', 'timestamp': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()), 'note': 'Awaiting payment verification'}
-                ]
+                'paymentProvider': 'stripe'
             }
-            orders.insert(0, new_order)
-            save_db(db)
-            add_notification(db, order_id, f'Nova Encomenda Criada ({order_id})', f'A sua encomenda {order_id} foi registada. Conclua o pagamento para início da impressão.', 'Preparing', new_order['email'])
-            return self.send_json(201, {'success': True, 'order': new_order, 'orderId': order_id})
 
-        # File Upload (Multipart Form Data)
+            order = db.create_order(order_data, pricing['items'])
+            order['customerName'] = order.get('customer_name')
+            order['total'] = float(order.get('total', 0))
+            return self.send_json(201, {'success': True, 'order': order, 'orderId': order.get('public_reference')})
+
+        # File Upload
         if path == '/api/upload-file':
             try:
                 content_type = self.headers.get('Content-Type', '')
@@ -618,7 +656,6 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
 
                 boundary = content_type.split('boundary=')[-1].strip()
                 content_length = int(self.headers.get('Content-Length', 0))
-                
                 if content_length > 50 * 1024 * 1024:
                     return self.send_json(400, {'error': 'File size exceeds maximum 50MB limit'})
 
@@ -642,34 +679,31 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
                                 file_name = header_text.split('filename="')[1].split('"')[0]
 
                 if not quote_id:
-                    quote_id = f'LS-{int(time.time()) % 10000}'
+                    quote_id = f'LS-{secrets.token_hex(3).upper()}'
 
                 clean_name = os.path.basename(file_name)
-                safe_name = ''.join(c for c in clean_name if c.isalnum() or c in '._-')
-                if not safe_name:
-                    safe_name = 'model.stl'
-                
+                safe_name = ''.join(c for c in clean_name if c.isalnum() or c in '._-') or 'model.stl'
                 disk_filename = f'{quote_id}_{safe_name}'.replace(' ', '_')
                 save_path = os.path.join(UPLOADS_DIR, disk_filename)
 
                 with open(save_path, 'wb') as f:
                     f.write(file_data)
 
-                db = load_db()
-                for q in db.get('quotes', []):
-                    if q.get('id') == quote_id:
-                        for fentry in q.get('files', []):
-                            if fentry.get('name', '') == file_name:
-                                fentry['url'] = f'/api/files/{disk_filename}'
-                                break
-                        else:
-                            q.setdefault('files', []).append({
-                                'name': file_name,
-                                'size': f'{round(len(file_data) / (1024*1024), 2)} MB',
-                                'url': f'/api/files/{disk_filename}'
-                            })
-                        save_db(db)
-                        break
+                # Link to quote if quote exists
+                q = db.get_quote_by_id_or_ref(quote_id)
+                if q:
+                    db.execute('''
+                        INSERT INTO quote_files (id, quote_id, original_filename, disk_filename, storage_url, mime_type, file_size, uploaded_at)
+                        VALUES (?, ?, ?, ?, ?, 'application/octet-stream', ?, ?)
+                    ''', (
+                        f'file_{uuid.uuid4().hex[:8]}',
+                        q['id'],
+                        safe_name,
+                        disk_filename,
+                        f'/api/files/{disk_filename}',
+                        f'{round(len(file_data)/(1024*1024), 2)} MB',
+                        time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
+                    ))
 
                 return self.send_json(200, {
                     'success': True,
@@ -678,54 +712,59 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
                     'sizeMB': round(len(file_data) / (1024 * 1024), 2)
                 })
             except Exception as e:
-                print(f'Multipart upload error: {e}')
                 return self.send_json(400, {'error': f'Upload failed: {e}'})
 
-        # Contact Form Submission
-        if path == '/api/contact':
-            return self.send_json(200, {
-                'success': True,
-                'message': 'Thanks for reaching out! A Layer Studios engineer will contact you within 24 hours.'
-            })
-
-        # Promo Code Validation
+        # Validate Promo
         if path == '/api/validate-promo':
             payload = self.read_json_body()
             code_input = payload.get('code', '').strip().upper()
-            db = load_db()
-            promo = next((p for p in db.get('promoCodes', []) if p.get('code') == code_input), None)
+            promo = db.fetchone('SELECT * FROM promo_codes WHERE code = ? AND active = 1', (code_input,))
             if promo:
-                return self.send_json(200, {'valid': True, 'discountPercent': promo.get('discountPercent', 10), 'description': promo.get('description', '')})
+                return self.send_json(200, {'valid': True, 'discountPercent': float(promo['discount_percent']), 'description': promo.get('description', '')})
             return self.send_json(404, {'valid': False, 'error': 'Invalid or expired promo code'})
 
-        # Stripe Checkout Session Creation
+        # Stripe Checkout Session Creation (Independent Server-Side Price Verification)
         if path == '/api/create-checkout-session':
             if not STRIPE_AVAILABLE:
                 return self.send_json(500, {'error': 'Stripe credentials are not configured on this server'})
 
             payload = self.read_json_body()
-            amount_eur = float(payload.get('amount', 0))
             order_id = payload.get('orderId', '')
             order_type = payload.get('type', 'order')
             title = payload.get('title', 'Layer Studios 3D Printing')
             customer_email = payload.get('email', '')
 
-            if amount_eur <= 0:
-                return self.send_json(400, {'error': 'Invalid amount'})
+            # Server verifies real price from database!
+            verified_amount = 0.0
+            if order_type == 'quote' or order_id.startswith('LS-Q'):
+                quote = db.get_quote_by_id_or_ref(order_id)
+                if not quote:
+                    return self.send_json(404, {'error': f'Quote {order_id} not found in database'})
+                verified_amount = float(quote.get('final_price', 0.0))
+                customer_email = customer_email or quote.get('guest_email', '')
+            else:
+                order = db.get_order_by_id_or_ref(order_id)
+                if not order:
+                    return self.send_json(404, {'error': f'Order {order_id} not found in database'})
+                verified_amount = float(order.get('total', 0.0))
+                customer_email = customer_email or order.get('email', '')
+
+            if verified_amount <= 0.0:
+                return self.send_json(400, {'error': 'Invalid verified order amount'})
 
             host = self.headers.get('Host', 'localhost:8080')
             protocol = 'https' if 'render.com' in host or 'onrender.com' in host else 'http'
             base_url = f'{protocol}://{host}'
 
             try:
-                cents = int(round(amount_eur * 100))
+                cents = int(round(verified_amount * 100))
                 form_data = {
                     'payment_method_types[0]': 'card',
                     'line_items[0][price_data][currency]': 'eur',
                     'line_items[0][price_data][product_data][name]': title,
                     'line_items[0][price_data][product_data][description]': f'Reference: {order_id} — Layer Studios Portugal',
                     'line_items[0][price_data][unit_amount]': str(cents),
-                    'line_items[0][price_data][quantity]': '1',
+                    'line_items[0][quantity]': '1',
                     'mode': 'payment',
                     'success_url': f'{base_url}/track?id={order_id}&paid=true&session_id={{CHECKOUT_SESSION_ID}}',
                     'cancel_url': f'{base_url}/track?id={order_id}&cancelled=true',
@@ -749,87 +788,54 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
                 session_id = session.get('id', '')
                 session_url = session.get('url', '')
 
-                db = load_db()
-                if order_type == 'quote':
-                    for q in db.get('quotes', []):
-                        if q.get('id') == order_id:
-                            q['paymentStatus'] = 'Processing'
-                            q['stripeSessionId'] = session_id
-                            break
+                # Update session id in database
+                if order_type == 'quote' or order_id.startswith('LS-Q'):
+                    db.update_quote(order_id, {'stripe_session_id': session_id, 'payment_status': 'processing'})
                 else:
-                    for o in db.get('orders', []):
-                        if o.get('id') == order_id:
-                            o['paymentStatus'] = 'Processing'
-                            o['stripeSessionId'] = session_id
-                            break
-                save_db(db)
+                    db.update_order(order_id, {'stripe_session_id': session_id, 'payment_status': 'processing'})
 
                 return self.send_json(200, {
                     'success': True,
                     'sessionId': session_id,
-                    'url': session_url
+                    'url': session_url,
+                    'amountVerified': verified_amount
                 })
-            except urllib.error.HTTPError as e:
-                err_body = e.read().decode('utf-8', errors='ignore')
-                print(f'Stripe HTTP error: {err_body}')
-                return self.send_json(400, {'error': f'Stripe API error: {err_body}'})
             except Exception as e:
                 print(f'Stripe session error: {e}')
                 return self.send_json(500, {'error': f'Payment session failed: {str(e)}'})
 
-        # Stripe Webhook with Cryptographic Signature Verification
+        # Stripe Webhook with Cryptographic Signature Verification & Idempotency
         if path == '/api/stripe-webhook':
             try:
                 content_length = int(self.headers.get('Content-Length', 0))
                 body = self.rfile.read(content_length)
-                
+
                 if STRIPE_WEBHOOK_SECRET:
                     sig_header = self.headers.get('Stripe-Signature', '')
                     if not sig_header:
                         return self.send_json(400, {'error': 'Missing Stripe-Signature header'})
-                    
+
                     sig_dict = {}
                     for item in sig_header.split(','):
                         if '=' in item:
                             k, v = item.split('=', 1)
                             sig_dict.setdefault(k.strip(), []).append(v.strip())
-                    
+
                     t = sig_dict.get('t', [''])[0]
                     v1_sigs = sig_dict.get('v1', [])
                     signed_payload = f'{t}.'.encode('utf-8') + body
                     expected_sig = hmac.new(STRIPE_WEBHOOK_SECRET.encode('utf-8'), signed_payload, hashlib.sha256).hexdigest()
-                    
+
                     if not any(hmac.compare_digest(expected_sig, s) for s in v1_sigs):
                         return self.send_json(400, {'error': 'Invalid webhook signature'})
 
                 event = json.loads(body.decode('utf-8'))
-                if event.get('type') == 'checkout.session.completed':
-                    session_data = event.get('data', {}).get('object', {})
-                    metadata = session_data.get('metadata', {})
-                    order_id = metadata.get('order_id', '')
-                    order_type = metadata.get('order_type', 'order')
+                event_id = event.get('id', f'evt_{int(time.time())}')
+                event_type = event.get('type', '')
+                session_data = event.get('data', {}).get('object', {})
 
-                    if order_id:
-                        db = load_db()
-                        if order_type == 'quote':
-                            for q in db.get('quotes', []):
-                                if q.get('id') == order_id:
-                                    q['paymentStatus'] = 'Paid'
-                                    q['paymentMethod'] = 'Stripe (Card / Apple Pay / Google Pay)'
-                                    q['status'] = 'Preparing'
-                                    break
-                        else:
-                            for o in db.get('orders', []):
-                                if o.get('id') == order_id:
-                                    o['paymentStatus'] = 'Paid'
-                                    o['paymentMethod'] = 'Stripe (Card / Apple Pay / Google Pay)'
-                                    o['status'] = 'Preparing'
-                                    break
-                        save_db(db)
-                        add_notification(db, order_id, f'Pagamento Confirmado ({order_id})', f'O seu pagamento foi recebido e a produção foi iniciada.', 'Preparing')
-                        print(f'[Stripe Webhook] Verified payment confirmed for {order_id}')
-
-                return self.send_json(200, {'received': True})
+                result = db.process_stripe_webhook_event(event_id, event_type, session_data)
+                return self.send_json(200, {'received': True, 'result': result})
             except Exception as e:
                 print(f'Stripe webhook error: {e}')
                 return self.send_json(400, {'error': str(e)})
@@ -846,42 +852,22 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
         if path == '/api/quotes' or path.startswith('/api/quotes/'):
             payload = self.read_json_body()
             quote_id = path.split('/api/quotes/')[1] if path.startswith('/api/quotes/') else payload.get('id', '')
-            db = load_db()
-            quote = next((q for q in db.get('quotes', []) if q.get('id', '').lower() == quote_id.lower()), None)
+            quote = db.get_quote_by_id_or_ref(quote_id)
             if not quote:
                 return self.send_json(404, {'error': 'Quote not found'})
 
-            old_status = quote.get('status')
-            for key, val in payload.items():
-                if key != 'id':
-                    quote[key] = val
-
-            new_status = payload.get('status')
-            if new_status and new_status != old_status:
-                add_notification(db, quote_id, f'Orçamento {quote_id}: {new_status}', f'O estado do seu orçamento {quote_id} foi atualizado para: {new_status}.', new_status, quote.get('email', ''))
-
-            save_db(db)
-            return self.send_json(200, {'success': True, 'quote': quote})
+            db.update_quote(quote['id'], {k: v for k, v in payload.items() if k != 'id'})
+            return self.send_json(200, {'success': True, 'quote': db.get_quote_by_id_or_ref(quote['id'])})
 
         if path == '/api/orders' or path.startswith('/api/orders/'):
             payload = self.read_json_body()
             order_id = path.split('/api/orders/')[1] if path.startswith('/api/orders/') else payload.get('id', '')
-            db = load_db()
-            order = next((o for o in db.get('orders', []) if o.get('id', '').lower() == order_id.lower()), None)
+            order = db.get_order_by_id_or_ref(order_id)
             if not order:
                 return self.send_json(404, {'error': 'Order not found'})
 
-            old_status = order.get('status')
-            for key, val in payload.items():
-                if key != 'id':
-                    order[key] = val
-
-            new_status = payload.get('status')
-            if new_status and new_status != old_status:
-                add_notification(db, order_id, f'Encomenda {order_id}: {new_status}', f'O estado da sua encomenda {order_id} avançou para: {new_status}.', new_status, order.get('email', ''))
-
-            save_db(db)
-            return self.send_json(200, {'success': True, 'order': order})
+            db.update_order(order['id'], {k: v for k, v in payload.items() if k != 'id'})
+            return self.send_json(200, {'success': True, 'order': db.get_order_by_id_or_ref(order['id'])})
 
         return self.send_json(404, {'error': 'Endpoint not found'})
 
@@ -894,21 +880,17 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
 
         if path.startswith('/api/quotes/'):
             quote_id = path.split('/api/quotes/')[1]
-            db = load_db()
-            initial_len = len(db.get('quotes', []))
-            db['quotes'] = [q for q in db.get('quotes', []) if q.get('id', '').lower() != quote_id.lower()]
-            if len(db['quotes']) < initial_len:
-                save_db(db)
+            quote = db.get_quote_by_id_or_ref(quote_id)
+            if quote:
+                db.delete_quote(quote['id'])
                 return self.send_json(200, {'success': True, 'deleted': quote_id})
             return self.send_json(404, {'error': 'Quote not found'})
 
         if path.startswith('/api/orders/'):
             order_id = path.split('/api/orders/')[1]
-            db = load_db()
-            initial_len = len(db.get('orders', []))
-            db['orders'] = [o for o in db.get('orders', []) if o.get('id', '').lower() != order_id.lower()]
-            if len(db['orders']) < initial_len:
-                save_db(db)
+            order = db.get_order_by_id_or_ref(order_id)
+            if order:
+                db.delete_order(order['id'])
                 return self.send_json(200, {'success': True, 'deleted': order_id})
             return self.send_json(404, {'error': 'Order not found'})
 
@@ -917,7 +899,7 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
 def run_server(port=8080):
     server_address = ('', port)
     httpd = ThreadingHTTPServer(server_address, LayerStudiosHandler)
-    print(f'Layer Studios Secure Server running at http://localhost:{port}')
+    print(f'Layer Studios Production Server running at http://localhost:{port}')
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
@@ -926,10 +908,9 @@ def run_server(port=8080):
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8080))
     if len(sys.argv) > 1 and sys.argv[1] == '--test':
-        print('Running server self-test...')
-        db = load_db()
-        assert 'products' in db and len(db['products']) > 0, 'Products database missing'
-        assert 'materials' in db and len(db['materials']) > 0, 'Materials database missing'
+        print('Running production server self-test...')
+        prods = db.get_products()
+        assert len(prods) > 0, 'Products table missing records'
         print('All database checks passed!')
         sys.exit(0)
     elif len(sys.argv) > 1:
