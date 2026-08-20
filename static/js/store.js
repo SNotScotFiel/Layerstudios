@@ -551,12 +551,25 @@ class LayerStudiosStore {
             this.saveCart();
             checkoutModal.classList.add('hidden');
             checkoutForm.reset();
-            window.LayerStudiosApp && window.LayerStudiosApp.showToast(`Order ${data.orderId} placed successfully!`, 'success');
-            window.location.href = `/track?id=${data.orderId}`;
+            
+            if (window.LayerStudiosPayments) {
+              window.LayerStudiosPayments.openPayment({
+                type: 'order',
+                id: data.orderId,
+                amount: payload.total,
+                title: `${payload.items[0]?.title || 'Store Merchandise'} (${payload.items.length} items)`,
+                phone: payload.phone || '+351 912 345 678',
+                onSuccess: (method) => {
+                  window.location.href = `/track?id=${data.orderId}&paid=true`;
+                }
+              });
+            } else {
+              window.location.href = `/track?id=${data.orderId}`;
+            }
           }
         } catch (err) {
           console.error('Checkout error:', err);
-          const fallbackOrderId = `LS-${Math.floor(10000 + Math.random() * 90000)}`;
+          const fallbackOrderId = `ORD-${Math.floor(10000 + Math.random() * 90000)}`;
           this.cart = [];
           this.saveCart();
           checkoutModal.classList.add('hidden');

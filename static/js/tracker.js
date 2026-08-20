@@ -147,9 +147,46 @@ class LayerStudiosTracker {
       }
     }
 
-    if (specTotal) {
-      const price = data.pricing?.finalPrice || data.total || 40.50;
-      specTotal.textContent = `€${price.toFixed(2)}`;
+    // Payment Action Banner (if not yet marked Paid)
+    const payBannerContainer = document.getElementById('tracker-payment-action-banner') || document.createElement('div');
+    payBannerContainer.id = 'tracker-payment-action-banner';
+    const price = data.pricing?.finalPrice || data.total || 40.50;
+    const isPaid = data.paymentStatus === 'Paid' || ['Printing', 'Quality Inspection', 'Ready to Ship', 'Shipped', 'Completed'].includes(currentStatus);
+
+    if (!isPaid) {
+      payBannerContainer.className = 'p-5 rounded-2xl bg-gradient-to-r from-blue-950/60 via-slate-900 to-slate-900 border border-blue-500/40 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl';
+      payBannerContainer.innerHTML = `
+        <div>
+          <span class="text-[10px] font-mono font-bold text-blue-400 uppercase tracking-wider block">Production Launch</span>
+          <p class="text-sm font-bold text-white mt-0.5">Complete payment of <strong class="text-blue-400">€${price.toFixed(2)}</strong> to start printing</p>
+          <p class="text-xs text-slate-400">MB WAY · Multibanco Reference · Credit Card / Apple Pay</p>
+        </div>
+        <button type="button" id="track-pay-now-btn" class="w-full sm:w-auto px-6 py-3 rounded-xl bg-blue-500 hover:bg-blue-400 text-white font-bold text-xs shadow-lg shadow-blue-500/25 transition-all whitespace-nowrap">
+          💳 Pay &amp; Start Production &rarr;
+        </button>
+      `;
+
+      const summaryCard = container.querySelector('.p-6.sm\\:p-8');
+      if (summaryCard && !summaryCard.contains(payBannerContainer)) {
+        summaryCard.insertBefore(payBannerContainer, summaryCard.firstChild);
+      }
+
+      payBannerContainer.querySelector('#track-pay-now-btn')?.addEventListener('click', () => {
+        if (window.LayerStudiosPayments) {
+          window.LayerStudiosPayments.openPayment({
+            type: data.id.startsWith('LS') ? 'quote' : 'order',
+            id: data.id,
+            amount: price,
+            title: data.projectName || '3D Printing Order',
+            phone: data.phone || '+351 912 345 678',
+            onSuccess: (method) => {
+              window.location.reload();
+            }
+          });
+        }
+      });
+    } else {
+      payBannerContainer.remove();
     }
 
     // 10-Stage Milestone Pipeline rendering
