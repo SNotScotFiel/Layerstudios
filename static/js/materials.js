@@ -27,6 +27,9 @@ class LayerStudiosMaterials {
         this.materials = await res.json();
         this.renderMaterialCards();
         this.renderComparisonTable();
+        if (window.LayerStudiosI18nInstance) {
+          window.LayerStudiosI18nInstance.applyLanguage(window.LayerStudiosI18nInstance.currentLang);
+        }
       }
     } catch (err) {
       console.error('Fetch materials error:', err);
@@ -194,6 +197,10 @@ class LayerStudiosMaterials {
         try { localStorage.setItem('ls_selected_material', recommended); } catch(e){}
         window.location.href = '/quote';
       };
+    }
+
+    if (window.LayerStudiosI18nInstance) {
+      window.LayerStudiosI18nInstance.applyLanguage(window.LayerStudiosI18nInstance.currentLang);
     }
   }
 }
