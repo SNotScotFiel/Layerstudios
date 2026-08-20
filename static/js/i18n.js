@@ -1,7 +1,7 @@
 /**
  * Layer Studios - Complete Internationalization (i18n) Engine (PT-PT / EN)
- * Translates navigation, hero, 3D viewer HUD, quote calculator, store catalog,
- * materials advisor quiz, order tracking, and all UI elements seamlessly.
+ * Translates navigation, hero, 3D viewer HUD, quote calculator, material badges,
+ * dropdown options, placeholders, store catalog, materials quiz, and order tracking.
  */
 
 const LS_PHRASES = [
@@ -67,56 +67,71 @@ const LS_PHRASES = [
   ['Fast 24-48h Dispatch', 'Expedição em 24–48 Horas'],
   ['Dispatched directly from Portugal with tracked express shipping across the EU.', 'Enviado diretamente de Portugal com correio expresso registado para toda a UE.'],
 
-  // Portfolio & Showcase
-  ['Recent Custom Projects', 'Projetos Recentes à Medida'],
-  ['Engineered solutions built for real-world stress, extreme heat, and custom fit.', 'Soluções concebidas para esforço real, temperaturas elevadas e encaixes perfeitos.'],
-  ['All Categories', 'Todas as Categorias'],
-  ['Automotive', 'Automóvel'],
-  ['Robotics & Tech', 'Robótica & Tech'],
-  ['Home & Office', 'Casa & Escritório'],
-  ['Custom Macro Pad Enclosure', 'Caixa para Teclado Macro Pad'],
-  ['VW/Audi Trim Clip Replacement', 'Mola de Friso para VW/Audi'],
-  ['GoPro High-Vibration Mount', 'Suporte GoPro Anti-Vibração'],
-  ['Modular Desk Storage System', 'Sistema Modular de Secretária'],
-  ['Drone Arm Motor Mount', 'Suporte de Motor para Braço de Drone'],
-  ['TPU Impact Bumper Gasket', 'Vedante de Impacto em TPU'],
-
-  // Quote Page
+  // Quote Page - Badges & Materials
   ['Instant 3D Print Quote & Slicer', 'Calculadora e Orçamento de Impressão 3D'],
   ['Upload your 3D file for instant volume analysis and pricing, or request a custom CAD design from our engineers.', 'Carregue o seu ficheiro 3D para análise imediata de volume e preço, ou solicite um projeto CAD à medida aos nossos técnicos.'],
   ['I have a 3D file', 'Tenho um ficheiro 3D (.STL, .3MF, .STEP)'],
   ['I need it designed', 'Preciso de Desenho CAD / Modelação'],
+  ['What would you like us to design?', 'O que gostaria que a nossa equipa desenhasse?'],
+  ['Describe the part — dimensions, purpose, material preference, how it mounts or connects...', 'Descreva a peça — dimensões aproximadas, finalidade, tipo de esforço, onde encaixa ou fixa...'],
   ['Drop your 3D files here', 'Arraste os ficheiros 3D para aqui'],
   ['or click to browse', 'ou clique para procurar ficheiros'],
   ['STL · 3MF · STEP · OBJ · PDF drawings (max 50 MB)', 'Ficheiros STL · 3MF · STEP · OBJ · Desenhos PDF (máx. 50 MB)'],
   ['Print Settings', 'Parâmetros de Fabrico'],
+  ['Material', 'Material'],
+  ['Rigid · Affordable', 'Rígido · Económico'],
+  ['Strong · Heat resistant', 'Resistente · Suporta Calor'],
+  ['Tough · High temp', 'Robusto · Alta Temperatura'],
+  ['Flexible · Impact', 'Flexível · Absorção de Impacto'],
+  ['Premium · Ultra strong', 'Premium · Ultra Resistente'],
+  ['More →', 'Mais →'],
+  ['See all materials', 'Ver todos os materiais'],
+
+  // Dropdown Options
   ['Print Quality', 'Qualidade de Impressão (Altura da Camada)'],
+  ['Fine (0.1mm)', 'Fino (0.10mm - Elevado Detalhe)'],
+  ['Fine (0.10mm)', 'Fino (0.10mm - Elevado Detalhe)'],
+  ['Standard (0.2mm)', 'Padrão (0.20mm - Velocidade & Força)'],
+  ['Standard (0.20mm)', 'Padrão (0.20mm - Velocidade & Força)'],
+  ['Draft (0.3mm)', 'Rascunho (0.30mm - Rápido)'],
+  ['Draft (0.30mm)', 'Rascunho (0.30mm - Rápido)'],
   ['Infill Strength', 'Densidade de Preenchimento (Infill)'],
-  ['Preferred Colour', 'Cor Pretendida'],
-  ['Quantity', 'Quantidade'],
-  ['Ultra Fine (0.12mm)', 'Ultra Fino (0.12mm - Detalhe Máximo)'],
-  ['Fine (0.16mm)', 'Fino (0.16mm - Equilíbrio)'],
-  ['Standard (0.20mm)', 'Padrão (0.20mm - Velocidade & Resistência)'],
-  ['Draft (0.28mm)', 'Rascunho (0.28mm - Rápido)'],
+  ['Light (15%) — Display', 'Leve (15%) — Decorativo'],
   ['Light (15% Infill)', 'Leve (15% Infill - Decorativo)'],
+  ['Standard (30%)', 'Padrão (30% - Funcional)'],
   ['Standard (30% Infill)', 'Padrão (30% Infill - Funcional)'],
+  ['Strong (60%)', 'Reforçado (60% - Esforço Mecânico)'],
   ['Heavy Duty (60% Infill)', 'Reforçado (60% Infill - Esforço Mecânico)'],
+  ['Solid (100%)', 'Sólido (100% - Carga Máxima)'],
   ['Solid (100% Infill)', 'Sólido (100% Infill - Carga Máxima)'],
+  ['Quantity', 'Quantidade'],
+  ['Preferred Colour', 'Cor Pretendida'],
+  ['e.g. Black, White, RAL 5015...', 'ex: Preto, Branco, RAL 5015...'],
   ['Matte Black', 'Preto Mate'],
   ['Signal White', 'Branco Puro'],
   ['Space Grey', 'Cinzento Espacial'],
   ['Royal Blue', 'Azul Royal'],
   ['Signal Orange', 'Laranja Signal'],
   ['Military Green', 'Verde Militar'],
+
+  // Contact Form
   ['Your Details', 'Os Seus Dados de Contacto'],
-  ['Full Name', 'Nome Completo'],
+  ['Name', 'Nome Completo'],
+  ['Your full name', 'O seu nome completo'],
+  ['Email', 'Endereço de Email'],
   ['Email Address', 'Endereço de Email'],
+  ['your@email.com', 'o.seu@email.com'],
   ['Phone Number', 'Número de Telemóvel'],
   ['Company (optional)', 'Empresa (opcional)'],
   ['Shipping Country', 'País de Envio'],
-  ['Project Name', 'Nome do Projeto'],
+  ['Portugal (€4.50 · Free over €50)', 'Portugal Continental (€4.50 · Grátis > €50)'],
+  ['European Union (€9.90)', 'União Europeia (€9.90)'],
+  ['International Tracked (€18.00)', 'Internacional com Rastreio (€18.00)'],
   ['NDA / Confidential project (do not photograph)', 'Projeto Confidencial / NDA (não fotografar nem partilhar)'],
-  ['Additional notes (tolerances, purpose, deadline...)', 'Notas adicionais (tolerâncias, encaixes, esforço, prazo pretendido...)'],
+  ['NDA / Confidential project:', 'Projeto Confidencial / NDA:'],
+  ['Do not photograph or display my part in Layer Studios portfolio.', 'Não fotografar nem publicar a minha peça no portfólio da Layer Studios.'],
+  ['Additional notes', 'Notas adicionais'],
+  ['e.g. M4 brass inserts required, smooth top surface...', 'ex: Inserções roscadas M4, acabamento liso superior...'],
   ['Send Quote Request →', 'Enviar Pedido de Orçamento →'],
   ['Estimated Cost', 'Resumo de Custos Estimados'],
   ['Material cost', 'Custo do Material'],
@@ -125,11 +140,26 @@ const LS_PHRASES = [
   ['Shipping (CTT Expresso)', 'Envio (CTT Expresso Portugal)'],
   ['Total Estimate', 'Total Estimado'],
 
+  // Quick answers / FAQ
+  ['Quick answers', 'Respostas Rápidas'],
+  ['What formats do you accept?', 'Que formatos de ficheiro 3D aceitam?'],
+  ['STL, 3MF, STEP (.step/.stp), OBJ, and ZIP archives. For design requests, we also accept PDF drawings, photos, and sketches.', 'Aceitamos nativamente ficheiros STL, 3MF, STEP (.step/.stp), OBJ e arquivos ZIP. Para projetos novos de raiz, também aceitamos desenhos em PDF, fotografias com medidas e esboços.'],
+  ['How long does it take?', 'Quanto tempo demora a produção?'],
+  ['Most orders are printed and shipped within 24–48 hours after payment. Complex or large parts may take 3–5 business days. We\'ll confirm the timeline when we review your quote.', 'A grande maioria das peças é impressa e expedida em 24 a 48 horas após confirmação. Projetos industriais de grande porte podem demorar 3 a 5 dias úteis. O prazo exato é confirmado na proposta.'],
+  ['What\'s the maximum part size?', 'Qual é o tamanho máximo da peça?'],
+  ['Our build volume is 256 × 256 × 256 mm. Larger parts can be split and glued together — just mention it in the notes.', 'O volume útil da nossa câmara é de 256 × 256 × 256 mm. Peças maiores podem ser fatiadas e unidas mecanicamente com encaixes invisíveis — indique nas notas se desejar.'],
+  ['I don\'t have a 3D file — can you still help?', 'Não tenho ficheiro 3D — podem ajudar?'],
+  ['Absolutely. Switch to "I need it designed" above, describe what you need, and optionally upload a photo, sketch, or PDF. Our team will create the 3D model and share it for your approval.', 'Sem dúvida! Mude para o separador "Preciso de Desenho CAD" acima, descreva o que pretende e anexe fotos ou medidas. A nossa equipa de engenharia cria o modelo 3D para a sua aprovação.'],
+  ['Quote request sent!', 'Pedido de orçamento enviado com sucesso!'],
+  ['We\'ll review your request and get back to you within 2 business hours with a final quote and payment link.', 'A nossa equipa técnica analisará o seu ficheiro e responderá no prazo de 2 horas úteis com a proposta final e link para pagamento.'],
+  ['Done', 'Concluir'],
+
   // Store Page
   ['Layer Studios Store', 'Loja Layer Studios'],
   ['Functional, minimalist, custom 3D printed lifestyle & desk designs.', 'Designs funcionais, minimalistas e impressos em 3D para secretária e lifestyle.'],
   ['All Products', 'Todos os Produtos'],
   ['Desk & Tech', 'Secretária & Tecnologia'],
+  ['Automotive', 'Automóvel'],
   ['Home & Workshop', 'Casa & Oficina'],
   ['Add to Cart', 'Adicionar ao Carrinho'],
   ['Customize & 3D View', 'Personalizar & Ver em 3D'],
@@ -186,16 +216,7 @@ const LS_PHRASES = [
   ['Shipped', 'Enviado via CTT Expresso'],
   ['Completed', 'Entregue / Concluído'],
 
-  // FAQ & Footer
-  ['Frequently Asked Questions', 'Perguntas Frequentes'],
-  ['How fast will I receive my order?', 'Em quanto tempo recebo a minha encomenda?'],
-  ['Most standard orders are sliced, printed, and dispatched within 24 to 48 hours via CTT Expresso in Portugal.', 'A maioria das encomendas é fatiada, impressa e enviada em 24 a 48 horas via CTT Expresso em Portugal continental.'],
-  ['What file formats do you accept?', 'Que formatos de ficheiro 3D aceitam?'],
-  ['We natively accept STL, 3MF, STEP, and OBJ files. For technical drawings, you can also upload PDF sketches.', 'Aceitamos nativamente ficheiros STL, 3MF, STEP e OBJ. Para projetos novos, também pode enviar esboços em PDF.'],
-  ['Can you design a 3D model from scratch for me?', 'Podem desenhar um modelo 3D do zero para mim?'],
-  ['Yes! Switch to the "I need it designed" tab on the Quote page, upload your dimensions or photos, and our CAD engineer will design it for you.', 'Sim! Selecione a opção "Preciso de Desenho CAD" na página de orçamentos, descreva as medidas e criamos o modelo CAD à medida.'],
-  ['Do you ship outside Portugal?', 'Enviam para fora de Portugal?'],
-  ['Yes, we ship across the entire European Union with tracked express shipping.', 'Sim, enviamos para toda a União Europeia com correio expresso registado.'],
+  // Footer
   ['About Our Studio', 'Sobre o Nosso Estúdio'],
   ['Recent Projects', 'Projetos Recentes'],
   ['B2B & Enterprise', 'B2B & Empresas'],
@@ -242,17 +263,25 @@ class LayerStudiosI18n {
     const walkTextNodes = (node) => {
       if (node.nodeType === Node.TEXT_NODE) {
         const text = node.nodeValue.trim();
-        if (text.length > 1) {
+        if (text.length > 0) {
           const lower = text.toLowerCase();
           if (phraseMap.has(lower)) {
             node.nodeValue = phraseMap.get(lower);
           }
         }
       } else if (node.nodeType === Node.ELEMENT_NODE) {
-        // Skip script and style tags
+        // Skip script and style tags and the switcher button itself
         if (node.tagName === 'SCRIPT' || node.tagName === 'STYLE' || node.classList.contains('lang-switcher-btn')) return;
 
-        // Placeholders and inputs
+        // Translate option text in selects
+        if (node.tagName === 'OPTION') {
+          const optText = node.textContent.trim().toLowerCase();
+          if (phraseMap.has(optText)) {
+            node.textContent = phraseMap.get(optText);
+          }
+        }
+
+        // Translate placeholders
         if (node.tagName === 'INPUT' || node.tagName === 'TEXTAREA') {
           if (node.placeholder) {
             const plower = node.placeholder.trim().toLowerCase();
@@ -281,7 +310,7 @@ class LayerStudiosI18n {
       switcher.onclick = () => {
         const nextLang = this.currentLang === 'pt' ? 'en' : 'pt';
         this.setLanguage(nextLang);
-        location.reload(); // Refresh to re-render dynamic template elements seamlessly
+        location.reload();
       };
 
       container.insertBefore(switcher, container.firstChild);
