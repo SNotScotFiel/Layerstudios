@@ -1,10 +1,6 @@
 /**
  * Layer Studios - Real-Time Customer Notifications & Live Order Updates Engine
- * Features:
- *  - Interactive Notification Bell 🔔 with unread badge counter in navbar
- *  - Notification drawer/dropdown with direct tracking links
- *  - Real-time polling for order & quote status transitions
- *  - Instant toast popups on status updates (e.g. "Order LS-1053 moved to Printing")
+ * Professional SVGs, sleek slide-over drawer, and real-time live order toast popups
  */
 
 class LayerStudiosNotifications {
@@ -56,7 +52,7 @@ class LayerStudiosNotifications {
     // Remove any existing duplicate bells
     document.querySelectorAll('.ls-notification-bell-btn').forEach(b => b.remove());
 
-    const containers = header.querySelectorAll('.flex.items-center.space-x-3, .flex.items-center.gap-4, .flex.items-center.gap-3');
+    const containers = header.querySelectorAll('.flex.items-center.space-x-3, .flex.items-center.space-x-2\\.5, .flex.items-center.gap-4, .flex.items-center.gap-3');
     if (containers.length === 0) return;
     const rightContainer = containers[containers.length - 1];
 
@@ -69,43 +65,14 @@ class LayerStudiosNotifications {
         </svg>
         <span id="ls-bell-badge" class="hidden absolute -top-1 -right-1 w-4 h-4 bg-blue-500 text-white font-mono text-[9px] font-bold rounded-full flex items-center justify-center animate-pulse">0</span>
       </button>
-
-      <!-- Account Button -->
-      <a href="/login" id="ls-nav-account-btn" class="ml-2 hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-xs font-semibold text-slate-300 hover:text-white hover:border-slate-700 transition-all whitespace-nowrap">
-        <span id="ls-nav-account-avatar">👤</span>
-        <span id="ls-nav-account-name">Conta</span>
-      </a>
     `;
 
     rightContainer.insertBefore(bellWrapper, rightContainer.firstChild);
-
-    // Update account button if logged in
-    this.updateNavAccountUI();
 
     // Click handler for bell
     document.getElementById('ls-nav-bell-btn')?.addEventListener('click', () => {
       this.toggleDrawer();
     });
-  }
-
-  updateNavAccountUI() {
-    const userJson = localStorage.getItem('ls_user');
-    const guestJson = localStorage.getItem('ls_guest');
-    const accountName = document.getElementById('ls-nav-account-name');
-    if (!accountName) return;
-
-    if (userJson) {
-      try {
-        const user = JSON.parse(userJson);
-        accountName.textContent = user.name ? user.name.split(' ')[0] : 'Conta';
-      } catch (e) {
-        accountName.textContent = 'Conta';
-      }
-    } else if (guestJson) {
-      accountName.textContent = 'Convidado';
-    } else {
-      accountName.textContent = 'Entrar';
-    }
   }
 
   createDrawer() {
@@ -121,9 +88,11 @@ class LayerStudiosNotifications {
           
           <!-- Header -->
           <div class="flex items-center justify-between pb-4 border-b border-slate-800">
-            <div class="flex items-center gap-2">
-              <div class="w-8 h-8 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400 font-bold text-sm">
-                🔔
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                </svg>
               </div>
               <div>
                 <h3 class="text-sm font-bold text-white leading-tight">Centro de Notificações</h3>
@@ -138,10 +107,14 @@ class LayerStudiosNotifications {
 
           <!-- Notification List -->
           <div id="ls-notif-list" class="flex-1 overflow-y-auto space-y-3 pr-1">
-            <div class="p-8 text-center text-slate-500 text-xs space-y-2">
-              <span class="text-3xl block">📭</span>
-              <p>Nenhuma notificação nova no momento.</p>
-              <p class="text-[10px] text-slate-600">As atualizações das suas encomendas aparecerão aqui em tempo real.</p>
+            <div class="p-8 text-center text-slate-500 text-xs space-y-3">
+              <div class="w-12 h-12 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center mx-auto text-slate-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+              </div>
+              <p class="font-medium text-slate-400">Nenhuma notificação nova no momento.</p>
+              <p class="text-[11px] text-slate-600">As atualizações das suas encomendas e orçamentos aparecerão aqui em direto.</p>
             </div>
           </div>
 
@@ -214,10 +187,14 @@ class LayerStudiosNotifications {
 
     if (notifs.length === 0) {
       listEl.innerHTML = `
-        <div class="p-8 text-center text-slate-500 text-xs space-y-2">
-          <span class="text-3xl block">📭</span>
+        <div class="p-8 text-center text-slate-500 text-xs space-y-3">
+          <div class="w-12 h-12 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center mx-auto text-slate-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+            </svg>
+          </div>
           <p class="font-semibold text-slate-400">Sem notificações pendentes</p>
-          <p class="text-[10px] text-slate-600">As atualizações de estado das suas impressões 3D surgirão aqui em direto.</p>
+          <p class="text-[11px] text-slate-600">As atualizações de estado das suas impressões 3D surgirão aqui em direto.</p>
         </div>
       `;
       return;
@@ -233,14 +210,13 @@ class LayerStudiosNotifications {
           : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:border-slate-700'
       }`;
 
-      const icon = n.status === 'Printing' ? '🖨️' :
-                   n.status === 'Shipped' ? '📦' :
-                   n.status === 'Quality Inspection' ? '🔍' :
-                   n.status === 'Paid' ? '💳' : '⚙️';
-
       item.innerHTML = `
         <div class="flex items-start gap-3">
-          <span class="text-xl shrink-0 mt-0.5">${icon}</span>
+          <div class="w-8 h-8 rounded-xl bg-slate-800/80 border border-slate-700 flex items-center justify-center shrink-0 mt-0.5 text-blue-400">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+          </div>
           <div class="flex-1 min-w-0">
             <div class="flex items-center justify-between gap-1 mb-0.5">
               <span class="text-xs font-bold text-white truncate">${n.title || 'Atualização de Encomenda'}</span>
@@ -314,7 +290,11 @@ class LayerStudiosNotifications {
     const toast = document.createElement('div');
     toast.className = 'fixed top-20 right-4 sm:right-6 z-50 p-4 rounded-2xl bg-slate-900 border-2 border-blue-500 text-white shadow-2xl shadow-blue-500/25 max-w-sm w-full animate-fade-in flex items-start gap-3 backdrop-blur-md';
     toast.innerHTML = `
-      <span class="text-2xl">🔔</span>
+      <div class="w-8 h-8 rounded-xl bg-blue-500/20 border border-blue-500/40 flex items-center justify-center shrink-0 text-blue-400">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+        </svg>
+      </div>
       <div class="flex-1">
         <div class="flex items-center justify-between">
           <strong class="text-xs font-bold text-blue-400 uppercase tracking-wide">Atualização em Direto</strong>

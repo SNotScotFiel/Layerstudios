@@ -289,7 +289,9 @@ class LayerStudiosAuth {
     if (allItems.length === 0) {
       listEl.innerHTML = `
         <div class="p-12 text-center text-slate-500 rounded-3xl bg-slate-900/40 border border-slate-800 space-y-3">
-          <span class="text-4xl block">📦</span>
+          <div class="w-12 h-12 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center mx-auto text-slate-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+          </div>
           <p class="font-bold text-white text-base">Ainda não tem encomendas ou orçamentos</p>
           <p class="text-xs text-slate-400 max-w-md mx-auto">Carregue um ficheiro 3D para obter um orçamento imediato ou explore os produtos prontos na loja.</p>
           <div class="flex items-center justify-center gap-3 pt-2">
@@ -318,8 +320,8 @@ class LayerStudiosAuth {
       card.innerHTML = `
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-800">
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl ${isQuote ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'} flex items-center justify-center font-bold font-mono text-sm">
-              ${isQuote ? '3D' : '🛒'}
+            <div class="w-10 h-10 rounded-xl ${isQuote ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'} flex items-center justify-center font-bold font-mono text-xs uppercase tracking-wider">
+              ${isQuote ? '3D' : 'Loja'}
             </div>
             <div>
               <div class="flex items-center gap-2">
@@ -360,9 +362,10 @@ class LayerStudiosAuth {
 
         ${!isPaid ? `
           <div class="pt-2 flex items-center justify-between">
-            <span class="text-xs text-amber-400/90 font-medium">💡 Conclua o pagamento para iniciar a produção imediata.</span>
-            <button type="button" class="btn-pay-item px-4 py-2 rounded-xl bg-blue-500 hover:bg-blue-400 text-white font-bold text-xs shadow-md shadow-blue-500/20 transition-all" data-id="${item.id}" data-amount="${price}" data-title="${item.projectName || item.id}">
-              💳 Pagar Agora
+            <span class="text-xs text-amber-400/90 font-medium">Conclua o pagamento para iniciar a produção imediata.</span>
+            <button type="button" class="btn-pay-item px-4 py-2 rounded-xl bg-blue-500 hover:bg-blue-400 text-white font-bold text-xs shadow-md shadow-blue-500/20 transition-all flex items-center gap-1.5" data-id="${item.id}" data-amount="${price}" data-title="${item.projectName || item.id}">
+              <span>Pagar Agora</span>
+              <span>&rarr;</span>
             </button>
           </div>
         ` : ''}
