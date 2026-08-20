@@ -37,7 +37,7 @@ print(f'[Stripe] Native payment gateway initialized (Active: {STRIPE_AVAILABLE})
 print(f'[Config] Canonical Base URL: {BASE_URL}')
 
 # Server-Side Admin Authentication Configuration
-ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'cavalao123').strip()
+ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'folha123').strip()
 ADMIN_TOKENS = {}  # token -> {'created': timestamp, 'expires': timestamp}
 
 # Rate Limiting Store: ip -> list of failed attempt timestamps

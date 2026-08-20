@@ -106,7 +106,7 @@ def run_audit():
 
     # 4. Admin Workflow: Edit Quote -> Approve -> Update Status -> Tracking
     # Login as admin
-    reqAdm = urllib.request.Request(f"{base}/api/admin/login", data=json.dumps({"password": "cavalao123"}).encode(), headers={"Content-Type": "application/json"})
+    reqAdm = urllib.request.Request(f"{base}/api/admin/login", data=json.dumps({"password": "folha123"}).encode(), headers={"Content-Type": "application/json"})
     with urllib.request.urlopen(reqAdm) as res:
         adm_data = json.loads(res.read())
         adm_token = adm_data['token']
