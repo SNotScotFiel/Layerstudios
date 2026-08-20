@@ -1,5 +1,5 @@
 
-import os, sys, json, time, urllib.parse, urllib.request, mimetypes, uuid, base64, ssl
+import os, sys, json, time, urllib.parse, urllib.request, mimetypes, uuid, base64, ssl, hashlib
 from http.server import HTTPServer, ThreadingHTTPServer, SimpleHTTPRequestHandler
 
 # Load local .env file if present
@@ -34,13 +34,16 @@ os.makedirs(STATIC_DIR, exist_ok=True)
 
 def load_db():
     if not os.path.exists(DB_FILE):
-        return {'quotes': [], 'orders': [], 'products': [], 'materials': [], 'portfolio': [], 'faqs': [], 'promoCodes': [], 'settings': {}}
+        return {'quotes': [], 'orders': [], 'products': [], 'materials': [], 'portfolio': [], 'faqs': [], 'promoCodes': [], 'settings': {}, 'users': [], 'notifications': []}
     try:
         with open(DB_FILE, 'r', encoding='utf-8') as f:
-            return json.load(f)
+            data = json.load(f)
+            data.setdefault('users', [])
+            data.setdefault('notifications', [])
+            return data
     except Exception as e:
         print(f'Error reading DB: {e}')
-        return {'quotes': [], 'orders': [], 'products': [], 'materials': [], 'portfolio': [], 'faqs': [], 'promoCodes': [], 'settings': {}}
+        return {'quotes': [], 'orders': [], 'products': [], 'materials': [], 'portfolio': [], 'faqs': [], 'promoCodes': [], 'settings': {}, 'users': [], 'notifications': []}
 
 def save_db(data):
     try:
@@ -50,6 +53,23 @@ def save_db(data):
     except Exception as e:
         print(f'Error saving DB: {e}')
         return False
+
+def add_notification(db, order_id, title, message, status, email=''):
+    notifs = db.setdefault('notifications', [])
+    notif = {
+        'id': f'notif_{int(time.time() * 1000)}_{uuid.uuid4().hex[:6]}',
+        'orderId': order_id,
+        'title': title,
+        'message': message,
+        'status': status,
+        'email': email.lower().strip() if email else '',
+        'timestamp': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
+        'read': False
+    }
+    notifs.insert(0, notif)
+    if len(notifs) > 200:
+        db['notifications'] = notifs[:200]
+    return notif
 
 class LayerStudiosHandler(SimpleHTTPRequestHandler):
     def end_headers(self):
@@ -176,6 +196,85 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
                 'available': STRIPE_AVAILABLE
             })
 
+        # Auth Profile Endpoint
+        query_params = urllib.parse.parse_qs(parsed.query)
+        if path == '/api/auth/me':
+            auth_header = self.headers.get('Authorization', '')
+            token = ''
+            if auth_header.startswith('Bearer '):
+                token = auth_header.split('Bearer ', 1)[1].strip()
+            if not token:
+                token = query_params.get('token', [''])[0]
+            
+            db = load_db()
+            user = next((u for u in db.get('users', []) if u.get('token') == token), None)
+            if user:
+                return self.send_json(200, {
+                    'success': True,
+                    'user': {
+                        'id': user.get('id'),
+                        'name': user.get('name'),
+                        'email': user.get('email'),
+                        'phone': user.get('phone', '')
+                    }
+                })
+            return self.send_json(401, {'error': 'Unauthorized / Session expired'})
+
+        # Customer Orders / Quotes Endpoint
+        if path == '/api/customer/orders':
+            email = query_params.get('email', [''])[0].strip().lower()
+            token = query_params.get('token', [''])[0].strip()
+            auth_header = self.headers.get('Authorization', '')
+            if auth_header.startswith('Bearer '):
+                token = auth_header.split('Bearer ', 1)[1].strip()
+            
+            db = load_db()
+            if token and not email:
+                user = next((u for u in db.get('users', []) if u.get('token') == token), None)
+                if user:
+                    email = user.get('email', '').lower()
+            
+            quotes = db.get('quotes', [])
+            orders = db.get('orders', [])
+            if email:
+                matched_quotes = [q for q in quotes if q.get('email', '').lower() == email]
+                matched_orders = [o for o in orders if o.get('email', '').lower() == email]
+            else:
+                matched_quotes = []
+                matched_orders = []
+            
+            return self.send_json(200, {
+                'success': True,
+                'email': email,
+                'quotes': matched_quotes,
+                'orders': matched_orders
+            })
+
+        # Customer Notifications Endpoint
+        if path == '/api/customer/notifications':
+            email = query_params.get('email', [''])[0].strip().lower()
+            order_ids_raw = query_params.get('orderIds', [''])[0]
+            order_ids = [oid.strip().lower() for oid in order_ids_raw.split(',') if oid.strip()]
+            
+            db = load_db()
+            all_notifs = db.get('notifications', [])
+            
+            matched = []
+            for n in all_notifs:
+                n_email = n.get('email', '').lower()
+                n_oid = n.get('orderId', '').lower()
+                if email and n_email == email:
+                    matched.append(n)
+                elif order_ids and n_oid in order_ids:
+                    matched.append(n)
+                elif not email and not order_ids:
+                    matched.append(n)
+            
+            return self.send_json(200, {
+                'success': True,
+                'notifications': matched[:30]
+            })
+
         # Static file serving
         if path == '/' or path == '/index.html':
             filepath = os.path.join(STATIC_DIR, 'index.html')
@@ -231,6 +330,117 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
     def do_POST(self):
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path.rstrip('/')
+
+        # 0a. Auth: Register
+        if path == '/api/auth/register':
+            payload = self.read_json_body()
+            name = payload.get('name', '').strip()
+            email = payload.get('email', '').strip().lower()
+            password = payload.get('password', '').strip()
+            phone = payload.get('phone', '').strip()
+            
+            if not email or '@' not in email:
+                return self.send_json(400, {'error': 'Por favor insira um email válido.'})
+            if not password or len(password) < 4:
+                return self.send_json(400, {'error': 'A palavra-passe deve ter pelo menos 4 caracteres.'})
+            
+            db = load_db()
+            users = db.setdefault('users', [])
+            if any(u.get('email', '').lower() == email for u in users):
+                return self.send_json(400, {'error': 'Já existe uma conta com este email. Por favor inicie sessão.'})
+            
+            pwd_hash = hashlib.sha256((password + 'ls_salt_2026').encode()).hexdigest()
+            token = f'usr_{uuid.uuid4().hex}'
+            new_user = {
+                'id': f'usr_{uuid.uuid4().hex[:8]}',
+                'name': name or 'Cliente',
+                'email': email,
+                'phone': phone,
+                'passwordHash': pwd_hash,
+                'token': token,
+                'createdAt': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
+                'lastLogin': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
+            }
+            users.append(new_user)
+            save_db(db)
+            
+            return self.send_json(201, {
+                'success': True,
+                'token': token,
+                'user': {'id': new_user['id'], 'name': new_user['name'], 'email': new_user['email'], 'phone': new_user['phone']}
+            })
+
+        # 0b. Auth: Login
+        if path == '/api/auth/login':
+            payload = self.read_json_body()
+            email = payload.get('email', '').strip().lower()
+            password = payload.get('password', '').strip()
+            
+            db = load_db()
+            users = db.setdefault('users', [])
+            pwd_hash = hashlib.sha256((password + 'ls_salt_2026').encode()).hexdigest()
+            user = next((u for u in users if u.get('email', '').lower() == email and u.get('passwordHash') == pwd_hash), None)
+            
+            if not user:
+                return self.send_json(401, {'error': 'Email ou palavra-passe incorretos.'})
+            
+            token = user.get('token') or f'usr_{uuid.uuid4().hex}'
+            user['token'] = token
+            user['lastLogin'] = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
+            save_db(db)
+            
+            return self.send_json(200, {
+                'success': True,
+                'token': token,
+                'user': {'id': user['id'], 'name': user['name'], 'email': user['email'], 'phone': user.get('phone', '')}
+            })
+
+        # 0c. Auth: Guest Lookup / Instant Access
+        if path == '/api/auth/guest':
+            payload = self.read_json_body()
+            query = payload.get('query', '').strip()
+            if not query:
+                return self.send_json(400, {'error': 'Por favor insira o seu email ou referência da encomenda.'})
+            
+            db = load_db()
+            quotes = db.get('quotes', [])
+            orders = db.get('orders', [])
+            
+            matched_quotes = []
+            matched_orders = []
+            if '@' in query:
+                q_email = query.lower()
+                matched_quotes = [q for q in quotes if q.get('email', '').lower() == q_email]
+                matched_orders = [o for o in orders if o.get('email', '').lower() == q_email]
+            else:
+                q_id = query.lower()
+                matched_quotes = [q for q in quotes if q.get('id', '').lower() == q_id]
+                matched_orders = [o for o in orders if o.get('id', '').lower() == q_id or o.get('quoteId', '').lower() == q_id]
+            
+            return self.send_json(200, {
+                'success': True,
+                'isGuest': True,
+                'query': query,
+                'quotes': matched_quotes,
+                'orders': matched_orders
+            })
+
+        # 0d. Notifications: Mark Read
+        if path == '/api/customer/notifications/read':
+            payload = self.read_json_body()
+            notif_id = payload.get('id')
+            email = payload.get('email', '').strip().lower()
+            
+            db = load_db()
+            for n in db.get('notifications', []):
+                if notif_id and n.get('id') == notif_id:
+                    n['read'] = True
+                elif email and n.get('email', '').lower() == email:
+                    n['read'] = True
+                elif not notif_id and not email:
+                    n['read'] = True
+            save_db(db)
+            return self.send_json(200, {'success': True})
 
         # 1. Create Quote
         if path == '/api/quotes':
@@ -597,9 +807,15 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
             if not quote:
                 return self.send_json(404, {'error': 'Quote not found'})
             
+            old_status = quote.get('status')
             # Update fields
             for key, val in payload.items():
                 quote[key] = val
+            
+            new_status = payload.get('status')
+            if new_status and new_status != old_status:
+                add_notification(db, quote_id, f'Orçamento {quote_id}: {new_status}', f'O estado do seu orçamento {quote_id} foi atualizado para: {new_status}.', new_status, quote.get('email', ''))
+            
             save_db(db)
             return self.send_json(200, {'success': True, 'quote': quote})
 
@@ -612,9 +828,15 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
             if not order:
                 return self.send_json(404, {'error': 'Order not found'})
             
+            old_status = order.get('status')
             # Update fields
             for key, val in payload.items():
                 order[key] = val
+            
+            new_status = payload.get('status')
+            if new_status and new_status != old_status:
+                add_notification(db, order_id, f'Encomenda {order_id}: {new_status}', f'O estado da sua encomenda {order_id} avançou para: {new_status}.', new_status, order.get('email', ''))
+            
             save_db(db)
             return self.send_json(200, {'success': True, 'order': order})
 

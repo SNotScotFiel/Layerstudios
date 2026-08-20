@@ -194,7 +194,22 @@ const LS_PHRASES = [
   ['Production Launch', 'Lançamento de Produção'],
   ['Pay & Start Production →', 'Pagar & Iniciar Produção →'],
   ['Complete payment of', 'Conclua o pagamento de'],
-  ['to start printing', 'para iniciar a impressão']
+  ['to start printing', 'para iniciar a impressão'],
+
+  // Account & Notifications
+  ['Account', 'Conta'],
+  ['My Account', 'Minha Conta'],
+  ['Notification Center', 'Centro de Notificações'],
+  ['Live Production Alerts', 'Live Production Alerts'],
+  ['Log In', 'Iniciar Sessão'],
+  ['Sign Up', 'Criar Conta'],
+  ['Guest Access', 'Acesso de Convidado'],
+  ['Customer Portal', 'Área de Cliente'],
+  ['My Orders & 3D Quotes', 'As Minhas Encomendas & Orçamentos 3D'],
+  ['Clear', 'Limpar'],
+  ['Log Out', 'Sair'],
+  ['Track Order', 'Seguir Encomenda'],
+  ['Live Status', 'Estado em Direto']
 ];
 
 class LayerStudiosI18n {
@@ -274,22 +289,28 @@ class LayerStudiosI18n {
   }
 
   renderLanguageSwitcherInNav() {
-    const navContainers = document.querySelectorAll('header .flex.items-center.space-x-3, header .flex.items-center.gap-4, header .flex.items-center.gap-3');
-    navContainers.forEach(container => {
-      if (container.querySelector('.lang-switcher-btn')) return;
+    // Remove any existing duplicate switcher buttons first
+    document.querySelectorAll('.lang-switcher-btn').forEach(b => b.remove());
 
-      const switcher = document.createElement('button');
-      switcher.type = 'button';
-      switcher.className = 'lang-switcher-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-xs font-mono font-bold text-slate-300 hover:text-white hover:border-slate-700 transition-all cursor-pointer';
-      switcher.innerHTML = this.getSwitcherHTML();
-      switcher.onclick = () => {
-        const nextLang = this.currentLang === 'pt' ? 'en' : 'pt';
-        this.setLanguage(nextLang);
-        location.reload();
-      };
+    const header = document.querySelector('header');
+    if (!header) return;
 
-      container.insertBefore(switcher, container.firstChild);
-    });
+    // Target ONLY the right-side actions container in header
+    const containers = header.querySelectorAll('.flex.items-center.space-x-3, .flex.items-center.gap-4, .flex.items-center.gap-3');
+    if (containers.length === 0) return;
+    const rightContainer = containers[containers.length - 1]; // Select strictly the last (rightmost) container
+
+    const switcher = document.createElement('button');
+    switcher.type = 'button';
+    switcher.className = 'lang-switcher-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-xs font-mono font-bold text-slate-300 hover:text-white hover:border-slate-700 transition-all cursor-pointer';
+    switcher.innerHTML = this.getSwitcherHTML();
+    switcher.onclick = () => {
+      const nextLang = this.currentLang === 'pt' ? 'en' : 'pt';
+      this.setLanguage(nextLang);
+      location.reload();
+    };
+
+    rightContainer.insertBefore(switcher, rightContainer.firstChild);
   }
 
   getSwitcherHTML() {

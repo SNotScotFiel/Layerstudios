@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="pt" class="dark scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Área de Cliente | Layer Studios Portugal</title>
+  <meta name="description" content="Aceda à sua conta Layer Studios para acompanhar o estado das suas impressões 3D, gerir orçamentos e ver o histórico de encomendas.">
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body class="bg-[#09090b] text-[#fafafa] font-sans antialiased min-h-screen flex flex-col selection:bg-blue-500 selection:text-white">
+
+  <!-- NAVBAR -->
+  <header class="sticky top-0 z-40 w-full border-b border-slate-800/80 bg-[#09090b]/90 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16 sm:h-20">
+        
+        <!-- Logo -->
+        <a href="/" class="flex items-center space-x-3 group shrink-0">
+          <div class="w-9 h-9 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform">
+            <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            </svg>
+          </div>
+          <div>
+            <span class="text-lg font-black tracking-tight text-white block leading-none">Layer<span class="text-blue-400">Studios</span></span>
+            <span class="text-[9px] font-mono text-slate-400 uppercase tracking-widest block mt-0.5">3D Printing Studio</span>
+          </div>
+        </a>
+
+        <!-- Desktop Navigation -->
+        <nav class="hidden md:flex items-center space-x-1 lg:space-x-2 text-sm font-medium text-slate-300">
+          <a href="/" class="px-3.5 py-2 rounded-xl hover:text-white hover:bg-slate-900/60 whitespace-nowrap transition-colors">Home</a>
+          <a href="/quote" class="px-3.5 py-2 rounded-xl hover:text-white hover:bg-slate-900/60 whitespace-nowrap transition-colors">Get a Quote</a>
+          <a href="/store" class="px-3.5 py-2 rounded-xl hover:text-white hover:bg-slate-900/60 whitespace-nowrap transition-colors">Store</a>
+          <a href="/materials" class="px-3.5 py-2 rounded-xl hover:text-white hover:bg-slate-900/60 whitespace-nowrap transition-colors">Materials</a>
+          <a href="/track" class="px-3.5 py-2 rounded-xl hover:text-white hover:bg-slate-900/60 whitespace-nowrap transition-colors">Track Order</a>
+        </nav>
+
+        <!-- Right Quick Actions -->
+        <div class="flex items-center space-x-3 shrink-0">
+          <a href="/quote" class="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-blue-500 hover:bg-blue-400 text-white shadow-md shadow-blue-500/20 transition-all whitespace-nowrap">
+            <span>Instant Quote &rarr;</span>
+          </a>
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT -->
+  <main class="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8 relative">
+    
+    <!-- Subtle Background Glow -->
+    <div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+    <!-- 1. AUTH FORMS CONTAINER (Sign In / Sign Up / Guest) -->
+    <div id="auth-forms-container" class="max-w-md w-full relative z-10 space-y-6">
+      
+      <!-- Header Badge -->
+      <div class="text-center space-y-2">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-xs font-mono font-bold text-blue-400">
+          <span>🔒</span>
+          <span>Área de Cliente Segura</span>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight">Bem-vindo à Layer Studios</h1>
+        <p class="text-xs sm:text-sm text-slate-400">Aceda às suas encomendas, orçamentos e notificações em direto.</p>
+      </div>
+
+      <!-- Auth Card -->
+      <div class="p-6 sm:p-8 rounded-3xl bg-slate-900/80 border border-slate-800 backdrop-blur-xl shadow-2xl space-y-6">
+        
+        <!-- Auth Tabs -->
+        <div class="grid grid-cols-3 gap-1.5 p-1 rounded-2xl bg-slate-950 border border-slate-800/80">
+          <button type="button" id="auth-tab-login" class="py-2.5 px-2 rounded-xl border text-xs font-bold transition-all border-blue-500 bg-blue-500/10 text-white">
+            Iniciar Sessão
+          </button>
+          <button type="button" id="auth-tab-register" class="py-2.5 px-2 rounded-xl border text-xs font-semibold transition-all border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700">
+            Criar Conta
+          </button>
+          <button type="button" id="auth-tab-guest" class="py-2.5 px-2 rounded-xl border text-xs font-semibold transition-all border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700">
+            ⚡ Convidado
+          </button>
+        </div>
+
+        <!-- TAB 1: LOGIN FORM -->
+        <form id="auth-form-login" class="space-y-4">
+          <div id="login-error-msg" class="hidden p-3 rounded-xl bg-red-950/80 border border-red-500/40 text-red-300 text-xs font-medium"></div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1.5">Email</label>
+            <input type="email" id="login-email" required placeholder="o.seu.email@exemplo.com" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-3 text-sm text-white focus:border-blue-400 focus:outline-none placeholder-slate-600 transition-colors">
+          </div>
+
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="block text-xs font-semibold text-slate-300">Palavra-passe</label>
+              <a href="#" onclick="alert('Para redefinir a palavra-passe, contacte hello@layerstudios.pt ou utilize o Acesso de Convidado.'); return false;" class="text-[11px] text-blue-400 hover:underline">Esqueceu-se?</a>
+            </div>
+            <input type="password" id="login-password" required placeholder="••••••••" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-3 text-sm text-white focus:border-blue-400 focus:outline-none placeholder-slate-600 transition-colors">
+          </div>
+
+          <button type="submit" id="btn-submit-login" class="w-full py-3.5 rounded-xl bg-blue-500 hover:bg-blue-400 text-white font-bold text-sm shadow-lg shadow-blue-500/25 transition-all transform hover:-translate-y-0.5">
+            Entrar na Conta &rarr;
+          </button>
+        </form>
+
+        <!-- TAB 2: REGISTER FORM -->
+        <form id="auth-form-register" class="hidden space-y-4">
+          <div id="reg-error-msg" class="hidden p-3 rounded-xl bg-red-950/80 border border-red-500/40 text-red-300 text-xs font-medium"></div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1.5">Nome Completo</label>
+            <input type="text" id="reg-name" required placeholder="ex. João Silva" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-3 text-sm text-white focus:border-blue-400 focus:outline-none placeholder-slate-600 transition-colors">
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1.5">Email</label>
+            <input type="email" id="reg-email" required placeholder="joao@exemplo.com" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-3 text-sm text-white focus:border-blue-400 focus:outline-none placeholder-slate-600 transition-colors">
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1.5">Telemóvel (opcional)</label>
+              <input type="tel" id="reg-phone" placeholder="+351 912 345 678" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-3 text-sm text-white focus:border-blue-400 focus:outline-none placeholder-slate-600 transition-colors">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1.5">Palavra-passe</label>
+              <input type="password" id="reg-password" required minlength="4" placeholder="mín. 4 carateres" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-3 text-sm text-white focus:border-blue-400 focus:outline-none placeholder-slate-600 transition-colors">
+            </div>
+          </div>
+
+          <button type="submit" id="btn-submit-register" class="w-full py-3.5 rounded-xl bg-blue-500 hover:bg-blue-400 text-white font-bold text-sm shadow-lg shadow-blue-500/25 transition-all transform hover:-translate-y-0.5">
+            Criar Conta Segura &rarr;
+          </button>
+        </form>
+
+        <!-- TAB 3: GUEST INSTANT LOOKUP -->
+        <form id="auth-form-guest" class="hidden space-y-4">
+          <div class="p-3.5 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-xs text-slate-300 space-y-1">
+            <strong class="text-blue-300 block">⚡ Acesso Sem Conta (Convidado)</strong>
+            <p class="text-[11px] text-slate-400">Não precisa de criar palavra-passe. Basta introduzir o seu email ou o código da sua encomenda/orçamento para aceder de imediato.</p>
+          </div>
+
+          <div id="guest-error-msg" class="hidden p-3 rounded-xl bg-red-950/80 border border-red-500/40 text-red-300 text-xs font-medium"></div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1.5">Email ou Referência (LS-XXXX / ORD-XXXX)</label>
+            <input type="text" id="guest-query" required placeholder="ex. LS-1053 ou cliente@email.com" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-3 text-sm text-white focus:border-blue-400 focus:outline-none placeholder-slate-600 font-mono transition-colors">
+          </div>
+
+          <button type="submit" id="btn-submit-guest" class="w-full py-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm transition-all border border-slate-700">
+            Consultar Encomendas &rarr;
+          </button>
+        </form>
+
+      </div>
+
+      <!-- Trust Badges -->
+      <div class="flex items-center justify-center gap-6 text-xs text-slate-500">
+        <span class="flex items-center gap-1.5"><span class="text-emerald-400">✓</span> 256-Bit SSL Encriptado</span>
+        <span class="flex items-center gap-1.5"><span class="text-emerald-400">✓</span> Acesso Instantâneo</span>
+      </div>
+
+    </div>
+
+    <!-- 2. CUSTOMER DASHBOARD CONTAINER (When Logged In) -->
+    <div id="auth-dashboard-container" class="hidden max-w-4xl w-full relative z-10 space-y-6 animate-fade-in">
+      
+      <!-- Dashboard Top Header Card -->
+      <div class="p-6 sm:p-8 rounded-3xl bg-slate-900/90 border border-slate-800 backdrop-blur-xl shadow-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+        <div class="flex items-center gap-4">
+          <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-2xl shadow-lg shadow-blue-500/25">
+            👤
+          </div>
+          <div>
+            <h2 id="dash-user-name" class="text-xl sm:text-2xl font-black text-white leading-tight">Cliente Layer Studios</h2>
+            <p id="dash-user-email" class="text-xs text-slate-400 font-mono mt-0.5">cliente@layerstudios.pt</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <a href="/quote" class="px-4 py-2.5 rounded-xl bg-blue-500 hover:bg-blue-400 text-white font-bold text-xs shadow-md shadow-blue-500/20 transition-all">
+            + Novo Orçamento 3D
+          </a>
+          <button type="button" id="auth-btn-logout" class="px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-bold text-xs transition-all border border-slate-700">
+            Sair ✕
+          </button>
+        </div>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="grid grid-cols-3 gap-3 sm:gap-4 font-mono">
+        <div class="p-4 sm:p-5 rounded-2xl bg-slate-900/70 border border-slate-800">
+          <span class="text-[10px] text-slate-500 uppercase block mb-1">Orçamentos</span>
+          <span id="dash-stat-quotes" class="text-xl sm:text-2xl font-black text-white">0</span>
+        </div>
+        <div class="p-4 sm:p-5 rounded-2xl bg-slate-900/70 border border-slate-800">
+          <span class="text-[10px] text-slate-500 uppercase block mb-1">Em Impressão</span>
+          <span id="dash-stat-active" class="text-xl sm:text-2xl font-black text-blue-400">0</span>
+        </div>
+        <div class="p-4 sm:p-5 rounded-2xl bg-slate-900/70 border border-slate-800">
+          <span class="text-[10px] text-slate-500 uppercase block mb-1">Encomendas Loja</span>
+          <span id="dash-stat-orders" class="text-xl sm:text-2xl font-black text-emerald-400">0</span>
+        </div>
+      </div>
+
+      <!-- Orders & Quotes List Section -->
+      <div class="space-y-4">
+        <div class="flex items-center justify-between">
+          <h3 class="text-base font-bold text-white">As Minhas Encomendas &amp; Orçamentos 3D</h3>
+          <span class="text-xs text-slate-400 font-mono">Atualizações em Tempo Real</span>
+        </div>
+
+        <div id="dash-orders-list" class="space-y-3">
+          <!-- Dynamic Items Injected by auth.js -->
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-slate-800 bg-slate-950 py-6 text-center text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto px-4">
+      <p>&copy; 2026 Layer Studios. Todos os direitos reservados. Portugal &bull; UE.</p>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="/static/js/payments.js"></script>
+  <script src="/static/js/notifications.js"></script>
+  <script src="/static/js/auth.js"></script>
+  <script src="/static/js/i18n.js"></script>
+</body>
+</html>
