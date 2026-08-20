@@ -36,8 +36,8 @@ STRIPE_AVAILABLE = bool(STRIPE_SECRET_KEY and STRIPE_PUBLISHABLE_KEY)
 print(f'[Stripe] Native payment gateway initialized (Active: {STRIPE_AVAILABLE})')
 print(f'[Config] Canonical Base URL: {BASE_URL}')
 
-# Server-Side Admin Authentication Configuration
-ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'folha123').strip()
+# Server-Side Admin Authentication Configuration (loaded ONLY from Environment Variable)
+ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', '').strip()
 ADMIN_TOKENS = {}  # token -> {'created': timestamp, 'expires': timestamp}
 
 # Rate Limiting Store: ip -> list of failed attempt timestamps
@@ -569,6 +569,9 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
 
             payload = self.read_json_body()
             password = payload.get('password', '').strip()
+
+            if not ADMIN_PASSWORD:
+                return self.send_json(500, {'error': 'ADMIN_PASSWORD environment variable is not configured on server.'})
 
             if hmac.compare_digest(password, ADMIN_PASSWORD):
                 clear_rate_limit(ip)
