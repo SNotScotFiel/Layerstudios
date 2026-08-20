@@ -30,12 +30,32 @@ class LayerStudiosTracker {
     this.checkInitialUrlParams();
   }
 
-  checkInitialUrlParams() {
+  async checkInitialUrlParams() {
     const urlParams = new URLSearchParams(window.location.search);
     const queryId = urlParams.get('id');
+    const isPaid = urlParams.get('paid') === 'true';
+
     if (queryId) {
       const input = document.getElementById('tracker-input-id');
       if (input) input.value = queryId;
+
+      if (isPaid) {
+        // Sync payment status with backend
+        try {
+          const endpoint = queryId.startsWith('LS') ? '/api/quotes' : '/api/orders';
+          await fetch(endpoint, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: queryId, paymentStatus: 'Paid', status: 'Preparing', paymentMethod: 'Stripe (Apple Pay / Google Pay / Card)' })
+          });
+          if (window.LayerStudiosApp) {
+            window.LayerStudiosApp.showToast('🎉 Pagamento confirmado com sucesso! A produção foi iniciada.', 'success');
+          }
+        } catch (e) {
+          console.warn('Auto-sync payment status error:', e);
+        }
+      }
+
       this.track(queryId);
       return;
     }
@@ -179,6 +199,7 @@ class LayerStudiosTracker {
             amount: price,
             title: data.projectName || '3D Printing Order',
             phone: data.phone || '+351 912 345 678',
+            email: data.email || '',
             onSuccess: (method) => {
               window.location.reload();
             }

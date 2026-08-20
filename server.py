@@ -2,6 +2,33 @@
 import os, sys, json, time, urllib.parse, mimetypes, uuid, base64
 from http.server import HTTPServer, ThreadingHTTPServer, SimpleHTTPRequestHandler
 
+# Load local .env file if present
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+env_path = os.path.join(BASE_DIR, '.env')
+if os.path.exists(env_path):
+    with open(env_path, 'r', encoding='utf-8') as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith('#') and '=' in line:
+                k, v = line.split('=', 1)
+                os.environ.setdefault(k.strip(), v.strip())
+
+STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY', '')
+STRIPE_PUBLISHABLE_KEY = os.environ.get('STRIPE_PUBLISHABLE_KEY', '')
+
+try:
+    import stripe
+    if STRIPE_SECRET_KEY:
+        stripe.api_key = STRIPE_SECRET_KEY
+        STRIPE_AVAILABLE = True
+        print('[Stripe] Payment processing enabled')
+    else:
+        STRIPE_AVAILABLE = False
+        print('[Stripe] STRIPE_SECRET_KEY not set — payments disabled')
+except ImportError:
+    STRIPE_AVAILABLE = False
+    print('[Stripe] stripe module not installed — payments disabled')
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, 'data')
 UPLOADS_DIR = os.path.join(BASE_DIR, 'uploads')
@@ -147,6 +174,13 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
                 'activePrints': active_prints,
                 'materialsBreakdown': materials_count,
                 'conversionRate': '68.4%'
+            })
+
+        # Stripe config endpoint
+        if path == '/api/stripe-config':
+            return self.send_json(200, {
+                'publishableKey': STRIPE_PUBLISHABLE_KEY,
+                'available': STRIPE_AVAILABLE
             })
 
         # Static file serving
@@ -436,6 +470,122 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
             if promo:
                 return self.send_json(200, {'valid': True, 'discountPercent': promo.get('discountPercent', 10), 'description': promo.get('description', '')})
             return self.send_json(404, {'valid': False, 'error': 'Invalid or expired promo code'})
+
+        # 6. Stripe Checkout Session
+        if path == '/api/create-checkout-session':
+            if not STRIPE_AVAILABLE:
+                return self.send_json(500, {'error': 'Stripe is not configured on this server'})
+            
+            payload = self.read_json_body()
+            amount_eur = float(payload.get('amount', 0))
+            order_id = payload.get('orderId', '')
+            order_type = payload.get('type', 'order')
+            title = payload.get('title', 'Layer Studios 3D Printing')
+            customer_email = payload.get('email', '')
+            
+            if amount_eur <= 0:
+                return self.send_json(400, {'error': 'Invalid amount'})
+            
+            # Build the base URL from the request Host header
+            host = self.headers.get('Host', 'localhost:8080')
+            protocol = 'https' if 'render.com' in host or 'onrender.com' in host else 'http'
+            base_url = f'{protocol}://{host}'
+            
+            try:
+                session_params = {
+                    'payment_method_types': ['card'],
+                    'line_items': [{
+                        'price_data': {
+                            'currency': 'eur',
+                            'product_data': {
+                                'name': title,
+                                'description': f'Reference: {order_id} — Layer Studios Portugal',
+                            },
+                            'unit_amount': int(round(amount_eur * 100)),  # Stripe uses cents
+                        },
+                        'quantity': 1,
+                    }],
+                    'mode': 'payment',
+                    'success_url': f'{base_url}/track?id={order_id}&paid=true',
+                    'cancel_url': f'{base_url}/track?id={order_id}&cancelled=true',
+                    'metadata': {
+                        'order_id': order_id,
+                        'order_type': order_type,
+                    },
+                    'payment_intent_data': {
+                        'metadata': {
+                            'order_id': order_id,
+                            'order_type': order_type,
+                        }
+                    }
+                }
+                
+                if customer_email:
+                    session_params['customer_email'] = customer_email
+                
+                session = stripe.checkout.Session.create(**session_params)
+                
+                # Mark the order/quote as payment pending
+                db = load_db()
+                if order_type == 'quote':
+                    for q in db.get('quotes', []):
+                        if q.get('id') == order_id:
+                            q['paymentStatus'] = 'Processing'
+                            q['stripeSessionId'] = session.id
+                            break
+                else:
+                    for o in db.get('orders', []):
+                        if o.get('id') == order_id:
+                            o['paymentStatus'] = 'Processing'
+                            o['stripeSessionId'] = session.id
+                            break
+                save_db(db)
+                
+                return self.send_json(200, {
+                    'success': True,
+                    'sessionId': session.id,
+                    'url': session.url
+                })
+            except Exception as e:
+                print(f'Stripe session error: {e}')
+                return self.send_json(500, {'error': f'Payment session failed: {str(e)}'})
+
+        # 7. Stripe Webhook (payment confirmation)
+        if path == '/api/stripe-webhook':
+            try:
+                content_length = int(self.headers.get('Content-Length', 0))
+                body = self.rfile.read(content_length)
+                event = json.loads(body.decode('utf-8'))
+                
+                if event.get('type') == 'checkout.session.completed':
+                    session_data = event.get('data', {}).get('object', {})
+                    metadata = session_data.get('metadata', {})
+                    order_id = metadata.get('order_id', '')
+                    order_type = metadata.get('order_type', 'order')
+                    
+                    if order_id:
+                        db = load_db()
+                        if order_type == 'quote':
+                            for q in db.get('quotes', []):
+                                if q.get('id') == order_id:
+                                    q['paymentStatus'] = 'Paid'
+                                    q['paymentMethod'] = 'Stripe (Card/Apple Pay/Google Pay)'
+                                    q['status'] = 'Preparing'
+                                    break
+                        else:
+                            for o in db.get('orders', []):
+                                if o.get('id') == order_id:
+                                    o['paymentStatus'] = 'Paid'
+                                    o['paymentMethod'] = 'Stripe (Card/Apple Pay/Google Pay)'
+                                    o['status'] = 'Preparing'
+                                    break
+                        save_db(db)
+                        print(f'[Stripe Webhook] Payment confirmed for {order_id}')
+                
+                return self.send_json(200, {'received': True})
+            except Exception as e:
+                print(f'Stripe webhook error: {e}')
+                return self.send_json(400, {'error': str(e)})
 
         return self.send_json(404, {'error': 'Endpoint not found'})
 

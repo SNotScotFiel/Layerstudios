@@ -178,7 +178,23 @@ const LS_PHRASES = [
   ['Recent Projects', 'Projetos Recentes'],
   ['B2B & Enterprise', 'B2B & Empresas'],
   ['Contact & Workshop', 'Contactos & Oficina'],
-  ['© 2026 Layer Studios. All rights reserved. Portugal • EU.', '© 2026 Layer Studios. Todos os direitos reservados. Portugal • UE.']
+  ['© 2026 Layer Studios. All rights reserved. Portugal • EU.', '© 2026 Layer Studios. Todos os direitos reservados. Portugal • UE.'],
+
+  // Payment Modal & Tracker
+  ['Layer Studios Secure Checkout', 'Checkout Seguro Layer Studios'],
+  ['256-Bit SSL Encrypted Gateway', 'Gateway Encriptada SSL de 256-Bits'],
+  ['Total to Pay', 'Total a Pagar'],
+  ['Order Reference', 'Referência da Encomenda'],
+  ['One-Click Checkout', 'Pagamento Rápido em 1 Clique'],
+  ['Pay with Apple Pay / Google Pay / Card', 'Pagar com Apple Pay / Google Pay / Cartão'],
+  ['Pay securely using Apple Pay, Google Pay, or any Credit/Debit Card. Processed directly through Stripe with end-to-end encryption.', 'Pague com total segurança através de Apple Pay, Google Pay ou Cartão de Débito/Crédito. Processado diretamente via Stripe com encriptação de ponta a ponta.'],
+  ['Instant & Direct', 'Instantâneo & Direto'],
+  ['Push Notification', 'Notificação Push'],
+  ['Entity & Ref', 'Entidade & Ref.'],
+  ['Production Launch', 'Lançamento de Produção'],
+  ['Pay & Start Production →', 'Pagar & Iniciar Produção →'],
+  ['Complete payment of', 'Conclua o pagamento de'],
+  ['to start printing', 'para iniciar a impressão']
 ];
 
 class LayerStudiosI18n {

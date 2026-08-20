@@ -559,6 +559,7 @@ class LayerStudiosStore {
                 amount: payload.total,
                 title: `${payload.items[0]?.title || 'Store Merchandise'} (${payload.items.length} items)`,
                 phone: payload.phone || '+351 912 345 678',
+                email: payload.email || '',
                 onSuccess: (method) => {
                   window.location.href = `/track?id=${data.orderId}&paid=true`;
                 }

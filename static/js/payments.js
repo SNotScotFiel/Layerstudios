@@ -1,7 +1,6 @@
 /**
- * Layer Studios - Universal Payment Engine (MB WAY, Multibanco, Card, Apple Pay)
- * Handles payment processing, MB WAY instant notifications, Multibanco reference generation,
- * encrypted card processing, and order/quote state transitions to 'Paid'.
+ * Layer Studios - Universal Payment Engine (Apple Pay, Google Pay, Cards, MB WAY, Multibanco)
+ * Integrated with Stripe Checkout & local Portuguese payment reference methods.
  */
 
 class LayerStudiosPayments {
@@ -49,22 +48,50 @@ class LayerStudiosPayments {
 
         <!-- Method Tabs -->
         <div class="grid grid-cols-3 gap-2 text-xs font-mono">
-          <button type="button" class="pay-method-tab py-2.5 px-3 rounded-xl border font-bold transition-all flex flex-col items-center gap-1 border-blue-500 bg-blue-500/10 text-white" data-method="mbway">
-            <span>📱 MB WAY</span>
-            <span class="text-[9px] text-slate-400 font-normal">Instant Push</span>
+          <button type="button" class="pay-method-tab py-2.5 px-3 rounded-xl border font-bold transition-all flex flex-col items-center gap-1 border-blue-500 bg-blue-500/10 text-white" data-method="stripe">
+            <span>💳 Card / Pay / GPay</span>
+            <span class="text-[9px] text-slate-400 font-normal">Instant &amp; Direct</span>
           </button>
-          <button type="button" class="pay-method-tab py-2.5 px-3 rounded-xl border font-bold transition-all flex flex-col items-center gap-1 border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700" data-method="card">
-            <span>💳 Card / Apple</span>
-            <span class="text-[9px] text-slate-500 font-normal">Stripe Secure</span>
+          <button type="button" class="pay-method-tab py-2.5 px-3 rounded-xl border font-bold transition-all flex flex-col items-center gap-1 border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700" data-method="mbway">
+            <span>📱 MB WAY</span>
+            <span class="text-[9px] text-slate-500 font-normal">Push Notification</span>
           </button>
           <button type="button" class="pay-method-tab py-2.5 px-3 rounded-xl border font-bold transition-all flex flex-col items-center gap-1 border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700" data-method="multibanco">
             <span>🏧 Multibanco</span>
-            <span class="text-[9px] text-slate-500 font-normal">Entity & Ref</span>
+            <span class="text-[9px] text-slate-500 font-normal">Entity &amp; Ref</span>
           </button>
         </div>
 
-        <!-- TAB 1: MB WAY -->
-        <div id="pay-view-mbway" class="space-y-4">
+        <!-- TAB 1: STRIPE CHECKOUT (Apple Pay, Google Pay, Visa, MC) -->
+        <div id="pay-view-stripe" class="space-y-4">
+          <div class="p-4 rounded-2xl bg-gradient-to-br from-blue-950/40 via-slate-900 to-slate-950 border border-blue-500/20 text-xs space-y-2.5 text-slate-300">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-white text-sm">One-Click Checkout</span>
+              <div class="flex items-center gap-1.5 text-base">
+                <span title="Apple Pay">Pay</span>
+                <span title="Google Pay">GPay</span>
+                <span title="Visa/Mastercard">💳</span>
+              </div>
+            </div>
+            <p class="text-[11px] text-slate-400 leading-relaxed">
+              Pay securely using <strong>Apple Pay</strong>, <strong>Google Pay</strong>, or any Credit/Debit Card. Processed directly through Stripe with end-to-end encryption.
+            </p>
+          </div>
+
+          <button type="button" id="pay-btn-stripe-checkout" class="w-full py-4 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold text-sm shadow-xl shadow-blue-500/25 transition-all flex items-center justify-center gap-2.5">
+            <span>🔒 Pay with Apple Pay / Google Pay / Card</span>
+            <span class="font-mono text-xs opacity-90">&rarr;</span>
+          </button>
+
+          <div class="flex items-center justify-center gap-2 text-[10px] text-slate-500 font-mono pt-1">
+            <span>🛡️ Powered by Stripe</span>
+            <span>&bull;</span>
+            <span>PCI-DSS Level 1 Certified</span>
+          </div>
+        </div>
+
+        <!-- TAB 2: MB WAY -->
+        <div id="pay-view-mbway" class="hidden space-y-4">
           <div class="p-4 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-xs space-y-2 text-slate-300">
             <p class="font-semibold text-blue-300">📱 Open your MB WAY app on your phone:</p>
             <p class="text-[11px] text-slate-400">We've sent a payment request to <strong id="pay-mbway-phone-display" class="text-white font-mono">+351 9xx xxx xxx</strong>. You have <strong>04:59</strong> to approve the notification.</p>
@@ -77,34 +104,6 @@ class LayerStudiosPayments {
 
           <button type="button" id="pay-btn-simulate-mbway" class="w-full py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/25 transition-all flex items-center justify-center gap-2">
             <span>✓ Confirm MB WAY Payment</span>
-          </button>
-        </div>
-
-        <!-- TAB 2: CREDIT / DEBIT CARD -->
-        <div id="pay-view-card" class="hidden space-y-4 text-xs font-mono">
-          <div class="space-y-3">
-            <div>
-              <label class="block text-slate-400 mb-1">Card Number</label>
-              <div class="relative">
-                <input type="text" id="pay-card-num" placeholder="4242 •••• •••• 4242" maxlength="19" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-3 text-white focus:border-blue-400 focus:outline-none placeholder-slate-600">
-                <span class="absolute right-3 top-3 text-sm">💳</span>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-3">
-              <div>
-                <label class="block text-slate-400 mb-1">Expiry Date</label>
-                <input type="text" id="pay-card-exp" placeholder="MM / YY" maxlength="5" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-3 text-white focus:border-blue-400 focus:outline-none placeholder-slate-600 text-center">
-              </div>
-              <div>
-                <label class="block text-slate-400 mb-1">CVC / CVV</label>
-                <input type="password" id="pay-card-cvc" placeholder="•••" maxlength="4" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-3 text-white focus:border-blue-400 focus:outline-none placeholder-slate-600 text-center">
-              </div>
-            </div>
-          </div>
-
-          <button type="button" id="pay-btn-submit-card" class="w-full py-3.5 rounded-xl bg-blue-500 hover:bg-blue-400 text-white font-bold text-xs shadow-lg shadow-blue-500/25 transition-all flex items-center justify-center gap-2">
-            <span>🔒 Pay with Card</span>
           </button>
         </div>
 
@@ -164,8 +163,8 @@ class LayerStudiosPayments {
         tab.className = 'pay-method-tab py-2.5 px-3 rounded-xl border font-bold transition-all flex flex-col items-center gap-1 border-blue-500 bg-blue-500/10 text-white';
 
         const method = tab.getAttribute('data-method');
+        modal.querySelector('#pay-view-stripe').classList.toggle('hidden', method !== 'stripe');
         modal.querySelector('#pay-view-mbway').classList.toggle('hidden', method !== 'mbway');
-        modal.querySelector('#pay-view-card').classList.toggle('hidden', method !== 'card');
         modal.querySelector('#pay-view-multibanco').classList.toggle('hidden', method !== 'multibanco');
       };
     });
@@ -174,21 +173,69 @@ class LayerStudiosPayments {
     modal.querySelector('#pay-mb-copy').onclick = () => {
       const ref = modal.querySelector('#pay-mb-ref').textContent;
       navigator.clipboard.writeText(ref.replace(/\s+/g, ''));
-      alert('Referência Multibanco copiada!');
+      if (window.LayerStudiosApp) {
+        window.LayerStudiosApp.showToast('Referência Multibanco copiada!', 'info');
+      } else {
+        alert('Referência Multibanco copiada!');
+      }
+    };
+
+    // Stripe Checkout Button (Apple Pay, Google Pay, Card)
+    modal.querySelector('#pay-btn-stripe-checkout').onclick = async () => {
+      if (!this.currentPayment) return;
+      const { type, id, amount, title, email } = this.currentPayment;
+      const btn = modal.querySelector('#pay-btn-stripe-checkout');
+      const originalText = btn.innerHTML;
+
+      try {
+        btn.disabled = true;
+        btn.innerHTML = `
+          <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          Opening Stripe Checkout...
+        `;
+
+        const res = await fetch('/api/create-checkout-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            orderId: id,
+            type: type || 'order',
+            amount: amount,
+            title: title || 'Layer Studios 3D Printing',
+            email: email || ''
+          })
+        });
+
+        const data = await res.json();
+        if (res.ok && data.url) {
+          window.location.href = data.url;
+        } else {
+          throw new Error(data.error || 'Failed to create checkout session');
+        }
+      } catch (err) {
+        console.error('Stripe checkout redirect error:', err);
+        if (window.LayerStudiosApp) {
+          window.LayerStudiosApp.showToast('Erro ao iniciar pagamento Stripe: ' + err.message, 'error');
+        } else {
+          alert('Could not start Stripe session: ' + err.message);
+        }
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
     };
 
     // Simulate MB WAY
     modal.querySelector('#pay-btn-simulate-mbway').onclick = () => this.handleSuccessPayment('MB WAY');
 
-    // Submit Card
-    modal.querySelector('#pay-btn-submit-card').onclick = () => this.handleSuccessPayment('Card (Stripe)');
-
     // Submit Multibanco
     modal.querySelector('#pay-btn-submit-mb').onclick = () => this.handleSuccessPayment('Multibanco Reference');
   }
 
-  openPayment({ type = 'order', id, amount, title, phone = '+351 912 345 678', onSuccess }) {
-    this.currentPayment = { type, id, amount, title, phone, onSuccess };
+  openPayment({ type = 'order', id, amount, title, phone = '+351 912 345 678', email = '', onSuccess }) {
+    this.currentPayment = { type, id, amount, title, phone, email, onSuccess };
     const modal = this.modal || document.getElementById('ls-payment-gateway-modal');
     if (!modal) return;
 
@@ -214,13 +261,13 @@ class LayerStudiosPayments {
         await fetch('/api/quotes', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id, status: 'Printing', paymentStatus: 'Paid', paymentMethod: method })
+          body: JSON.stringify({ id, status: 'Preparing', paymentStatus: 'Paid', paymentMethod: method })
         });
       } else {
         await fetch('/api/orders', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id, status: 'Printing', paymentStatus: 'Paid', paymentMethod: method })
+          body: JSON.stringify({ id, status: 'Preparing', paymentStatus: 'Paid', paymentMethod: method })
         });
       }
     } catch (err) {
