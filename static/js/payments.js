@@ -21,7 +21,7 @@ class LayerStudiosPayments {
     modal.id = 'ls-payment-gateway-modal';
     modal.className = 'hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in';
     modal.innerHTML = `
-      <div class="bg-slate-900 border border-slate-700 rounded-3xl p-6 sm:p-8 max-w-lg w-full space-y-6 shadow-2xl relative overflow-hidden">
+      <div class="bg-slate-900 border border-slate-700 rounded-3xl p-6 sm:p-8 max-w-lg w-full max-h-[92vh] overflow-y-auto space-y-6 shadow-2xl relative">
         
         <!-- Header -->
         <div class="flex items-center justify-between border-b border-slate-800 pb-4">
