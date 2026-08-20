@@ -14,8 +14,10 @@ class LayerStudiosAuth {
   }
 
   async init() {
+    this.updateNavAccountUI();
     this.setupAuthUI();
     this.checkSession();
+    this.prefillFormFields();
   }
 
   async checkSession() {
@@ -23,6 +25,7 @@ class LayerStudiosAuth {
     if (userJson) {
       try {
         this.user = JSON.parse(userJson);
+        this.updateNavAccountUI();
         this.renderUserDashboard();
         return;
       } catch (e) {}
@@ -37,6 +40,7 @@ class LayerStudiosAuth {
           const data = await res.json();
           this.user = data.user;
           localStorage.setItem('ls_user', JSON.stringify(data.user));
+          this.updateNavAccountUI();
           this.renderUserDashboard();
         }
       } catch (e) {}
@@ -213,23 +217,64 @@ class LayerStudiosAuth {
     const userJson = localStorage.getItem('ls_user');
     const guestJson = localStorage.getItem('ls_guest');
     let label = 'Sign In / Sign Up';
+    let isLoggedIn = false;
+
     if (userJson) {
       try {
         const u = JSON.parse(userJson);
         label = u.name ? u.name.split(' ')[0] : 'Conta';
+        isLoggedIn = true;
       } catch (e) {
         label = 'Conta';
       }
     } else if (guestJson) {
       label = 'Convidado';
+      isLoggedIn = true;
     }
 
     document.querySelectorAll('a[href="/login"]').forEach(link => {
-      const spans = link.querySelectorAll('span');
-      if (spans.length > 0) {
-        spans[spans.length - 1].textContent = label;
+      if (link.classList.contains('mobile-nav-link') || link.closest('#mobile-menu-drawer')) {
+        const mainSpan = link.querySelector('span');
+        if (mainSpan) {
+          mainSpan.textContent = isLoggedIn ? `Minha Conta (${label})` : 'Sign In / Sign Up';
+        }
+      } else {
+        const spans = link.querySelectorAll('span');
+        if (spans.length > 0) {
+          spans[spans.length - 1].textContent = label;
+        }
+        if (isLoggedIn) {
+          link.classList.add('border-blue-500/40', 'bg-blue-500/10', 'text-white');
+          link.classList.remove('bg-slate-900/90', 'text-slate-200');
+        } else {
+          link.classList.remove('border-blue-500/40', 'bg-blue-500/10', 'text-white');
+          link.classList.add('bg-slate-900/90', 'text-slate-200');
+        }
       }
     });
+  }
+
+  prefillFormFields() {
+    const userJson = localStorage.getItem('ls_user');
+    if (!userJson) return;
+    try {
+      const user = JSON.parse(userJson);
+      // Quote page prefill
+      const qName = document.getElementById('quote-name');
+      const qEmail = document.getElementById('quote-email');
+      const qPhone = document.getElementById('quote-phone');
+      if (qName && !qName.value) qName.value = user.name || '';
+      if (qEmail && !qEmail.value) qEmail.value = user.email || '';
+      if (qPhone && !qPhone.value) qPhone.value = user.phone || '';
+
+      // Store checkout prefill
+      const cName = document.getElementById('checkout-name');
+      const cEmail = document.getElementById('checkout-email');
+      const cPhone = document.getElementById('checkout-phone');
+      if (cName && !cName.value) cName.value = user.name || '';
+      if (cEmail && !cEmail.value) cEmail.value = user.email || '';
+      if (cPhone && !cPhone.value) cPhone.value = user.phone || '';
+    } catch (e) {}
   }
 
   handleLogout() {
