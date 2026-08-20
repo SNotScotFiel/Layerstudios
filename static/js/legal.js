@@ -111,7 +111,7 @@ class LayerStudiosLegal {
               </div>
 
               <h4 class="text-sm font-bold text-white">1. Responsável pelo Tratamento</h4>
-              <p>O responsável pelo tratamento dos dados é a <strong>Layer Studios</strong>, com atividade sediada na Área Metropolitana de Lisboa, Portugal. Para qualquer questão sobre os seus dados ou exercício de direitos, contacte-nos através de <code class="text-blue-400">contact@layerstudios.pt</code>.</p>
+              <p>O responsável pelo tratamento dos dados é a <strong>Layer Studios</strong> (titular: <strong>Guilherme Miguel Garcia Cardoso</strong>, NIF <strong>262891808</strong>), com atividade sediada na Área Metropolitana de Lisboa, Portugal. Telefone de contacto: <strong>(+351) 962 118 770</strong>. Para qualquer questão sobre os seus dados ou exercício de direitos, contacte-nos através de <code class="text-blue-400">contact@layerstudios.pt</code>.</p>
 
               <h4 class="text-sm font-bold text-white">2. Dados Recolhidos e Finalidades</h4>
               <ul class="list-disc pl-5 space-y-1.5 text-slate-300">
@@ -140,7 +140,7 @@ class LayerStudiosLegal {
               </div>
 
               <h4 class="text-sm font-bold text-white">1. Data Controller</h4>
-              <p>The data controller is <strong>Layer Studios</strong>, based in Portugal. For any data inquiries or rights requests, contact us at <code class="text-blue-400">contact@layerstudios.pt</code>.</p>
+              <p>The data controller is <strong>Layer Studios</strong> (sole proprietor: <strong>Guilherme Miguel Garcia Cardoso</strong>, Tax ID / NIF <strong>PT262891808</strong>), based in Lisbon area, Portugal. Phone contact: <strong>(+351) 962 118 770</strong>. For any data inquiries or rights requests, contact us at <code class="text-blue-400">contact@layerstudios.pt</code>.</p>
 
               <h4 class="text-sm font-bold text-white">2. Data Collected and Purpose</h4>
               <ul class="list-disc pl-5 space-y-1.5 text-slate-300">
@@ -282,7 +282,7 @@ class LayerStudiosLegal {
               <p class="text-slate-400 text-xs">Nos termos da alínea c) do n.º 1 do artigo 17.º do Decreto-Lei n.º 24/2014 e da Diretiva Europeia 2011/83/UE, o direito de livre resolução (devolução por desistência em 14 dias) <em>não se aplica a bens personalizados ou confecionados de acordo com especificações do consumidor (impressões 3D sob medida)</em>, sem prejuízo da total garantia legal contra defeitos de fabrico e não conformidades.</p>
 
               <h4 class="text-sm font-bold text-white">4. Como Solicitar Suporte</h4>
-              <p>Envie uma fotografia da peça e a referência da sua encomenda para <code class="text-blue-400">contact@layerstudios.pt</code>. Respondemos prontamente em dias úteis.</p>
+              <p>Envie uma fotografia da peça e a referência da sua encomenda para <code class="text-blue-400">contact@layerstudios.pt</code> ou contacte <strong>(+351) 962 118 770</strong>. Respondemos prontamente em dias úteis.</p>
             </div>
           `
         } : {
@@ -316,10 +316,12 @@ class LayerStudiosLegal {
               <h4 class="text-sm font-bold text-white">1. Identificação do Prestador de Serviços</h4>
               <div class="p-4 rounded-xl bg-slate-950 border border-slate-800 text-xs space-y-1.5 font-mono text-slate-300">
                 <p><strong>Nome Comercial:</strong> Layer Studios</p>
+                <p><strong>Titular / Entidade Legal:</strong> Guilherme Miguel Garcia Cardoso</p>
+                <p><strong>NIF:</strong> 262891808</p>
                 <p><strong>Atividade:</strong> Serviços de Impressão 3D, Prototipagem e Modelação CAD</p>
                 <p><strong>Sede Operacional:</strong> Área Metropolitana de Lisboa, Portugal</p>
+                <p><strong>Telefone / WhatsApp:</strong> (+351) 962 118 770</p>
                 <p><strong>Email de Contacto:</strong> contact@layerstudios.pt</p>
-                <p><strong>NIF / Registo Comercial:</strong> [Aguarda Configuração do Proprietário]</p>
               </div>
 
               <h4 class="text-sm font-bold text-white">2. Livro de Reclamações Eletrónico</h4>
@@ -339,10 +341,12 @@ class LayerStudiosLegal {
               <h4 class="text-sm font-bold text-white">1. Service Provider Identification</h4>
               <div class="p-4 rounded-xl bg-slate-950 border border-slate-800 text-xs space-y-1.5 font-mono text-slate-300">
                 <p><strong>Trading Name:</strong> Layer Studios</p>
+                <p><strong>Legal Entity / Sole Proprietor:</strong> Guilherme Miguel Garcia Cardoso</p>
+                <p><strong>Tax ID (NIF):</strong> PT262891808</p>
                 <p><strong>Activity:</strong> 3D Printing, Prototyping & CAD Design Services</p>
                 <p><strong>Operating Base:</strong> Lisbon area, Portugal</p>
+                <p><strong>Phone / Support:</strong> (+351) 962 118 770</p>
                 <p><strong>Contact Email:</strong> contact@layerstudios.pt</p>
-                <p><strong>Tax ID / NIF:</strong> [Owner Configuration Required]</p>
               </div>
 
               <h4 class="text-sm font-bold text-white">2. Electronic Complaints Book (Portugal)</h4>
