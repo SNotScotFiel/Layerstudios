@@ -85,8 +85,7 @@ class LayerStudiosNotifications {
       <div id="ls-notif-backdrop" class="absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity"></div>
       <div class="fixed inset-y-0 right-0 max-w-full flex pl-10">
         <div class="w-screen max-w-sm sm:max-w-md bg-slate-950 border-l border-slate-800 shadow-2xl flex flex-col p-6 space-y-4">
-          
-          <!-- Header -->
+                   <!-- Header -->
           <div class="flex items-center justify-between pb-4 border-b border-slate-800">
             <div class="flex items-center gap-2.5">
               <div class="w-8 h-8 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400">
@@ -95,38 +94,23 @@ class LayerStudiosNotifications {
                 </svg>
               </div>
               <div>
-                <h3 class="text-sm font-bold text-white leading-tight">Centro de Notificações</h3>
+                <h3 class="text-sm font-bold text-white leading-tight">Notification Center</h3>
                 <span class="text-[10px] text-slate-400 font-mono">Live Production Alerts</span>
               </div>
             </div>
             <div class="flex items-center gap-2">
-              <button type="button" id="ls-notif-mark-read" class="text-[11px] text-slate-400 hover:text-blue-400 font-semibold px-2 py-1 rounded-lg hover:bg-slate-900 transition-all">Limpar</button>
-              <button type="button" id="ls-notif-close" class="p-2 text-slate-400 hover:text-white rounded-xl bg-slate-900 transition-colors">✕</button>
+              <button type="button" id="ls-notif-mark-read" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 transition-colors">
+                Clear
+              </button>
+              <button type="button" id="ls-notif-close" class="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-900 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+              </button>
             </div>
           </div>
 
-          <!-- Notification List -->
-          <div id="ls-notif-list" class="flex-1 overflow-y-auto space-y-3 pr-1">
-            <div class="p-8 text-center text-slate-500 text-xs space-y-3">
-              <div class="w-12 h-12 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center mx-auto text-slate-600">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                </svg>
-              </div>
-              <p class="font-medium text-slate-400">Nenhuma notificação nova no momento.</p>
-              <p class="text-[11px] text-slate-600">As atualizações das suas encomendas e orçamentos aparecerão aqui em direto.</p>
-            </div>
-          </div>
-
-          <!-- Footer Action -->
-          <div class="pt-4 border-t border-slate-800 flex items-center justify-between">
-            <a href="/track" class="text-xs text-blue-400 hover:text-blue-300 font-semibold flex items-center gap-1">
-              <span>Seguir Encomenda</span>
-              <span>&rarr;</span>
-            </a>
-            <a href="/login" class="text-xs text-slate-400 hover:text-white font-semibold">
-              Minha Conta &bull;
-            </a>
+          <!-- Notification Items Container -->
+          <div id="ls-notif-list" class="flex-1 overflow-y-auto space-y-2.5 pr-1">
+            <!-- Items injected by js -->
           </div>
 
         </div>
@@ -193,10 +177,13 @@ class LayerStudiosNotifications {
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
             </svg>
           </div>
-          <p class="font-semibold text-slate-400">Sem notificações pendentes</p>
-          <p class="text-[11px] text-slate-600">As atualizações de estado das suas impressões 3D surgirão aqui em direto.</p>
+          <p class="font-semibold text-slate-400">No pending notifications</p>
+          <p class="text-[11px] text-slate-600">Live status updates on your 3D prints will appear here in real time.</p>
         </div>
       `;
+      if (window.LayerStudiosI18nInstance) {
+        window.LayerStudiosI18nInstance.applyLanguage(window.LayerStudiosI18nInstance.currentLang);
+      }
       return;
     }
 

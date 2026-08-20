@@ -302,7 +302,7 @@ class LayerStudiosAuth {
 
     const nameEl = document.getElementById('dash-user-name');
     const emailEl = document.getElementById('dash-user-email');
-    if (nameEl) nameEl.textContent = this.user?.name || 'Cliente Layer Studios';
+    if (nameEl) nameEl.textContent = this.user?.name || 'Layer Studios Client';
     if (emailEl) emailEl.textContent = this.user?.email || '';
 
     // Load user orders and quotes
@@ -314,6 +314,10 @@ class LayerStudiosAuth {
       }
     } catch (e) {
       console.warn('Could not load customer dashboard items:', e);
+    }
+
+    if (window.LayerStudiosI18nInstance) {
+      window.LayerStudiosI18nInstance.applyLanguage(window.LayerStudiosI18nInstance.currentLang);
     }
   }
 
@@ -327,10 +331,14 @@ class LayerStudiosAuth {
 
     const nameEl = document.getElementById('dash-user-name');
     const emailEl = document.getElementById('dash-user-email');
-    if (nameEl) nameEl.textContent = 'Acesso de Convidado';
+    if (nameEl) nameEl.textContent = 'Guest Access';
     if (emailEl) emailEl.textContent = data.query || '';
 
     this.renderOrdersAndQuotes(data.quotes || [], data.orders || []);
+
+    if (window.LayerStudiosI18nInstance) {
+      window.LayerStudiosI18nInstance.applyLanguage(window.LayerStudiosI18nInstance.currentLang);
+    }
   }
 
   renderOrdersAndQuotes(quotes, orders) {
@@ -358,14 +366,17 @@ class LayerStudiosAuth {
           <div class="w-12 h-12 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center mx-auto text-slate-600">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
           </div>
-          <p class="font-bold text-white text-base">Ainda não tem encomendas ou orçamentos</p>
-          <p class="text-xs text-slate-400 max-w-md mx-auto">Carregue um ficheiro 3D para obter um orçamento imediato ou explore os produtos prontos na loja.</p>
+          <p class="font-bold text-white text-base">You have no quotes or orders yet</p>
+          <p class="text-xs text-slate-400 max-w-md mx-auto">Upload a 3D file to get an instant quote or explore our ready-to-ship store products.</p>
           <div class="flex items-center justify-center gap-3 pt-2">
-            <a href="/quote" class="px-5 py-2.5 rounded-xl bg-blue-500 hover:bg-blue-400 text-white font-bold text-xs shadow-lg shadow-blue-500/25">Novo Orçamento 3D &rarr;</a>
-            <a href="/store" class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs">Ver Loja</a>
+            <a href="/quote" class="px-5 py-2.5 rounded-xl bg-blue-500 hover:bg-blue-400 text-white font-bold text-xs shadow-lg shadow-blue-500/25">New 3D Quote &rarr;</a>
+            <a href="/store" class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs">Browse Store</a>
           </div>
         </div>
       `;
+      if (window.LayerStudiosI18nInstance) {
+        window.LayerStudiosI18nInstance.applyLanguage(window.LayerStudiosI18nInstance.currentLang);
+      }
       return;
     }
 
@@ -387,21 +398,21 @@ class LayerStudiosAuth {
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-800">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl ${isQuote ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'} flex items-center justify-center font-bold font-mono text-xs uppercase tracking-wider">
-              ${isQuote ? '3D' : 'Loja'}
+              ${isQuote ? '3D' : 'Store'}
             </div>
             <div>
               <div class="flex items-center gap-2">
                 <span class="font-mono font-bold text-white text-sm">${item.id}</span>
                 <span class="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold border ${statusColor}">${status}</span>
               </div>
-              <p class="text-xs text-slate-400 font-medium truncate max-w-sm mt-0.5">${item.projectName || (item.items && item.items[0]?.title) || 'Impressão 3D Personalizada'}</p>
+              <p class="text-xs text-slate-400 font-medium truncate max-w-sm mt-0.5">${item.projectName || (item.items && item.items[0]?.title) || 'Custom 3D Print Request'}</p>
             </div>
           </div>
 
           <div class="flex items-center gap-3 self-end sm:self-auto">
             <span class="font-mono font-black text-lg text-white">€${price.toFixed(2)}</span>
             <a href="/track?id=${item.id}" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs font-mono transition-all">
-              Seguir &rarr;
+              Track &rarr;
             </a>
           </div>
         </div>
@@ -413,24 +424,24 @@ class LayerStudiosAuth {
             <span class="text-slate-200 font-semibold truncate block">${item.material || (item.items && item.items[0]?.material) || 'PETG'}</span>
           </div>
           <div class="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80">
-            <span class="text-[9px] text-slate-500 uppercase block mb-0.5">Quantidade</span>
+            <span class="text-[9px] text-slate-500 uppercase block mb-0.5">Quantity</span>
             <span class="text-slate-200 font-semibold block">${item.quantity || (item.items && item.items[0]?.quantity) || 1} un.</span>
           </div>
           <div class="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80">
-            <span class="text-[9px] text-slate-500 uppercase block mb-0.5">Pagamento</span>
-            <span class="${isPaid ? 'text-emerald-400' : 'text-amber-400'} font-semibold block">${isPaid ? '✓ Pago' : 'Pendente'}</span>
+            <span class="text-[9px] text-slate-500 uppercase block mb-0.5">Payment</span>
+            <span class="${isPaid ? 'text-emerald-400' : 'text-amber-400'} font-semibold block">${isPaid ? '✓ Paid' : 'Pending'}</span>
           </div>
           <div class="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80">
-            <span class="text-[9px] text-slate-500 uppercase block mb-0.5">Data</span>
-            <span class="text-slate-400 block">${item.createdAt ? new Date(item.createdAt).toLocaleDateString('pt-PT') : 'Hoje'}</span>
+            <span class="text-[9px] text-slate-500 uppercase block mb-0.5">Date</span>
+            <span class="text-slate-400 block">${item.createdAt ? new Date(item.createdAt).toLocaleDateString('pt-PT') : 'Today'}</span>
           </div>
         </div>
 
         ${!isPaid ? `
           <div class="pt-2 flex items-center justify-between">
-            <span class="text-xs text-amber-400/90 font-medium">Conclua o pagamento para iniciar a produção imediata.</span>
+            <span class="text-xs text-amber-400/90 font-medium">Complete payment to initiate immediate production.</span>
             <button type="button" class="btn-pay-item px-4 py-2 rounded-xl bg-blue-500 hover:bg-blue-400 text-white font-bold text-xs shadow-md shadow-blue-500/20 transition-all flex items-center gap-1.5" data-id="${item.id}" data-amount="${price}" data-title="${item.projectName || item.id}">
-              <span>Pagar Agora</span>
+              <span>Pay Now</span>
               <span>&rarr;</span>
             </button>
           </div>
@@ -453,6 +464,10 @@ class LayerStudiosAuth {
 
       listEl.appendChild(card);
     });
+
+    if (window.LayerStudiosI18nInstance) {
+      window.LayerStudiosI18nInstance.applyLanguage(window.LayerStudiosI18nInstance.currentLang);
+    }
   }
 }
 
