@@ -1,7 +1,7 @@
 /**
  * Layer Studios - Complete Internationalization (i18n) Engine (PT-PT / EN)
- * Translates navigation, hero, 3D viewer HUD, quote calculator, material badges,
- * dropdown options, placeholders, store catalog, materials quiz, and order tracking.
+ * Complete natural Portuguese (PT-PT) and English translation for all pages,
+ * hero copy, 3D viewer HUD, service cards, material badges, dropdown options, and forms.
  */
 
 const LS_PHRASES = [
@@ -16,15 +16,25 @@ const LS_PHRASES = [
   ['New Quote', 'Novo Orçamento'],
   ['Exit to Site', 'Voltar ao Site'],
 
-  // Hero Section
+  // Hero Section (Screenshot 1)
+  ['Studio open in Portugal • EU delivery in 24–48h', 'Estúdio aberto em Portugal • Envio UE em 24–48h'],
+  ['Studio open in Portugal · EU delivery in 24–48h', 'Estúdio aberto em Portugal · Envio UE em 24–48h'],
   ['You imagine it.', 'Tu imaginas.'],
   ['We print it.', 'Nós imprimimos.'],
   ['256³ mm Bambu Lab · Precision Studio in Portugal', '256³ mm Bambu Lab · Estúdio de Precisão em Portugal'],
+  ['Precision 3D printing, rapid prototyping, and custom replacement parts made easy. Drop your CAD file or send us a sketch — we\'ll handle the slicing, materials, and delivery.', 'Impressão 3D de precisão, prototipagem rápida e peças à medida sem complicações. Envie o seu ficheiro CAD ou esboço — tratamos do fatiamento, materiais e entrega.'],
   ['Professional 3D printing & rapid prototyping studio in Portugal. Upload your STL or 3MF file, get an instant estimate, or order custom-engineered functional designs.', 'Estúdio profissional de impressão 3D e prototipagem rápida em Portugal. Carregue o seu ficheiro STL ou 3MF, obtenha uma estimativa imediata ou encomende peças à medida.'],
+  ['Upload 3D File • Instant Quote', 'Carregar Ficheiro 3D • Orçamento Imediato'],
+  ['Upload 3D File · Instant Quote', 'Carregar Ficheiro 3D · Orçamento Imediato'],
+  ['Upload 3D File • Instant Quote →', 'Carregar Ficheiro 3D • Orçamento Imediato →'],
   ['Instant Quote & Slicer →', 'Orçamento e Slicer 3D →'],
   ['Instant Quote & Slicer', 'Orçamento e Slicer 3D'],
+  ['Browse Store Catalog', 'Explorar Catálogo da Loja'],
   ['Browse Catalog', 'Ver Catálogo da Loja'],
   ['Explore Catalog', 'Ver Catálogo'],
+  ['Tolerance Accuracy', 'Tolerância de Precisão'],
+  ['Build Volume', 'Volume de Impressão'],
+  ['Standard Turnaround', 'Prazo Padrão de Envio'],
   ['256³ mm Build Plate', 'Base 256³ mm Bambu Lab'],
   ['24–48h Fast Turnaround', 'Produção Rápida em 24–48h'],
   ['Free Shipping > €50 in PT', 'Envio Grátis > €50 em Portugal'],
@@ -32,7 +42,48 @@ const LS_PHRASES = [
   ['Multi-Material & Carbon Fiber', 'Multi-Material e Fibra de Carbono'],
   ['Instant 3D CAD Geometry Analysis', 'Análise Geométrica 3D Instantânea'],
 
-  // 3D Slicer & Preview
+  // 3 Core Pillars (Screenshot 3)
+  ['24–48h Rapid Turnaround', 'Produção Rápida em 24–48h'],
+  ['Local production in Portugal with express domestic shipping and fast EU courier delivery.', 'Produção local em Portugal com envio expresso nacional e entregas rápidas em toda a UE.'],
+  ['Industrial Tolerances', 'Tolerâncias Industriais'],
+  ['Calibrated direct-drive motion systems achieving ±0.15mm accuracy and perfect layer bonding.', 'Sistemas calibrados de acionamento direto atingindo precisão de ±0.15mm e adesão perfeita entre camadas.'],
+  ['Friendly for Beginners', 'Acessível a Iniciantes'],
+  ['No 3D experience needed. We inspect every model, fix manifold errors, and recommend the best settings.', 'Sem necessidade de experiência em 3D. Inspecionamos cada modelo, corrigimos erros geométricos e recomendamos as melhores definições.'],
+
+  // Capabilities & Services Section (Screenshot 2)
+  ['Capabilities', 'Capacidades'],
+  ['Full-Spectrum Manufacturing & CAD Design', 'Fabrico Abrangente & Modelação CAD'],
+  ['Full-Spectrum Manufacturing &amp; CAD Design', 'Fabrico Abrangente & Modelação CAD'],
+  ['Whether you have a ready CAD model or just a broken plastic part you need replicated, Layer Studios provides end-to-end service.', 'Quer tenha um modelo CAD pronto ou apenas uma peça partida para replicar, a Layer Studios oferece um serviço completo de ponta a ponta.'],
+  
+  ['Rapid Prototyping', 'Prototipagem Rápida'],
+  ['Turn digital CAD concepts into testable physical models in hours. Test ergonomic fit, mechanics, and form factor before investing in expensive tooling.', 'Transforme conceitos digitais em modelos físicos testáveis em poucas horas. Valide ergonomia, mecânica e encaixes antes de investir em moldes caros.'],
+  ['Request prototype quote', 'Pedir orçamento de protótipo'],
+  ['Request prototype quote →', 'Pedir orçamento de protótipo →'],
+
+  ['Small-Batch Production', 'Produção em Pequena Série'],
+  ['Produce from 5 to 500+ end-use parts without injection mould upfront costs. Ideal for market testing, custom electronic enclosures, and bespoke hardware.', 'Produza de 5 a 500+ peças funcionais sem custos iniciais de moldes de injeção. Ideal para testes de mercado, caixas de eletrónica e hardware sob medida.'],
+  ['Calculate batch pricing', 'Calcular preço de série'],
+  ['Calculate batch pricing →', 'Calcular preço de série →'],
+
+  ['Replacement & Obsolete Parts', 'Peças de Substituição & Descontinuadas'],
+  ['Replacement &amp; Obsolete Parts', 'Peças de Substituição & Descontinuadas'],
+  ['Discontinued appliance gears, broken car trim clips, drone arms, or vacuum mounts. Send us caliper measurements or fragments for 1:1 replacement.', 'Engrenagens de eletrodomésticos, molas de friso automóvel partidas, braços de drone ou suportes. Envie medidas ou fragmentos para substituição 1:1.'],
+  ['Send broken part photo', 'Enviar foto da peça partida'],
+  ['Send broken part photo →', 'Enviar foto da peça partida →'],
+
+  ['CAD & Reverse Engineering', 'Modelação CAD & Engenharia Inversa'],
+  ['CAD &amp; Reverse Engineering', 'Modelação CAD & Engenharia Inversa'],
+  ['No 3D file? We create precision STEP and STL solid CAD files from dimensioned sketches, technical drawings, or physical samples.', 'Sem ficheiro 3D? Criamos ficheiros CAD sólidos de precisão (STEP e STL) a partir de esboços cotados, desenhos técnicos ou amostras físicas.'],
+
+  ['Post-Processing & Finishing', 'Pós-Processamento & Acabamentos'],
+  ['Post-Processing &amp; Finishing', 'Pós-Processamento & Acabamentos'],
+  ['Chemical vapour smoothing, multi-grit sanding, UV-stable priming, brass heat-set threaded inserts, and assembly bonding.', 'Alisamento por vapor químico, lixagem progressiva, primário anti-UV, inserções roscadas em latão e colagem estrutural.'],
+
+  ['Material Selection Advisory', 'Consultoria e Escolha de Materiais'],
+  ['Get expert engineering advice on selecting between PLA+, PETG, ABS, TPU 95A, and Carbon-Fiber Nylon based on heat, load, and chemical resistance.', 'Aconselhamento técnico especializado na escolha entre PLA+, PETG, ABS, TPU 95A e Nylon com Fibra de Carbono consoante calor, esforço e agentes químicos.'],
+
+  // 3D Slicer & Preview HUD
   ['3D Model Preview', 'Pré-visualização 3D'],
   ['Layer Preview', 'Pré-visualização de Camadas'],
   ['Model Analysis', 'Análise do Modelo 3D'],
@@ -44,6 +95,7 @@ const LS_PHRASES = [
   ['Est. Time', 'Tempo Est.'],
   ['Est. Filament', 'Filamento Est.'],
   ['Filament', 'Filamento'],
+  ['Weight', 'Peso Est.'],
   ['Fits on plate', '✓ Cabe na mesa'],
   ['Exceeds 256mm', '⚠ Excede 256mm'],
   ['Rotate 360°', 'Rodar 360°'],
@@ -51,21 +103,9 @@ const LS_PHRASES = [
   ['Wireframe', 'Estrutura Arestas'],
   ['Solid View', 'Vista Sólida'],
   ['Slice Height', 'Altura da Camada'],
-  ['Top View', 'Vista Superior'],
-  ['Front View', 'Vista Frontal'],
-  ['Side View', 'Vista Lateral'],
-
-  // Pillars & Features
-  ['Why Layer Studios', 'Porquê a Layer Studios'],
-  ['Industrial quality for creators, engineers, and automotive enthusiasts.', 'Qualidade industrial para criadores, engenheiros e apaixonados por automóveis.'],
-  ['High-Speed Bambu Precision', 'Precisão Bambu Lab de Alta Velocidade'],
-  ['CoreXY kinematics delivering sub-millimeter tolerances and buttery-smooth layer lines.', 'Cinemática CoreXY com tolerâncias submilimétricas e acabamento impecável.'],
-  ['Engineering Grade Filaments', 'Filamentos de Grau de Engenharia'],
-  ['Carbon-Fiber Nylon, heat-resistant PETG/ABS, and ultra-durable TPU 95A.', 'Nylon com Fibra de Carbono, PETG/ABS resistente ao calor e TPU 95A flexível.'],
-  ['Instant Physics-Based Quoting', 'Orçamento Baseado em Física Real'],
-  ['Transparent pricing derived from your exact 3D volume, mass, and machine time.', 'Preços transparentes calculados a partir do volume, massa e tempo de máquina reais.'],
-  ['Fast 24-48h Dispatch', 'Expedição em 24–48 Horas'],
-  ['Dispatched directly from Portugal with tracked express shipping across the EU.', 'Enviado diretamente de Portugal com correio expresso registado para toda a UE.'],
+  ['Layer Slice', 'Corte de Camadas'],
+  ['Axes', 'Eixos XYZ'],
+  ['Auto', 'Rotação Auto'],
 
   // Quote Page - Badges & Materials
   ['Instant 3D Print Quote & Slicer', 'Calculadora e Orçamento de Impressão 3D'],
@@ -252,17 +292,19 @@ class LayerStudiosI18n {
     // Build phrase lookup map
     const phraseMap = new Map();
     LS_PHRASES.forEach(([en, pt]) => {
+      const cleanEn = en.trim().replace(/\s+/g, ' ');
+      const cleanPt = pt.trim().replace(/\s+/g, ' ');
       if (isPT) {
-        phraseMap.set(en.trim().toLowerCase(), pt);
+        phraseMap.set(cleanEn.toLowerCase(), cleanPt);
       } else {
-        phraseMap.set(pt.trim().toLowerCase(), en);
+        phraseMap.set(cleanPt.toLowerCase(), cleanEn);
       }
     });
 
     // Deep text node translation across the document
     const walkTextNodes = (node) => {
       if (node.nodeType === Node.TEXT_NODE) {
-        const text = node.nodeValue.trim();
+        const text = node.nodeValue.trim().replace(/\s+/g, ' ');
         if (text.length > 0) {
           const lower = text.toLowerCase();
           if (phraseMap.has(lower)) {
@@ -275,7 +317,7 @@ class LayerStudiosI18n {
 
         // Translate option text in selects
         if (node.tagName === 'OPTION') {
-          const optText = node.textContent.trim().toLowerCase();
+          const optText = node.textContent.trim().replace(/\s+/g, ' ').toLowerCase();
           if (phraseMap.has(optText)) {
             node.textContent = phraseMap.get(optText);
           }
@@ -284,7 +326,7 @@ class LayerStudiosI18n {
         // Translate placeholders
         if (node.tagName === 'INPUT' || node.tagName === 'TEXTAREA') {
           if (node.placeholder) {
-            const plower = node.placeholder.trim().toLowerCase();
+            const plower = node.placeholder.trim().replace(/\s+/g, ' ').toLowerCase();
             if (phraseMap.has(plower)) {
               node.placeholder = phraseMap.get(plower);
             }
