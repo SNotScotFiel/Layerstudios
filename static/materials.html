@@ -1,10 +1,64 @@
 <!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
+<html lang="pt-PT" class="scroll-smooth">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Materials & Capabilities — Layer Studios | 3D Printing Materials</title>
-  <meta name="description" content="Explore and compare 3D printing engineering materials: PLA+, PETG, ABS, TPU 95A, Carbon-Fiber CF-Nylon, and Precision Resin. Full technical specs, thermal limits, and interactive advisor quiz.">
+  <title>Guia de Materiais de Impressão 3D | PLA, PETG, ABS, TPU | Layer Studios</title>
+  <meta name="description" content="Guia técnico e comparativo de materiais de impressão 3D em Portugal. Compare resistência térmica, química e mecânica entre PLA+, PETG, ABS, TPU 95A e Carbono.">
+  <meta name="keywords" content="materiais impressão 3D, propriedades PETG, filamento PLA+, imprimir TPU flexível, nylon fibra carbono Portugal, resistência materiais 3D">
+  <meta name="author" content="Layer Studios">
+
+  <!-- Canonical and Language Alternates -->
+  <link rel="canonical" href="https://layerstudios.pt/materials">
+  <link rel="alternate" hreflang="pt-PT" href="https://layerstudios.pt/materials">
+  <link rel="alternate" hreflang="en" href="https://layerstudios.pt/materials">
+  <link rel="alternate" hreflang="x-default" href="https://layerstudios.pt/materials">
+
+  <!-- Open Graph & Social Sharing -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Layer Studios">
+  <meta property="og:title" content="Guia de Materiais de Impressão 3D | Layer Studios">
+  <meta property="og:description" content="Guia técnico e comparativo de materiais de impressão 3D em Portugal. PLA+, PETG, ABS, TPU 95A e Carbono.">
+  <meta property="og:url" content="https://layerstudios.pt/materials">
+  <meta property="og:image" content="https://layerstudios.pt/static/assets/og_image.svg">
+  <meta property="og:locale" content="pt_PT">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Guia de Materiais de Impressão 3D | Layer Studios">
+  <meta name="twitter:description" content="Guia comparativo de materiais de engenharia para impressão 3D em Portugal.">
+  <meta name="twitter:image" content="https://layerstudios.pt/static/assets/og_image.svg">
+
+  <!-- Schema.org JSON-LD -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebPage",
+        "name": "Guia de Materiais de Impressão 3D",
+        "url": "https://layerstudios.pt/materials",
+        "description": "Especificações técnicas, limites térmicos e guia de seleção de filamentos de engenharia em Portugal."
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Início",
+            "item": "https://layerstudios.pt/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Materiais",
+            "item": "https://layerstudios.pt/materials"
+          }
+        ]
+      }
+    ]
+  }
+  </script>
 
   <!-- Tailwind CSS via CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -63,13 +117,14 @@
 
         <!-- Right Quick Actions -->
         <div class="flex items-center space-x-2.5 shrink-0">
+          <!-- Language Switcher -->
+          <button id="lang-toggle-btn" type="button" class="lang-toggle-btn inline-flex items-center px-2.5 py-2 rounded-xl text-xs font-mono font-bold bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 transition-colors" title="Mudar Idioma / Switch Language">
+            <span class="lang-active-pt text-blue-400">PT</span><span class="text-slate-600 mx-1">|</span><span class="lang-active-en text-slate-400">EN</span>
+          </button>
+
           <a href="/login" class="hidden sm:inline-flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-slate-900/90 hover:bg-slate-800 text-slate-200 border border-slate-800 hover:border-slate-700 transition-all whitespace-nowrap">
             <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
             <span>Sign In / Sign Up</span>
-          </a>
-          <a href="/track" class="hidden lg:inline-flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-900/90 hover:bg-slate-800 text-slate-300 border border-slate-800 transition-all whitespace-nowrap">
-            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span>Live Status</span>
           </a>
           <a href="/quote" class="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-blue-500 hover:bg-blue-400 text-white shadow-md shadow-blue-500/20 hover:shadow-blue-500/35 transition-all whitespace-nowrap">
             <span>Instant Quote &rarr;</span>
@@ -309,6 +364,7 @@
     });
   </script>
   <script src="/static/js/legal.js"></script>
+  <script src="/static/js/analytics.js"></script>
   <script src="/static/js/notifications.js"></script>
   <script src="/static/js/auth.js"></script>
   <script src="/static/js/i18n.js"></script>

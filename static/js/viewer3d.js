@@ -510,6 +510,8 @@ class LayerStudiosViewer {
 
   animate() {
     requestAnimationFrame(() => this.animate());
+    // Throttle rendering when tab is not active to preserve device battery & CPU
+    if (document.hidden) return;
     if (this.controls) this.controls.update();
     if (this.renderer && this.scene && this.camera) this.renderer.render(this.scene, this.camera);
   }

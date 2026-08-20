@@ -25,12 +25,16 @@ if os.path.exists(env_path):
                 k, v = line.split('=', 1)
                 os.environ.setdefault(k.strip(), v.strip())
 
+# Domain and Environment Configuration
+BASE_URL = os.environ.get('BASE_URL', 'https://layerstudios.pt').rstrip('/')
+
 # Stripe Environment Configuration (No hardcoded secrets)
 STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY', '').strip()
 STRIPE_PUBLISHABLE_KEY = os.environ.get('STRIPE_PUBLISHABLE_KEY', '').strip()
 STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET', '').strip()
 STRIPE_AVAILABLE = bool(STRIPE_SECRET_KEY and STRIPE_PUBLISHABLE_KEY)
 print(f'[Stripe] Native payment gateway initialized (Active: {STRIPE_AVAILABLE})')
+print(f'[Config] Canonical Base URL: {BASE_URL}')
 
 # Server-Side Admin Authentication Configuration
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'cavalao123').strip()
@@ -125,7 +129,10 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
         self.send_header('Access-Control-Allow-Origin', '*')
         self.send_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
         self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Admin-Token')
-        self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
+        self.send_header('X-Content-Type-Options', 'nosniff')
+        self.send_header('X-Frame-Options', 'SAMEORIGIN')
+        self.send_header('Referrer-Policy', 'strict-origin-when-cross-origin')
+        self.send_header('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
         super().end_headers()
 
     def do_OPTIONS(self):
@@ -137,6 +144,7 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
         self.send_response(status_code)
         self.send_header('Content-Type', 'application/json; charset=utf-8')
         self.send_header('Content-Length', str(len(content)))
+        self.send_header('Cache-Control', 'no-store, no-cache, must-revalidate')
         self.end_headers()
         self.wfile.write(content)
 
@@ -451,6 +459,52 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
         if path.startswith('/uploads/'):
             return self.send_json(403, {'error': 'Direct upload browsing disabled. Access via /api/files with valid authorization.'})
 
+        # 16. Robots.txt
+        if path == '/robots.txt':
+            robots_path = os.path.join(STATIC_DIR, 'robots.txt')
+            if os.path.exists(robots_path):
+                with open(robots_path, 'rb') as f:
+                    content = f.read()
+            else:
+                content = f"User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /admin\nDisallow: /uploads/\nSitemap: {BASE_URL}/sitemap.xml\n".encode('utf-8')
+            self.send_response(200)
+            self.send_header('Content-Type', 'text/plain; charset=utf-8')
+            self.send_header('Content-Length', str(len(content)))
+            self.send_header('Cache-Control', 'public, max-age=86400')
+            self.end_headers()
+            self.wfile.write(content)
+            return
+
+        # 17. Sitemap.xml
+        if path == '/sitemap.xml':
+            sitemap_path = os.path.join(STATIC_DIR, 'sitemap.xml')
+            if os.path.exists(sitemap_path):
+                with open(sitemap_path, 'rb') as f:
+                    content = f.read()
+            else:
+                content = b'<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>'
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/xml; charset=utf-8')
+            self.send_header('Content-Length', str(len(content)))
+            self.send_header('Cache-Control', 'public, max-age=86400')
+            self.end_headers()
+            self.wfile.write(content)
+            return
+
+        # 18. Favicon shortcut
+        if path == '/favicon.ico':
+            fav_path = os.path.join(STATIC_DIR, 'assets', 'logo.svg')
+            if os.path.exists(fav_path):
+                with open(fav_path, 'rb') as f:
+                    content = f.read()
+                self.send_response(200)
+                self.send_header('Content-Type', 'image/svg+xml')
+                self.send_header('Content-Length', str(len(content)))
+                self.send_header('Cache-Control', 'public, max-age=604800')
+                self.end_headers()
+                self.wfile.write(content)
+                return
+
         # Default web serving
         if path == '/' or path == '/index.html':
             filepath = os.path.join(STATIC_DIR, 'index.html')
@@ -467,19 +521,29 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
             self.send_response(200)
             self.send_header('Content-Type', mime_type or ('text/html; charset=utf-8' if filepath.endswith('.html') else 'application/octet-stream'))
             self.send_header('Content-Length', str(len(content)))
+
+            # Caching strategy: Static assets cached for 7 days, HTML files require revalidation
+            if filepath.endswith(('.js', '.css', '.svg', '.png', '.jpg', '.jpeg', '.webp', '.woff2', '.woff')):
+                self.send_header('Cache-Control', 'public, max-age=604800, stale-while-revalidate=86400')
+            else:
+                self.send_header('Cache-Control', 'no-cache, must-revalidate')
+
             self.end_headers()
             self.wfile.write(content)
         else:
-            index_path = os.path.join(STATIC_DIR, 'index.html')
-            if os.path.exists(index_path):
-                with open(index_path, 'rb') as f: content = f.read()
-                self.send_response(200)
+            # Custom branded 404 response with proper HTTP 404 status (clean technical SEO)
+            err_404_path = os.path.join(STATIC_DIR, '404.html')
+            if os.path.exists(err_404_path):
+                with open(err_404_path, 'rb') as f:
+                    content = f.read()
+                self.send_response(404)
                 self.send_header('Content-Type', 'text/html; charset=utf-8')
                 self.send_header('Content-Length', str(len(content)))
+                self.send_header('Cache-Control', 'no-cache, must-revalidate')
                 self.end_headers()
                 self.wfile.write(content)
             else:
-                self.send_json(404, {'error': 'File not found'})
+                self.send_json(404, {'error': 'Page not found'})
 
     def do_POST(self):
         parsed = urllib.parse.urlparse(self.path)
@@ -753,8 +817,11 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
                 return self.send_json(400, {'error': 'Invalid verified order amount'})
 
             host = self.headers.get('Host', 'localhost:8080')
-            protocol = 'https' if 'render.com' in host or 'onrender.com' in host else 'http'
-            base_url = f'{protocol}://{host}'
+            protocol = 'https' if 'render.com' in host or 'onrender.com' in host or 'layerstudios.pt' in host else 'http'
+            if 'localhost' in host or '127.0.0.1' in host:
+                base_url = f'{protocol}://{host}'
+            else:
+                base_url = BASE_URL
 
             try:
                 cents = int(round(verified_amount * 100))

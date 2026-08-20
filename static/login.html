@@ -1,16 +1,38 @@
 <!DOCTYPE html>
-<html lang="en" class="dark scroll-smooth">
+<html lang="pt-PT" class="dark scroll-smooth">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Customer Portal | Layer Studios Portugal</title>
-  <meta name="description" content="Access your Layer Studios account to track 3D printing orders, manage quotes, and view live production updates.">
-  
+  <title>Área de Cliente & Acesso | Layer Studios</title>
+  <meta name="description" content="Aceda à sua conta Layer Studios para acompanhar pedidos, histórico de orçamentos 3D e estado de produção em Portugal.">
+  <meta name="author" content="Layer Studios">
+
+  <!-- Canonical and Language Alternates -->
+  <link rel="canonical" href="https://layerstudios.pt/login">
+  <link rel="alternate" hreflang="pt-PT" href="https://layerstudios.pt/login">
+  <link rel="alternate" hreflang="en" href="https://layerstudios.pt/login">
+  <link rel="alternate" hreflang="x-default" href="https://layerstudios.pt/login">
+
+  <!-- Open Graph & Social Sharing -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Layer Studios">
+  <meta property="og:title" content="Área de Cliente & Acesso | Layer Studios">
+  <meta property="og:description" content="Aceda à sua conta Layer Studios para gerir orçamentos e encomendas.">
+  <meta property="og:url" content="https://layerstudios.pt/login">
+  <meta property="og:image" content="https://layerstudios.pt/static/assets/og_image.svg">
+  <meta property="og:locale" content="pt_PT">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Área de Cliente & Acesso | Layer Studios">
+  <meta name="twitter:description" content="Portal de cliente Layer Studios.">
+  <meta name="twitter:image" content="https://layerstudios.pt/static/assets/og_image.svg">
+
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/css/styles.css">
+  <link rel="icon" type="image/svg+xml" href="/static/assets/logo.svg">
 </head>
 <body class="bg-[#09090b] text-[#fafafa] font-sans antialiased min-h-screen flex flex-col selection:bg-blue-500 selection:text-white">
 
@@ -43,10 +65,11 @@
 
         <!-- Right Quick Actions -->
         <div class="flex items-center space-x-2.5 shrink-0">
-          <a href="/login" class="inline-flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-slate-900/90 hover:bg-slate-800 text-slate-200 border border-slate-800 hover:border-slate-700 transition-all whitespace-nowrap">
-            <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-            <span>Sign In / Sign Up</span>
-          </a>
+          <!-- Language Switcher -->
+          <button id="lang-toggle-btn" type="button" class="lang-toggle-btn inline-flex items-center px-2.5 py-2 rounded-xl text-xs font-mono font-bold bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 transition-colors" title="Mudar Idioma / Switch Language">
+            <span class="lang-active-pt text-blue-400">PT</span><span class="text-slate-600 mx-1">|</span><span class="lang-active-en text-slate-400">EN</span>
+          </button>
+
           <a href="/quote" class="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-blue-500 hover:bg-blue-400 text-white shadow-md shadow-blue-500/20 transition-all whitespace-nowrap">
             <span>Instant Quote &rarr;</span>
           </a>
@@ -250,6 +273,7 @@
 
   <!-- Scripts -->
   <script src="/static/js/legal.js"></script>
+  <script src="/static/js/analytics.js"></script>
   <script src="/static/js/payments.js"></script>
   <script src="/static/js/notifications.js"></script>
   <script src="/static/js/auth.js"></script>

@@ -187,6 +187,13 @@ class LayerStudiosQuoteEngine {
 
       this.uploadedFiles.push(fileRecord);
 
+      if (window.LayerStudiosAnalytics) {
+        window.LayerStudiosAnalytics.track('file_uploaded', {
+          format: ext,
+          size_tier: parseFloat(sizeMB) > 20 ? 'large' : (parseFloat(sizeMB) > 5 ? 'medium' : 'small')
+        });
+      }
+
       // Render file badge
       const badge = document.createElement('div');
       badge.className = 'flex items-center justify-between p-3 rounded-lg bg-slate-900/90 border border-slate-800 text-sm animate-fade-in';
@@ -651,6 +658,14 @@ class LayerStudiosQuoteEngine {
 
         if (res.ok && data.success) {
           const quoteId = data.quoteId || 'LS-1048';
+
+          if (window.LayerStudiosAnalytics) {
+            window.LayerStudiosAnalytics.track('quote_submitted', {
+              material: payload.material,
+              quantity: payload.quantity,
+              hasModel: payload.hasModel
+            });
+          }
 
           // Upload actual binary files separately in the background (non-blocking)
           if (this.uploadedFiles && this.uploadedFiles.length > 0) {

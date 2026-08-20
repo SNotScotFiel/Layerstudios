@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+Allow: /quote
+Allow: /store
+Allow: /materials
+Allow: /track
+Allow: /login
+Allow: /static/
+
+Disallow: /api/
+Disallow: /admin
+Disallow: /admin.html
+Disallow: /uploads/
+
+Sitemap: https://layerstudios.pt/sitemap.xml

@@ -354,6 +354,14 @@ class LayerStudiosStore {
     }
 
     this.saveCart();
+    if (window.LayerStudiosAnalytics) {
+      window.LayerStudiosAnalytics.track('add_to_cart', {
+        product_id: product.id,
+        title: product.title,
+        quantity: quantity,
+        price: product.price
+      });
+    }
     window.LayerStudiosApp && window.LayerStudiosApp.showToast(`Added ${quantity}x "${product.title}" to cart!`, 'success');
   }
 
@@ -488,6 +496,12 @@ class LayerStudiosStore {
         this.closeCartDrawer();
         document.getElementById('checkout-total-badge').textContent = `€${(this.cartSummary?.total || 33.00).toFixed(2)}`;
         checkoutModal.classList.remove('hidden');
+        if (window.LayerStudiosAnalytics) {
+          window.LayerStudiosAnalytics.track('checkout_started', {
+            items_count: this.cart.length,
+            total: this.cartSummary?.total || 0
+          });
+        }
       });
     }
 

@@ -1,10 +1,64 @@
 <!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
+<html lang="pt-PT" class="scroll-smooth">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Live Order & Production Tracker — Layer Studios</title>
-  <meta name="description" content="Track your 3D print order in real time: slicing verification, printbed queue, manufacturing progress, quality control, and CTT Express tracking.">
+  <title>Seguir Encomenda ou Orçamento | Layer Studios</title>
+  <meta name="description" content="Acompanhe o estado de produção, controlo de qualidade e envio registado da sua encomenda ou orçamento de impressão 3D na Layer Studios.">
+  <meta name="keywords" content="seguir encomenda 3D, estado orçamento impressão 3D, tracking CTT Express peças 3D, produção Layer Studios">
+  <meta name="author" content="Layer Studios">
+
+  <!-- Canonical and Language Alternates -->
+  <link rel="canonical" href="https://layerstudios.pt/track">
+  <link rel="alternate" hreflang="pt-PT" href="https://layerstudios.pt/track">
+  <link rel="alternate" hreflang="en" href="https://layerstudios.pt/track">
+  <link rel="alternate" hreflang="x-default" href="https://layerstudios.pt/track">
+
+  <!-- Open Graph & Social Sharing -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Layer Studios">
+  <meta property="og:title" content="Seguir Encomenda ou Orçamento | Layer Studios">
+  <meta property="og:description" content="Acompanhe o estado de produção e envio da sua peça ou encomenda na Layer Studios.">
+  <meta property="og:url" content="https://layerstudios.pt/track">
+  <meta property="og:image" content="https://layerstudios.pt/static/assets/og_image.svg">
+  <meta property="og:locale" content="pt_PT">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Seguir Encomenda ou Orçamento | Layer Studios">
+  <meta name="twitter:description" content="Acompanhe o progresso de fabrico e envio da sua encomenda.">
+  <meta name="twitter:image" content="https://layerstudios.pt/static/assets/og_image.svg">
+
+  <!-- Schema.org JSON-LD -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebPage",
+        "name": "Seguir Encomenda ou Orçamento",
+        "url": "https://layerstudios.pt/track",
+        "description": "Rastreio em tempo real de estado de produção e envio de encomendas de impressão 3D."
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Início",
+            "item": "https://layerstudios.pt/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Seguir Encomenda",
+            "item": "https://layerstudios.pt/track"
+          }
+        ]
+      }
+    ]
+  }
+  </script>
 
   <!-- Tailwind CSS via CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -63,13 +117,14 @@
 
         <!-- Right Quick Actions -->
         <div class="flex items-center space-x-2.5 shrink-0">
+          <!-- Language Switcher -->
+          <button id="lang-toggle-btn" type="button" class="lang-toggle-btn inline-flex items-center px-2.5 py-2 rounded-xl text-xs font-mono font-bold bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 transition-colors" title="Mudar Idioma / Switch Language">
+            <span class="lang-active-pt text-blue-400">PT</span><span class="text-slate-600 mx-1">|</span><span class="lang-active-en text-slate-400">EN</span>
+          </button>
+
           <a href="/login" class="inline-flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-slate-900/90 hover:bg-slate-800 text-slate-200 border border-slate-800 hover:border-slate-700 transition-all whitespace-nowrap">
             <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
             <span>Sign In / Sign Up</span>
-          </a>
-          <a href="/track" class="hidden lg:inline-flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-900/90 hover:bg-slate-800 text-slate-300 border border-slate-800 transition-all whitespace-nowrap">
-            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span>Live Status</span>
           </a>
           <a href="/quote" class="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-blue-500 hover:bg-blue-400 text-white shadow-md shadow-blue-500/20 hover:shadow-blue-500/35 transition-all whitespace-nowrap">
             <span>New Quote &rarr;</span>
@@ -250,6 +305,7 @@
     });
   </script>
   <script src="/static/js/legal.js"></script>
+  <script src="/static/js/analytics.js"></script>
   <script src="/static/js/payments.js"></script>
   <script src="/static/js/notifications.js"></script>
   <script src="/static/js/auth.js"></script>

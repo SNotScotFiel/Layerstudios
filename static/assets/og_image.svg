@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#09090b" />
+      <stop offset="100%" stop-color="#020617" />
+    </linearGradient>
+    <linearGradient id="blueGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#60a5fa" />
+      <stop offset="100%" stop-color="#2563eb" />
+    </linearGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255, 255, 255, 0.04)" stroke-width="1"/>
+    </pattern>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)" />
+  <rect width="1200" height="630" fill="url(#grid)" />
+
+  <!-- Glow orb -->
+  <circle cx="950" cy="300" r="280" fill="#3b82f6" opacity="0.12" filter="blur(60px)" />
+  <circle cx="200" cy="150" r="180" fill="#60a5fa" opacity="0.08" filter="blur(50px)" />
+
+  <!-- Logo Mark -->
+  <g transform="translate(100, 110)">
+    <rect width="72" height="72" rx="20" fill="#0f172a" stroke="#334155" stroke-width="2" />
+    <path d="M22 46 L36 53 L50 46 L36 39 Z" fill="url(#blueGlow)" />
+    <path d="M22 36 L36 43 L50 36 L36 29 Z" fill="#60a5fa" opacity="0.8" />
+    <path d="M22 26 L36 33 L50 26 L36 19 Z" fill="#93c5fd" opacity="0.6" />
+    <text x="92" y="48" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="38" font-weight="900" fill="#ffffff" letter-spacing="-0.5px">Layer<tspan fill="#60a5fa">Studios</tspan></text>
+  </g>
+
+  <!-- Badge -->
+  <g transform="translate(100, 240)">
+    <rect width="330" height="38" rx="19" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5" stroke-opacity="0.4" />
+    <circle cx="20" cy="19" r="5" fill="#3b82f6" />
+    <text x="36" y="24" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="14" font-weight="700" fill="#93c5fd" letter-spacing="1.5px">PORTUGAL · ESTÚDIO DE PRECISÃO</text>
+  </g>
+
+  <!-- Headline -->
+  <text x="100" y="340" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="52" font-weight="900" fill="#ffffff" letter-spacing="-1px">
+    Impressão 3D &amp; Prototipagem Rápida
+  </text>
+
+  <!-- Subtitle -->
+  <text x="100" y="400" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="24" font-weight="400" fill="#94a3b8">
+    Peças sob medida, engenharia reversa e fabrico funcional em PLA, PETG, TPU e Nylon.
+  </text>
+
+  <!-- Feature pills -->
+  <g transform="translate(100, 470)">
+    <rect x="0" y="0" width="220" height="46" rx="14" fill="#0f172a" stroke="#334155" stroke-width="1" />
+    <text x="24" y="28" font-family="monospace" font-size="15" font-weight="700" fill="#e2e8f0">✓ Orçamento Imediato</text>
+
+    <rect x="235" y="0" width="220" height="46" rx="14" fill="#0f172a" stroke="#334155" stroke-width="1" />
+    <text x="259" y="28" font-family="monospace" font-size="15" font-weight="700" fill="#e2e8f0">✓ Envio em 2–4 Dias</text>
+
+    <rect x="470" y="0" width="250" height="46" rx="14" fill="#0f172a" stroke="#334155" stroke-width="1" />
+    <text x="494" y="28" font-family="monospace" font-size="15" font-weight="700" fill="#e2e8f0">✓ Faturação com NIF</text>
+  </g>
+
+  <!-- URL footer -->
+  <text x="100" y="580" font-family="monospace" font-size="16" font-weight="700" fill="#60a5fa" letter-spacing="0.5px">https://layerstudios.pt</text>
+  <text x="1100" y="580" font-family="monospace" font-size="16" font-weight="600" fill="#64748b" text-anchor="end">Lisboa · Portugal · UE</text>
+</svg>
