@@ -92,10 +92,10 @@
       <div class="text-center space-y-2">
         <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-xs font-mono font-bold text-blue-400">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-          <span>Secure Customer Portal</span>
+          <span>Área de Cliente Segura</span>
         </div>
-        <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight">Welcome to Layer Studios</h1>
-        <p class="text-xs sm:text-sm text-slate-400">Access your orders, quotes, and live manufacturing updates.</p>
+        <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight">Bem-vindo à Layer Studios</h1>
+        <p class="text-xs sm:text-sm text-slate-400">Aceda às suas encomendas, orçamentos e estado de produção em direto.</p>
       </div>
 
       <!-- Auth Card -->
@@ -104,13 +104,13 @@
         <!-- Auth Tabs -->
         <div class="grid grid-cols-3 gap-1.5 p-1 rounded-2xl bg-slate-950 border border-slate-800/80">
           <button type="button" id="auth-tab-login" class="py-2.5 px-2 rounded-xl border text-xs font-bold transition-all border-blue-500 bg-blue-500/10 text-white">
-            Log In
+            Iniciar Sessão
           </button>
           <button type="button" id="auth-tab-register" class="py-2.5 px-2 rounded-xl border text-xs font-semibold transition-all border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700">
-            Sign Up
+            Criar Conta
           </button>
           <button type="button" id="auth-tab-guest" class="py-2.5 px-2 rounded-xl border text-xs font-semibold transition-all border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700">
-            Guest
+            Convidado
           </button>
         </div>
 
@@ -119,20 +119,20 @@
           <div id="login-error-msg" class="hidden p-3 rounded-xl bg-red-950/80 border border-red-500/40 text-red-300 text-xs font-medium"></div>
 
           <div>
-            <label class="block text-xs font-semibold text-slate-300 mb-1.5">Email address</label>
-            <input type="email" id="login-email" required placeholder="your.email@example.com" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-3 text-sm text-white focus:border-blue-400 focus:outline-none placeholder-slate-600 transition-colors">
+            <label class="block text-xs font-semibold text-slate-300 mb-1.5">Endereço de Email</label>
+            <input type="email" id="login-email" required placeholder="o.seu.email@exemplo.com" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-3 text-sm text-white focus:border-blue-400 focus:outline-none placeholder-slate-600 transition-colors">
           </div>
 
           <div>
             <div class="flex items-center justify-between mb-1.5">
-              <label class="block text-xs font-semibold text-slate-300">Password</label>
-              <a href="#" onclick="alert('To reset your password, contact hello@layerstudios.pt or use Guest Access.'); return false;" class="text-[11px] text-blue-400 hover:underline">Forgot password?</a>
+              <label class="block text-xs font-semibold text-slate-300">Palavra-passe</label>
+              <a href="#" onclick="alert('Para recuperar a sua palavra-passe, contacte contact@layerstudios.pt ou utilize o Acesso de Convidado.'); return false;" class="text-[11px] text-blue-400 hover:underline">Esqueceu-se?</a>
             </div>
             <input type="password" id="login-password" required placeholder="••••••••" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-3 text-sm text-white focus:border-blue-400 focus:outline-none placeholder-slate-600 transition-colors">
           </div>
 
           <button type="submit" id="btn-submit-login" class="w-full py-3.5 rounded-xl bg-blue-500 hover:bg-blue-400 text-white font-bold text-sm shadow-lg shadow-blue-500/25 transition-all transform hover:-translate-y-0.5">
-            Log In to Account &rarr;
+            Entrar na Conta &rarr;
           </button>
         </form>
 
@@ -141,36 +141,36 @@
           <div id="reg-error-msg" class="hidden p-3 rounded-xl bg-red-950/80 border border-red-500/40 text-red-300 text-xs font-medium"></div>
 
           <div>
-            <label class="block text-xs font-semibold text-slate-300 mb-1.5">Full Name</label>
-            <input type="text" id="reg-name" required placeholder="e.g. John Doe" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-3 text-sm text-white focus:border-blue-400 focus:outline-none placeholder-slate-600 transition-colors">
+            <label class="block text-xs font-semibold text-slate-300 mb-1.5">Nome Completo</label>
+            <input type="text" id="reg-name" required placeholder="ex: Guilherme Cardoso" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-3 text-sm text-white focus:border-blue-400 focus:outline-none placeholder-slate-600 transition-colors">
           </div>
 
           <div>
-            <label class="block text-xs font-semibold text-slate-300 mb-1.5">Email address</label>
-            <input type="email" id="reg-email" required placeholder="john@example.com" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-3 text-sm text-white focus:border-blue-400 focus:outline-none placeholder-slate-600 transition-colors">
+            <label class="block text-xs font-semibold text-slate-300 mb-1.5">Endereço de Email</label>
+            <input type="email" id="reg-email" required placeholder="o.seu.email@exemplo.com" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-3 text-sm text-white focus:border-blue-400 focus:outline-none placeholder-slate-600 transition-colors">
           </div>
 
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-xs font-semibold text-slate-300 mb-1.5">Phone (optional)</label>
+              <label class="block text-xs font-semibold text-slate-300 mb-1.5">Telemóvel (opcional)</label>
               <input type="tel" id="reg-phone" placeholder="+351 912 345 678" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-3 text-sm text-white focus:border-blue-400 focus:outline-none placeholder-slate-600 transition-colors">
             </div>
             <div>
-              <label class="block text-xs font-semibold text-slate-300 mb-1.5">Password</label>
-              <input type="password" id="reg-password" required minlength="4" placeholder="min. 4 characters" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-3 text-sm text-white focus:border-blue-400 focus:outline-none placeholder-slate-600 transition-colors">
+              <label class="block text-xs font-semibold text-slate-300 mb-1.5">Palavra-passe</label>
+              <input type="password" id="reg-password" required minlength="4" placeholder="mín. 4 caracteres" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-3 text-sm text-white focus:border-blue-400 focus:outline-none placeholder-slate-600 transition-colors">
             </div>
           </div>
 
           <button type="submit" id="btn-submit-register" class="w-full py-3.5 rounded-xl bg-blue-500 hover:bg-blue-400 text-white font-bold text-sm shadow-lg shadow-blue-500/25 transition-all transform hover:-translate-y-0.5">
-            Create Secure Account &rarr;
+            Criar Conta Segura &rarr;
           </button>
         </form>
 
         <!-- TAB 3: GUEST INSTANT LOOKUP -->
         <form id="auth-form-guest" class="hidden space-y-4">
           <div class="p-3.5 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-xs text-slate-300 space-y-1">
-            <strong class="text-blue-300 block font-semibold">Guest Access (No Account Required)</strong>
-            <p class="text-[11px] text-slate-400">No password required. Enter your email address or Order/Quote Reference to view your orders immediately.</p>
+            <strong class="text-blue-300 block font-semibold">Acesso de Convidado (Sem Conta Obrigatória)</strong>
+            <p class="text-[11px] text-slate-400">Não precisa de palavra-passe. Introduza o seu email ou código de Encomenda/Orçamento para consultar o estado imediatamente.</p>
           </div>
 
           <div id="guest-error-msg" class="hidden p-3 rounded-xl bg-red-950/80 border border-red-500/40 text-red-300 text-xs font-medium"></div>
