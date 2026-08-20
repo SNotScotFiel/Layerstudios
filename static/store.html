@@ -330,13 +330,13 @@
           </div>
 
           <div id="pay-details-mbway" class="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-xs text-blue-300">
-            You will receive an instant MB WAY push notification on your phone after confirming.
+            MB WAY transfer details and order tracking reference will be provided upon placement.
           </div>
           <div id="pay-details-multibanco" class="hidden p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-400 font-mono">
-            Entity: <strong>21094</strong> &bull; Reference will be generated upon order placement.
+            Bank transfer reference will be generated upon order placement.
           </div>
           <div id="pay-details-card" class="hidden p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-400">
-            Encrypted card checkout via Stripe gateway.
+            Secure payment processed by Stripe.
           </div>
         </div>
 
@@ -356,12 +356,17 @@
   <footer class="border-t border-slate-800/80 bg-slate-950 py-10 px-4 sm:px-6 lg:px-8 mt-20">
     <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500 font-mono">
       <div>&copy; 2026 Layer Studios. Store &amp; Catalog &bull; Portugal.</div>
-      <div class="flex space-x-6">
+      <div class="flex flex-wrap gap-4 justify-center">
         <a href="/" class="hover:text-white">Home</a>
         <a href="/quote" class="hover:text-white">Get a Quote</a>
         <a href="/materials" class="hover:text-white">Materials</a>
         <a href="/track" class="hover:text-white">Track Order</a>
-              </div>
+        <a href="#" data-legal-modal="terms" class="hover:text-white">Terms</a>
+        <a href="#" data-legal-modal="privacy" class="hover:text-white">Privacy</a>
+        <a href="#" data-legal-modal="shipping" class="hover:text-white">Shipping</a>
+        <a href="#" data-legal-modal="returns" class="hover:text-white">Returns</a>
+        <a href="#" data-legal-modal="legal" class="hover:text-white">Legal Notice</a>
+      </div>
     </div>
   </footer>
 
@@ -385,6 +390,7 @@
       }
     });
   </script>
+  <script src="/static/js/legal.js"></script>
   <script src="/static/js/payments.js"></script>
   <script src="/static/js/notifications.js"></script>
   <script src="/static/js/auth.js"></script>

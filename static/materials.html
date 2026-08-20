@@ -263,6 +263,10 @@
         </table>
       </div>
 
+      <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 text-xs text-slate-400 space-y-1 leading-relaxed">
+        <p><strong class="text-slate-300">Engineering Application Note:</strong> Thermal resistance and mechanical strength depend on part geometry, wall thickness, infill percentage, and layer orientation. Standard FDM prints are ideal for functional prototypes, enclosures, brackets, and non-critical replacement parts. They are not rated for safety-critical automotive structural systems, unsealed food contact, or medical implants.</p>
+      </div>
+
     </div>
   </section>
 
@@ -270,12 +274,17 @@
   <footer class="border-t border-slate-800/80 bg-slate-950 py-10 px-4 sm:px-6 lg:px-8">
     <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500 font-mono">
       <div>&copy; 2026 Layer Studios. Materials Center &bull; Portugal.</div>
-      <div class="flex space-x-6">
+      <div class="flex flex-wrap gap-4 justify-center">
         <a href="/" class="hover:text-white">Home</a>
         <a href="/quote" class="hover:text-white">Get a Quote</a>
         <a href="/store" class="hover:text-white">Store</a>
         <a href="/track" class="hover:text-white">Track Order</a>
-              </div>
+        <a href="#" data-legal-modal="terms" class="hover:text-white">Terms</a>
+        <a href="#" data-legal-modal="privacy" class="hover:text-white">Privacy</a>
+        <a href="#" data-legal-modal="shipping" class="hover:text-white">Shipping</a>
+        <a href="#" data-legal-modal="returns" class="hover:text-white">Returns</a>
+        <a href="#" data-legal-modal="legal" class="hover:text-white">Legal Notice</a>
+      </div>
     </div>
   </footer>
 
@@ -299,6 +308,7 @@
       }
     });
   </script>
+  <script src="/static/js/legal.js"></script>
   <script src="/static/js/notifications.js"></script>
   <script src="/static/js/auth.js"></script>
   <script src="/static/js/i18n.js"></script>

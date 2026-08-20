@@ -114,14 +114,14 @@
       </div>
       <h1 class="text-3xl sm:text-5xl font-black text-white">Live Production Tracker</h1>
       <p class="text-sm sm:text-base text-slate-400 max-w-xl mx-auto leading-relaxed">
-        Enter your 8-digit Order Reference (e.g. <span class="font-mono text-white">LS-84920</span>) or Quote ID to monitor print status, slicing review, and shipping dispatch.
+        Enter your 8-digit Order Reference (e.g. <span class="font-mono text-white">LS-O-XXXXXX</span>) or Quote ID to monitor print status, slicing review, and shipping dispatch.
       </p>
 
       <!-- Search Box -->
       <form id="tracker-search-form" class="max-w-xl mx-auto pt-6">
         <div class="flex flex-col sm:flex-row gap-3">
           <div class="relative flex-1">
-            <input id="tracker-input-id" type="text" required placeholder="LS-84920 or QT-8831" class="w-full pl-11 pr-4 py-3.5 rounded-2xl bg-slate-900 border border-slate-800 text-white font-mono text-sm uppercase focus:border-blue-400 focus:outline-none placeholder-slate-600">
+            <input id="tracker-input-id" type="text" required placeholder="LS-O-XXXXXX or LS-Q-XXXXXX" class="w-full pl-11 pr-4 py-3.5 rounded-2xl bg-slate-900 border border-slate-800 text-white font-mono text-sm uppercase focus:border-blue-400 focus:outline-none placeholder-slate-600">
             <svg class="w-5 h-5 text-slate-500 absolute left-3.5 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
           </div>
           <button type="submit" class="px-8 py-3.5 rounded-2xl bg-blue-500 hover:bg-blue-400 text-white font-bold text-sm shadow-lg shadow-blue-500/25 transition-all whitespace-nowrap">
@@ -130,7 +130,7 @@
         </div>
 
         <!-- Helper hint -->
-        <p class="text-xs text-slate-500 font-mono text-center pt-2">Enter your Quote ID (e.g. LS-XXXX) or Order Reference to view live production status</p>
+        <p class="text-xs text-slate-500 font-mono text-center pt-2">Enter your Quote Reference (LS-Q-XXXXXX) or Order Reference (LS-O-XXXXXX) to view status</p>
       </form>
     </div>
   </div>
@@ -144,14 +144,14 @@
       <!-- Loading State -->
       <div id="tracker-loading" class="hidden text-center py-16 space-y-3">
         <div class="w-10 h-10 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-        <p class="text-xs font-mono text-slate-400">Connecting to Layer Studios telemetry node...</p>
+        <p class="text-xs font-mono text-slate-400">Loading order details from Layer Studios...</p>
       </div>
 
       <!-- Not Found State -->
       <div id="tracker-not-found" class="hidden text-center py-16 rounded-3xl bg-slate-900/60 border border-slate-800 p-8 space-y-3">
         <div class="text-3xl">🔍</div>
         <h3 class="text-lg font-bold text-white">Reference <span id="tracker-searched-id" class="font-mono text-blue-400"></span> Not Found</h3>
-        <p class="text-xs text-slate-400 max-w-md mx-auto">Please verify your order confirmation email or invoice. Note that custom quotes can take up to 15 minutes to register in the live queue.</p>
+        <p class="text-xs text-slate-400 max-w-md mx-auto">Please check the reference number received in your email or invoice. If you submitted a quote just now, please allow a moment for it to be registered.</p>
       </div>
 
       <!-- Result Container (Populated by tracker.js) -->
@@ -169,23 +169,23 @@
             <div id="track-res-status-badge" class="self-start sm:self-auto"></div>
           </div>
 
-          <!-- Metadata Grid -->
+          <!-- Technical Specs Grid -->
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs font-mono">
-            <div class="p-3 rounded-xl bg-slate-950 border border-slate-800">
-              <span class="text-slate-500 block text-[9px] uppercase">Material</span>
-              <span id="track-res-material" class="text-white font-bold block mt-1"></span>
+            <div class="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800/80">
+              <span class="text-[10px] text-slate-500 uppercase block mb-1">Production Status</span>
+              <span id="track-res-status-txt" class="text-slate-200 font-bold block"></span>
             </div>
-            <div class="p-3 rounded-xl bg-slate-950 border border-slate-800">
-              <span class="text-slate-500 block text-[9px] uppercase">Quantity</span>
-              <span id="track-res-qty" class="text-white font-bold block mt-1"></span>
+            <div class="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800/80">
+              <span class="text-[10px] text-slate-500 uppercase block mb-1">Payment Status</span>
+              <span id="track-res-payment-txt" class="text-slate-200 font-bold block"></span>
             </div>
-            <div class="p-3 rounded-xl bg-slate-950 border border-slate-800">
-              <span class="text-slate-500 block text-[9px] uppercase">Carrier</span>
-              <span id="track-res-carrier" class="text-blue-400 font-bold block mt-1"></span>
+            <div class="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800/80">
+              <span class="text-[10px] text-slate-500 uppercase block mb-1">Estimated Dispatch</span>
+              <span id="track-res-est-txt" class="text-blue-400 font-bold block"></span>
             </div>
-            <div class="p-3 rounded-xl bg-slate-950 border border-slate-800">
-              <span class="text-slate-500 block text-[9px] uppercase">Order Value</span>
-              <span id="track-res-total" class="text-white font-bold block mt-1"></span>
+            <div class="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800/80">
+              <span class="text-[10px] text-slate-500 uppercase block mb-1">Shipping / Carrier</span>
+              <span id="track-res-carrier-txt" class="text-slate-200 font-bold block"></span>
             </div>
           </div>
 
@@ -215,12 +215,17 @@
   <footer class="border-t border-slate-800/80 bg-slate-950 py-10 px-4 sm:px-6 lg:px-8">
     <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500 font-mono">
       <div>&copy; 2026 Layer Studios. Order Tracking &bull; Portugal.</div>
-      <div class="flex space-x-6">
+      <div class="flex flex-wrap gap-4 justify-center">
         <a href="/" class="hover:text-white">Home</a>
         <a href="/quote" class="hover:text-white">Get a Quote</a>
         <a href="/store" class="hover:text-white">Store</a>
         <a href="/materials" class="hover:text-white">Materials</a>
-              </div>
+        <a href="#" data-legal-modal="terms" class="hover:text-white">Terms</a>
+        <a href="#" data-legal-modal="privacy" class="hover:text-white">Privacy</a>
+        <a href="#" data-legal-modal="shipping" class="hover:text-white">Shipping</a>
+        <a href="#" data-legal-modal="returns" class="hover:text-white">Returns</a>
+        <a href="#" data-legal-modal="legal" class="hover:text-white">Legal Notice</a>
+      </div>
     </div>
   </footer>
 
@@ -242,19 +247,9 @@
       if (typeof LayerStudiosTracker !== 'undefined') {
         window.LayerStudiosTrackerInstance = new LayerStudiosTracker();
       }
-
-      // Demo button handlers
-      document.querySelectorAll('.demo-track-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const input = document.getElementById('tracker-input-id');
-          if (input) {
-            input.value = btn.getAttribute('data-id');
-            document.getElementById('tracker-search-form')?.dispatchEvent(new Event('submit'));
-          }
-        });
-      });
     });
   </script>
+  <script src="/static/js/legal.js"></script>
   <script src="/static/js/payments.js"></script>
   <script src="/static/js/notifications.js"></script>
   <script src="/static/js/auth.js"></script>
