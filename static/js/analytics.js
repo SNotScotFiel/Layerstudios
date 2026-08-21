@@ -22,9 +22,9 @@
   class LayerStudiosAnalytics {
     constructor() {
       this.config = {
-        gaMeasurementId: '',
+        gaMeasurementId: 'G-HJH0SPL67W',
         googleAdsId: '',
-        environment: 'development'
+        environment: window.location.hostname.includes('layerstudios.pt') ? 'production' : 'development'
       };
       this.initialized = false;
       this.tagScriptLoaded = false;
@@ -33,6 +33,7 @@
       this.quoteStartedFired = false;
 
       this.initConsentMode();
+      this.setupGoogleTagsIfAllowed();
       this.fetchConfigAndInit();
       this.bindGlobalListeners();
     }
@@ -87,16 +88,10 @@
       try {
         const res = await fetch('/api/analytics-config');
         if (res.ok) {
-          this.config = await res.json();
+          const remoteConfig = await res.json();
+          this.config = Object.assign(this.config, remoteConfig);
         }
-      } catch (err) {
-        // Fallback gracefully
-        this.config = {
-          gaMeasurementId: '',
-          googleAdsId: '',
-          environment: window.location.hostname.includes('layerstudios.pt') ? 'production' : 'development'
-        };
-      }
+      } catch (err) {}
 
       this.initialized = true;
       this.setupGoogleTagsIfAllowed();
@@ -104,15 +99,10 @@
     }
 
     setupGoogleTagsIfAllowed() {
-      const gaId = this.config.gaMeasurementId;
+      const gaId = this.config.gaMeasurementId || 'G-HJH0SPL67W';
       const adsId = this.config.googleAdsId;
 
-      if (!gaId && !adsId) {
-        if (this.config.environment === 'development' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-          console.log('[Analytics] Layer Studios Analytics Initialized in DEV Mode (Awaiting owner GA4_MEASUREMENT_ID).');
-        }
-        return;
-      }
+      if (!gaId && !adsId) return;
 
       const primaryTagId = gaId || adsId;
       if (primaryTagId && !this.tagScriptLoaded) {
@@ -120,7 +110,7 @@
         script.async = true;
         script.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(primaryTagId)}`;
         script.onerror = () => {
-          console.warn('[Analytics] Google tag script blocked or unreachable. Site operation remains nominal.');
+          console.warn('[Analytics] Google tag script blocked (e.g. adblocker active). Site operation remains nominal.');
         };
         document.head.appendChild(script);
         this.tagScriptLoaded = true;
@@ -128,9 +118,7 @@
 
       if (gaId) {
         gtag('config', gaId, {
-          send_page_view: true,
-          anonymize_ip: true,
-          cookie_flags: 'SameSite=None;Secure'
+          anonymize_ip: true
         });
       }
 
@@ -165,6 +153,12 @@
 
       if (settings.analytics || settings.marketing) {
         this.setupGoogleTagsIfAllowed();
+        // Immediately fire page_view event now that consent is granted
+        gtag('event', 'page_view', {
+          page_title: document.title,
+          page_location: window.location.href,
+          page_path: window.location.pathname
+        });
       }
 
       // Hide banner if open
