@@ -389,16 +389,31 @@ class LayerStudiosAuth {
     }
 
     listEl.innerHTML = '';
+    const isPT = (localStorage.getItem('ls_lang') || 'pt') === 'pt';
+    const statusMap = {
+      'Quote Requested': isPT ? 'Orçamento Solicitado' : 'Quote Requested',
+      'Under Review': isPT ? 'Em Análise' : 'Under Review',
+      'Quote Sent': isPT ? 'Orçamento Pronto' : 'Quote Ready',
+      'Awaiting Payment': isPT ? 'Aguardar Pagamento' : 'Awaiting Payment',
+      'Preparing': isPT ? 'Em Preparação' : 'Preparing',
+      'Printing': isPT ? 'Em Impressão' : 'Printing',
+      'Quality Inspection': isPT ? 'Controlo Qualidade' : 'Quality Inspection',
+      'Ready to Ship': isPT ? 'Pronto p/ Envio' : 'Ready to Ship',
+      'Shipped': isPT ? 'Enviado' : 'Shipped',
+      'Completed': isPT ? 'Concluído' : 'Completed'
+    };
+
     allItems.forEach(item => {
       const card = document.createElement('div');
       const isQuote = item.itemType === 'quote';
       const price = item.pricing?.finalPrice || item.total || 0;
       const isPaid = item.paymentStatus === 'Paid';
-      const status = item.status || 'Quote Requested';
+      const rawStatus = item.status || 'Quote Requested';
+      const displayStatus = statusMap[rawStatus] || rawStatus;
 
-      const statusColor = status === 'Printing' ? 'text-amber-400 bg-amber-500/10 border-amber-500/30' :
-                          status === 'Ready to Ship' || status === 'Shipped' ? 'text-blue-400 bg-blue-500/10 border-blue-500/30' :
-                          status === 'Completed' ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30' :
+      const statusColor = rawStatus === 'Printing' ? 'text-amber-400 bg-amber-500/10 border-amber-500/30' :
+                          rawStatus === 'Ready to Ship' || rawStatus === 'Shipped' ? 'text-blue-400 bg-blue-500/10 border-blue-500/30' :
+                          rawStatus === 'Completed' ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30' :
                           'text-slate-300 bg-slate-800 border-slate-700';
 
       card.className = 'p-5 sm:p-6 rounded-2xl bg-slate-900/70 border border-slate-800 hover:border-slate-700 transition-all space-y-4';
@@ -406,21 +421,21 @@ class LayerStudiosAuth {
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-800">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl ${isQuote ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'} flex items-center justify-center font-bold font-mono text-xs uppercase tracking-wider">
-              ${isQuote ? '3D' : 'Store'}
+              ${isQuote ? '3D' : (isPT ? 'Loja' : 'Store')}
             </div>
             <div>
               <div class="flex items-center gap-2">
                 <span class="font-mono font-bold text-white text-sm">${item.id}</span>
-                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold border ${statusColor}">${status}</span>
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold border ${statusColor}">${displayStatus}</span>
               </div>
-              <p class="text-xs text-slate-400 font-medium truncate max-w-sm mt-0.5">${item.projectName || (item.items && item.items[0]?.title) || 'Custom 3D Print Request'}</p>
+              <p class="text-xs text-slate-400 font-medium truncate max-w-sm mt-0.5">${item.projectName || (item.items && item.items[0]?.title) || (isPT ? 'Pedido de Impressão 3D' : 'Custom 3D Print Request')}</p>
             </div>
           </div>
 
           <div class="flex items-center gap-3 self-end sm:self-auto">
             <span class="font-mono font-black text-lg text-white">€${price.toFixed(2)}</span>
             <a href="/track?id=${item.id}" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs font-mono transition-all">
-              Track &rarr;
+              ${isPT ? 'Seguir' : 'Track'} &rarr;
             </a>
           </div>
         </div>
@@ -428,28 +443,28 @@ class LayerStudiosAuth {
         <!-- Details Grid -->
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-mono">
           <div class="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80">
-            <span class="text-[9px] text-slate-500 uppercase block mb-0.5">Material</span>
+            <span class="text-[9px] text-slate-500 uppercase block mb-0.5">${isPT ? 'Material' : 'Material'}</span>
             <span class="text-slate-200 font-semibold truncate block">${item.material || (item.items && item.items[0]?.material) || 'PETG'}</span>
           </div>
           <div class="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80">
-            <span class="text-[9px] text-slate-500 uppercase block mb-0.5">Quantity</span>
+            <span class="text-[9px] text-slate-500 uppercase block mb-0.5">${isPT ? 'Quantidade' : 'Quantity'}</span>
             <span class="text-slate-200 font-semibold block">${item.quantity || (item.items && item.items[0]?.quantity) || 1} un.</span>
           </div>
           <div class="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80">
-            <span class="text-[9px] text-slate-500 uppercase block mb-0.5">Payment</span>
-            <span class="${isPaid ? 'text-emerald-400' : 'text-amber-400'} font-semibold block">${isPaid ? '✓ Paid' : 'Pending'}</span>
+            <span class="text-[9px] text-slate-500 uppercase block mb-0.5">${isPT ? 'Pagamento' : 'Payment'}</span>
+            <span class="${isPaid ? 'text-emerald-400' : 'text-amber-400'} font-semibold block">${isPaid ? (isPT ? '✓ Pago' : '✓ Paid') : (isPT ? 'Pendente' : 'Pending')}</span>
           </div>
           <div class="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80">
-            <span class="text-[9px] text-slate-500 uppercase block mb-0.5">Date</span>
-            <span class="text-slate-400 block">${item.createdAt ? new Date(item.createdAt).toLocaleDateString('pt-PT') : 'Today'}</span>
+            <span class="text-[9px] text-slate-500 uppercase block mb-0.5">${isPT ? 'Data' : 'Date'}</span>
+            <span class="text-slate-400 block">${item.createdAt ? new Date(item.createdAt).toLocaleDateString(isPT ? 'pt-PT' : 'en-GB') : (isPT ? 'Hoje' : 'Today')}</span>
           </div>
         </div>
 
         ${!isPaid ? `
           <div class="pt-2 flex items-center justify-between">
-            <span class="text-xs text-amber-400/90 font-medium">Complete payment to initiate immediate production.</span>
+            <span class="text-xs text-amber-400/90 font-medium">${isPT ? 'Conclua o pagamento para iniciar a produção imediata.' : 'Complete payment to initiate immediate production.'}</span>
             <button type="button" class="btn-pay-item px-4 py-2 rounded-xl bg-blue-500 hover:bg-blue-400 text-white font-bold text-xs shadow-md shadow-blue-500/20 transition-all flex items-center gap-1.5" data-id="${item.id}" data-amount="${price}" data-title="${item.projectName || item.id}">
-              <span>Pay Now</span>
+              <span>${isPT ? 'Pagar Agora' : 'Pay Now'}</span>
               <span>&rarr;</span>
             </button>
           </div>

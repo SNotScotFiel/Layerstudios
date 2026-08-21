@@ -224,14 +224,6 @@ class LayerStudiosStore {
     });
   }
 
-      card.querySelector('.btn-view-prod').addEventListener('click', () => {
-        this.openProductModal(p);
-      });
-
-      grid.appendChild(card);
-    });
-  }
-
   openProductModal(product) {
     this.currentProduct = product;
     const modal = document.getElementById('product-detail-modal');

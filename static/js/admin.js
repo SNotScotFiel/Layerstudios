@@ -513,7 +513,7 @@ class LayerStudiosAdmin {
           </table>
 
           <div style="text-align: center; margin: 28px 0;">
-            <a href="http://localhost:8080/#track?id=LS-1048" style="background: #0284C7; color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: bold; font-size: 14px; display: inline-block;">Review & Accept Quote &rarr;</a>
+            <a href="https://layerstudios.pt/track?id=LS-1048" style="background: #3b82f6; color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: bold; font-size: 14px; display: inline-block;">Review & Accept Quote &rarr;</a>
           </div>
         `;
         break;
@@ -526,7 +526,7 @@ class LayerStudiosAdmin {
           <p style="color: #94A3B8; font-size: 14px; line-height: 1.6;">Machine #2 has started printing your batch of <strong>20x Custom PCB Enclosure Box & Snap-Lid</strong>. Calibration telemetry is nominal with flawless first-layer adhesion.</p>
           <p style="color: #60a5fa; font-size: 13px; font-family: monospace;">Current Status: 65% Completed (Layer 420/650)</p>
           <div style="text-align: center; margin: 24px 0;">
-            <a href="http://localhost:8080/#track?id=ORD-8821" style="background: #0284C7; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; font-size: 14px; display: inline-block;">Track Live Progress</a>
+            <a href="https://layerstudios.pt/track?id=ORD-8821" style="background: #3b82f6; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; font-size: 14px; display: inline-block;">Track Live Progress</a>
           </div>
         `;
         break;
@@ -542,7 +542,7 @@ class LayerStudiosAdmin {
             <p style="color: #60a5fa; font-size: 16px; font-weight: bold; font-family: monospace; margin: 4px 0 0 0;">CT984512304PT</p>
           </div>
           <div style="text-align: center; margin: 24px 0;">
-            <a href="https://www.ctt.pt" style="background: #0284C7; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; font-size: 14px; display: inline-block;">Track Delivery with CTT</a>
+            <a href="https://www.ctt.pt" style="background: #3b82f6; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; font-size: 14px; display: inline-block;">Track Delivery with CTT</a>
           </div>
         `;
         break;
@@ -565,7 +565,7 @@ class LayerStudiosAdmin {
 
         <div style="margin-top: 32px; padding-top: 20px; border-top: 1px solid #1E293B; font-size: 11px; color: #64748B; text-align: center; line-height: 1.5;">
           <p style="margin: 0;">Layer Studios &bull; Lisbon & Porto, Portugal</p>
-          <p style="margin: 4px 0 0 0;">Questions? Reply directly to this email or contact <a href="mailto:hello@layerstudios.pt" style="color: #60a5fa;">hello@layerstudios.pt</a></p>
+          <p style="margin: 4px 0 0 0;">Questions? Reply directly to this email or contact <a href="mailto:contact@layerstudios.pt" style="color: #60a5fa;">contact@layerstudios.pt</a></p>
         </div>
       </div>
     `;

@@ -173,16 +173,46 @@ class LayerStudiosTracker {
     const price = data.pricing?.finalPrice || data.total || 40.50;
     const isPaid = data.paymentStatus === 'Paid' || ['Printing', 'Quality Inspection', 'Ready to Ship', 'Shipped', 'Completed'].includes(currentStatus);
 
+    const isPT = (localStorage.getItem('ls_lang') || 'pt') === 'pt';
+    const lang = isPT ? 'pt' : 'en';
+
+    const stageDisplayNames = {
+      pt: {
+        'Quote Requested': 'Pedido de Orçamento',
+        'Under Review': 'Em Análise Técnica',
+        'Quote Sent': 'Orçamento Disponível',
+        'Awaiting Payment': 'Aguardar Pagamento',
+        'Preparing': 'Em Preparação',
+        'Printing': 'Em Impressão',
+        'Quality Inspection': 'Controlo de Qualidade',
+        'Ready to Ship': 'Pronto para Envio',
+        'Shipped': 'Enviado',
+        'Completed': 'Entregue / Concluído'
+      },
+      en: {
+        'Quote Requested': 'Quote Requested',
+        'Under Review': 'Under Technical Review',
+        'Quote Sent': 'Quote Ready',
+        'Awaiting Payment': 'Awaiting Payment',
+        'Preparing': 'Preparing',
+        'Printing': 'Printing',
+        'Quality Inspection': 'Quality Inspection',
+        'Ready to Ship': 'Ready to Ship',
+        'Shipped': 'Shipped',
+        'Completed': 'Delivered / Completed'
+      }
+    };
+
     if (!isPaid) {
       payBannerContainer.className = 'p-5 rounded-2xl bg-gradient-to-r from-blue-950/60 via-slate-900 to-slate-900 border border-blue-500/40 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl';
       payBannerContainer.innerHTML = `
         <div>
-          <span class="text-[10px] font-mono font-bold text-blue-400 uppercase tracking-wider block">Production Launch</span>
-          <p class="text-sm font-bold text-white mt-0.5">Complete payment of <strong class="text-blue-400">€${price.toFixed(2)}</strong> to start printing</p>
-          <p class="text-xs text-slate-400">MB WAY · Multibanco Reference · Credit Card / Apple Pay</p>
+          <span class="text-[10px] font-mono font-bold text-blue-400 uppercase tracking-wider block">${isPT ? 'Lançamento de Produção' : 'Production Launch'}</span>
+          <p class="text-sm font-bold text-white mt-0.5">${isPT ? 'Conclua o pagamento de' : 'Complete payment of'} <strong class="text-blue-400">€${price.toFixed(2)}</strong> ${isPT ? 'para iniciar a impressão' : 'to start printing'}</p>
+          <p class="text-xs text-slate-400">${isPT ? 'MB WAY · Referência Multibanco · Cartão / Apple Pay' : 'MB WAY · Multibanco Reference · Credit Card / Apple Pay'}</p>
         </div>
         <button type="button" id="track-pay-now-btn" class="w-full sm:w-auto px-6 py-3 rounded-xl bg-blue-500 hover:bg-blue-400 text-white font-bold text-xs shadow-lg shadow-blue-500/25 transition-all whitespace-nowrap">
-          💳 Pay &amp; Start Production &rarr;
+          💳 ${isPT ? 'Pagar & Iniciar Produção' : 'Pay & Start Production'} &rarr;
         </button>
       `;
 
@@ -236,6 +266,7 @@ class LayerStudiosTracker {
     }
 
     const hasPermission = ('Notification' in window) && Notification.permission === 'granted';
+    const isPT = (localStorage.getItem('ls_lang') || 'pt') === 'pt';
 
     card.className = 'p-4 sm:p-5 rounded-2xl bg-slate-900/90 border border-slate-800 backdrop-blur-md flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg';
     card.innerHTML = `
@@ -247,18 +278,20 @@ class LayerStudiosTracker {
         </div>
         <div class="flex-1">
           <div class="flex items-center gap-2">
-            <h4 class="text-xs sm:text-sm font-bold text-white leading-tight">Alertas em Tempo Real</h4>
+            <h4 class="text-xs sm:text-sm font-bold text-white leading-tight">${isPT ? 'Alertas em Tempo Real' : 'Real-Time Alerts'}</h4>
             <span class="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold ${hasPermission ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'}">
-              ${hasPermission ? '● Ativo' : '● Em Direto'}
+              ${hasPermission ? (isPT ? '● Ativo' : '● Active') : (isPT ? '● Em Direto' : '● Live')}
             </span>
           </div>
           <p class="text-[11px] text-slate-400 mt-0.5 leading-relaxed">
-            Receba notificações automáticas no sino do topo e no navegador sempre que a sua peça <strong class="text-white font-mono">${data.id}</strong> mudar de estado.
+            ${isPT 
+              ? `Receba notificações automáticas no sino do topo e no navegador sempre que a sua peça <strong class="text-white font-mono">${data.id}</strong> mudar de estado.`
+              : `Receive live status updates in the notification bell and browser whenever <strong class="text-white font-mono">${data.id}</strong> updates.`}
           </p>
         </div>
       </div>
       <button type="button" id="btn-subscribe-push-alerts" class="w-full sm:w-auto px-4 py-2.5 rounded-xl ${hasPermission ? 'bg-emerald-950/60 text-emerald-300 border border-emerald-500/30' : 'bg-slate-800 hover:bg-blue-600 text-white border border-slate-700 hover:border-blue-500'} font-semibold text-xs transition-all whitespace-nowrap flex items-center justify-center gap-2 shrink-0">
-        <span>${hasPermission ? '🔔 Notificações Ativas' : '🔔 Ativar Alertas no Navegador'}</span>
+        <span>${hasPermission ? (isPT ? '🔔 Notificações Ativas' : '🔔 Alerts Active') : (isPT ? '🔔 Ativar Alertas no Navegador' : '🔔 Enable Browser Alerts')}</span>
       </button>
     `;
 
@@ -269,14 +302,14 @@ class LayerStudiosTracker {
           window.LayerStudiosNotifications.addTrackedOrderId(data.id);
           const granted = await window.LayerStudiosNotifications.requestBrowserNotificationPermission();
           if (granted) {
-            btn.innerHTML = '<span>🔔 Notificações Ativas</span>';
+            btn.innerHTML = `<span>${isPT ? '🔔 Notificações Ativas' : '🔔 Alerts Active'}</span>`;
             btn.className = 'w-full sm:w-auto px-4 py-2.5 rounded-xl bg-emerald-950/60 text-emerald-300 border border-emerald-500/30 font-semibold text-xs transition-all whitespace-nowrap flex items-center justify-center gap-2 shrink-0';
             if (window.LayerStudiosApp) {
-              window.LayerStudiosApp.showToast(`🔔 Notificações ativadas para ${data.id}!`, 'success');
+              window.LayerStudiosApp.showToast(isPT ? `🔔 Notificações ativadas para ${data.id}!` : `🔔 Alerts activated for ${data.id}!`, 'success');
             }
           } else {
             if (window.LayerStudiosApp) {
-              window.LayerStudiosApp.showToast(`Alertas em direto registados no Centro de Notificações.`, 'info');
+              window.LayerStudiosApp.showToast(isPT ? `Alertas em direto registados no Centro de Notificações.` : `Live alerts active in Notification Center.`, 'info');
             }
           }
         }
@@ -287,6 +320,20 @@ class LayerStudiosTracker {
   render10StageTimeline(currentStatus, data) {
     const pipelineEl = document.getElementById('tracker-10-stages');
     if (!pipelineEl) return;
+
+    const isPT = (localStorage.getItem('ls_lang') || 'pt') === 'pt';
+    const stageMap = {
+      'Quote Requested': isPT ? 'Pedido de Orçamento' : 'Quote Requested',
+      'Under Review': isPT ? 'Em Análise Técnica' : 'Under Technical Review',
+      'Quote Sent': isPT ? 'Orçamento Disponível' : 'Quote Ready',
+      'Awaiting Payment': isPT ? 'Aguardar Pagamento' : 'Awaiting Payment',
+      'Preparing': isPT ? 'Em Preparação' : 'Preparing',
+      'Printing': isPT ? 'Em Impressão' : 'Printing',
+      'Quality Inspection': isPT ? 'Controlo de Qualidade' : 'Quality Inspection',
+      'Ready to Ship': isPT ? 'Pronto para Envio' : 'Ready to Ship',
+      'Shipped': isPT ? 'Enviado' : 'Shipped',
+      'Completed': isPT ? 'Entregue / Concluído' : 'Delivered / Completed'
+    };
 
     let currentIndex = this.stages.findIndex(s => s.toLowerCase() === currentStatus.toLowerCase());
     if (currentIndex === -1) {
@@ -306,7 +353,7 @@ class LayerStudiosTracker {
       const stageCard = document.createElement('div');
       stageCard.className = `flex items-center p-3 rounded-lg border transition-all ${
         isCurrent
-          ? 'bg-blue-500/10 border-sky-500/50 shadow-lg shadow-sky-500/10'
+          ? 'bg-blue-500/10 border-blue-500/40 shadow-lg shadow-blue-500/10'
           : isCompleted
           ? 'bg-slate-900/60 border-slate-800 opacity-90'
           : 'bg-slate-950/40 border-slate-900 opacity-40'
@@ -316,27 +363,37 @@ class LayerStudiosTracker {
       if (isCompleted) {
         iconHtml = `<div class="w-7 h-7 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 text-xs font-bold font-mono">✓</div>`;
       } else if (isCurrent) {
-        iconHtml = `<div class="w-7 h-7 rounded-full bg-blue-500 border border-sky-300 flex items-center justify-center text-white text-xs font-bold font-mono radar-dot">${idx + 1}</div>`;
+        iconHtml = `<div class="w-7 h-7 rounded-full bg-blue-500 border border-blue-300 flex items-center justify-center text-white text-xs font-bold font-mono radar-dot">${idx + 1}</div>`;
       } else {
         iconHtml = `<div class="w-7 h-7 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-400 text-xs font-mono">${idx + 1}</div>`;
       }
 
       let subtext = '';
       if (isCurrent && stageName === 'Printing') {
-        subtext = '<span class="text-xs text-amber-400 font-mono block mt-0.5 animate-pulse">Printing active &bull; 65% completed (Layer 420/650)</span>';
+        subtext = isPT 
+          ? '<span class="text-xs text-amber-400 font-mono block mt-0.5 animate-pulse">Impressão ativa &bull; Telemetria nominal (Camada 420/650)</span>'
+          : '<span class="text-xs text-amber-400 font-mono block mt-0.5 animate-pulse">Printing active &bull; Nominal telemetry (Layer 420/650)</span>';
       } else if (isCurrent && stageName === 'Quote Sent') {
-        subtext = '<span class="text-xs text-blue-400 font-mono block mt-0.5">Quote ready for your approval below</span>';
+        subtext = isPT 
+          ? '<span class="text-xs text-blue-400 font-mono block mt-0.5">Orçamento pronto para aprovação</span>'
+          : '<span class="text-xs text-blue-400 font-mono block mt-0.5">Quote ready for your approval below</span>';
       } else if (isCompleted) {
-        subtext = '<span class="text-xs text-emerald-400/80 font-mono block mt-0.5">Completed</span>';
+        subtext = isPT 
+          ? '<span class="text-xs text-emerald-400/80 font-mono block mt-0.5">Concluído</span>'
+          : '<span class="text-xs text-emerald-400/80 font-mono block mt-0.5">Completed</span>';
       } else {
-        subtext = '<span class="text-xs text-slate-500 font-mono block mt-0.5">Pending stage</span>';
+        subtext = isPT 
+          ? '<span class="text-xs text-slate-500 font-mono block mt-0.5">Etapa seguinte</span>'
+          : '<span class="text-xs text-slate-500 font-mono block mt-0.5">Pending stage</span>';
       }
+
+      const displayTitle = stageMap[stageName] || stageName;
 
       stageCard.innerHTML = `
         <div class="flex items-center space-x-3 w-full">
           ${iconHtml}
           <div class="flex-1 overflow-hidden">
-            <p class="text-sm font-semibold ${isCurrent ? 'text-white' : isCompleted ? 'text-slate-200' : 'text-slate-500'}">${stageName}</p>
+            <p class="text-sm font-semibold ${isCurrent ? 'text-white' : isCompleted ? 'text-slate-200' : 'text-slate-500'}">${displayTitle}</p>
             ${subtext}
           </div>
         </div>
@@ -350,14 +407,14 @@ class LayerStudiosTracker {
     if (actionArea) {
       if (currentStatus === 'Quote Sent') {
         actionArea.innerHTML = `
-          <div class="p-4 rounded-xl bg-blue-500/10 border border-sky-500/30 flex flex-col sm:flex-row items-center justify-between gap-4 mt-6">
+          <div class="p-4 rounded-xl bg-blue-500/10 border border-blue-500/30 flex flex-col sm:flex-row items-center justify-between gap-4 mt-6">
             <div>
-              <p class="font-bold text-white text-base">Your official quote is ready for approval!</p>
-              <p class="text-xs text-slate-300">Total: <span class="font-bold text-blue-400">€${(data.pricing?.finalPrice || 40.50).toFixed(2)}</span> &bull; Lead time: 3-5 days</p>
+              <p class="font-bold text-white text-base">${isPT ? 'O seu orçamento oficial está pronto para aprovação!' : 'Your official quote is ready for approval!'}</p>
+              <p class="text-xs text-slate-300">Total: <span class="font-bold text-blue-400">€${(data.pricing?.finalPrice || 40.50).toFixed(2)}</span> &bull; ${isPT ? 'Prazo: 2–4 dias úteis' : 'Lead time: 2–4 business days'}</p>
             </div>
             <div class="flex space-x-3">
-              <button type="button" onclick="window.LayerStudiosTrackerInstance.approveQuote('${data.id}')" class="px-5 py-2.5 rounded-lg bg-blue-500 hover:bg-sky-400 text-white font-semibold text-sm shadow-lg shadow-sky-500/20 transition-all">
-                Accept & Proceed to Production
+              <button type="button" onclick="window.LayerStudiosTrackerInstance.approveQuote('${data.id}')" class="px-5 py-2.5 rounded-lg bg-blue-500 hover:bg-blue-400 text-white font-semibold text-sm shadow-lg shadow-blue-500/20 transition-all">
+                ${isPT ? 'Aprovar & Iniciar Produção' : 'Accept & Proceed to Production'} &rarr;
               </button>
             </div>
           </div>
@@ -370,6 +427,7 @@ class LayerStudiosTracker {
   }
 
   async approveQuote(quoteId) {
+    const isPT = (localStorage.getItem('ls_lang') || 'pt') === 'pt';
     try {
       const res = await fetch(`/api/quotes/${quoteId}`, {
         method: 'PUT',
@@ -377,7 +435,7 @@ class LayerStudiosTracker {
         body: JSON.stringify({ status: 'Preparing' })
       });
       if (res.ok) {
-        window.LayerStudiosApp && window.LayerStudiosApp.showToast(`Quote ${quoteId} accepted! Production queued.`, 'success');
+        window.LayerStudiosApp && window.LayerStudiosApp.showToast(isPT ? `Orçamento ${quoteId} aprovado! Produção iniciada.` : `Quote ${quoteId} accepted! Production queued.`, 'success');
         this.track(quoteId);
       }
     } catch (err) {

@@ -672,7 +672,7 @@ class LayerStudiosQuoteEngine {
             for (const file of this.uploadedFiles) {
               try {
                 const formData = new FormData();
-                formData.append('file', file);
+                formData.append('file', file.fileObject || file);
                 formData.append('quoteId', quoteId);
                 fetch('/api/upload-file', { method: 'POST', body: formData }).catch(() => {});
               } catch (uploadErr) {
