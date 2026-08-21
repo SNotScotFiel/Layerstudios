@@ -315,9 +315,15 @@ class LayerStudiosApp {
           body: JSON.stringify(payload)
         });
         const data = await res.json();
+        if (window.LayerStudiosAnalytics) {
+          window.LayerStudiosAnalytics.trackContactSubmitted('general_inquiry');
+        }
         this.showToast(data.message || 'Message sent! We will reply within 24 hours.', 'success');
         form.reset();
       } catch {
+        if (window.LayerStudiosAnalytics) {
+          window.LayerStudiosAnalytics.trackContactSubmitted('general_inquiry');
+        }
         this.showToast('Message sent! Our engineering team will contact you shortly.', 'success');
         form.reset();
       } finally {

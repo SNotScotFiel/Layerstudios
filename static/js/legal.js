@@ -74,6 +74,12 @@ class LayerStudiosLegal {
       if (target) {
         e.preventDefault();
         const type = target.getAttribute('data-legal-modal');
+        if (type === 'cookies') {
+          if (window.LayerStudiosAnalytics) {
+            window.LayerStudiosAnalytics.openCookieSettingsModal();
+          }
+          return;
+        }
         this.open(type);
       }
     });

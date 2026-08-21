@@ -469,12 +469,17 @@ class LayerStudiosI18n {
   }
 
   setLanguage(lang) {
+    const prevLang = this.currentLang;
     if (lang !== 'pt' && lang !== 'en') lang = 'pt';
     this.currentLang = lang;
     localStorage.setItem('ls_lang', lang);
     localStorage.setItem('ls_lang_chosen', 'true');
     this.applyLanguage(lang);
     this.updateSwitcherUI();
+
+    if (prevLang !== lang && window.LayerStudiosAnalytics) {
+      window.LayerStudiosAnalytics.trackLanguageChanged(prevLang, lang);
+    }
   }
 
   applyLanguage(lang) {

@@ -36,6 +36,14 @@ STRIPE_AVAILABLE = bool(STRIPE_SECRET_KEY and STRIPE_PUBLISHABLE_KEY)
 print(f'[Stripe] Native payment gateway initialized (Active: {STRIPE_AVAILABLE})')
 print(f'[Config] Canonical Base URL: {BASE_URL}')
 
+# Google Analytics 4 & Google Ads Configuration (Loaded safely from Environment Variables)
+GA4_MEASUREMENT_ID = os.environ.get('GA4_MEASUREMENT_ID', '').strip()
+GOOGLE_ADS_ID = os.environ.get('GOOGLE_ADS_ID', '').strip()
+if GA4_MEASUREMENT_ID:
+    print(f'[Analytics] GA4 Measurement ID configured: {GA4_MEASUREMENT_ID[:4]}***')
+else:
+    print('[Analytics] GA4 Measurement ID not configured (awaiting owner GA4_MEASUREMENT_ID).')
+
 # Server-Side Admin Authentication Configuration (loaded ONLY from Environment Variable)
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', '').strip()
 ADMIN_TOKENS = {}  # token -> {'created': timestamp, 'expires': timestamp}
@@ -180,6 +188,14 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
             return self.send_json(200, {
                 'publishableKey': STRIPE_PUBLISHABLE_KEY if STRIPE_AVAILABLE else '',
                 'available': STRIPE_AVAILABLE
+            })
+
+        # 2b. Analytics & Google Ads Config
+        if path == '/api/analytics-config':
+            return self.send_json(200, {
+                'gaMeasurementId': GA4_MEASUREMENT_ID,
+                'googleAdsId': GOOGLE_ADS_ID,
+                'environment': 'production' if BASE_URL.startswith('https://layerstudios.pt') else 'development'
             })
 
         # 3. List All Quotes (Admin Only)

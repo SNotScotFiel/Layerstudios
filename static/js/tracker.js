@@ -243,6 +243,20 @@ class LayerStudiosTracker {
     // 10-Stage Milestone Pipeline rendering
     this.render10StageTimeline(currentStatus, data);
 
+    // Track verified purchase conversion safely (deduplicated by ID)
+    if (isPaid && window.LayerStudiosAnalytics) {
+      window.LayerStudiosAnalytics.trackPurchase(data.id, {
+        total: price,
+        items: data.items || [{
+          id: data.id,
+          title: data.projectName || (isQuote ? '3D Print Quote' : 'Store Order'),
+          price: price,
+          quantity: data.quantity || 1,
+          material: data.material || 'PETG'
+        }]
+      });
+    }
+
     // Auto-subscribe to live notifications for this order/quote
     if (window.LayerStudiosNotifications) {
       window.LayerStudiosNotifications.addTrackedOrderId(data.id);
@@ -435,6 +449,9 @@ class LayerStudiosTracker {
         body: JSON.stringify({ status: 'Preparing' })
       });
       if (res.ok) {
+        if (window.LayerStudiosAnalytics) {
+          window.LayerStudiosAnalytics.trackQuoteAccepted(quoteId);
+        }
         window.LayerStudiosApp && window.LayerStudiosApp.showToast(isPT ? `Orçamento ${quoteId} aprovado! Produção iniciada.` : `Quote ${quoteId} accepted! Production queued.`, 'success');
         this.track(quoteId);
       }

@@ -53,6 +53,10 @@ class LayerStudiosQuoteEngine {
     this.setupFormSubmission();
     this.initQuoteViewer();
     this.recalculateQuote();
+
+    if (window.LayerStudiosAnalytics) {
+      window.LayerStudiosAnalytics.trackQuotePageViewed();
+    }
   }
 
   initQuoteViewer() {
@@ -117,6 +121,11 @@ class LayerStudiosQuoteEngine {
         if (uploadAreaModel) uploadAreaModel.classList.add('hidden');
         if (uploadAreaDesign) uploadAreaDesign.classList.remove('hidden');
         this.recalculateQuote();
+
+        if (window.LayerStudiosAnalytics) {
+          window.LayerStudiosAnalytics.trackDesignHelpRequested();
+          window.LayerStudiosAnalytics.trackQuoteStarted('design_help');
+        }
       });
     }
   }
@@ -162,11 +171,13 @@ class LayerStudiosQuoteEngine {
         fileInput.value = '';
       }
     });
-  }
-
-  handleFiles(fileList) {
+  }  handleFiles(fileList) {
     const fileListContainer = document.getElementById('uploaded-files-list');
     if (!fileListContainer) return;
+
+    if (window.LayerStudiosAnalytics) {
+      window.LayerStudiosAnalytics.trackQuoteStarted('file_upload');
+    }
 
     Array.from(fileList).forEach(file => {
       const ext = file.name.split('.').pop().toLowerCase();
@@ -174,6 +185,9 @@ class LayerStudiosQuoteEngine {
       
       if (!validExtensions.includes(ext)) {
         window.LayerStudiosApp && window.LayerStudiosApp.showToast(`Unsupported format: .${ext}. Please upload STL, 3MF, STEP, OBJ, PDF or Images.`, 'warning');
+        if (window.LayerStudiosAnalytics) {
+          window.LayerStudiosAnalytics.trackError('model_upload', 'unsupported_extension');
+        }
         return;
       }
 
@@ -187,11 +201,9 @@ class LayerStudiosQuoteEngine {
 
       this.uploadedFiles.push(fileRecord);
 
+      const is3D = ['stl', '3mf', 'step', 'stp', 'obj'].includes(ext);
       if (window.LayerStudiosAnalytics) {
-        window.LayerStudiosAnalytics.track('file_uploaded', {
-          format: ext,
-          size_tier: parseFloat(sizeMB) > 20 ? 'large' : (parseFloat(sizeMB) > 5 ? 'medium' : 'small')
-        });
+        window.LayerStudiosAnalytics.trackModelUploaded(ext, is3D ? '3d_model' : 'reference_file');
       }
 
       // Render file badge
@@ -228,6 +240,9 @@ class LayerStudiosQuoteEngine {
           if (this.viewer) {
             this.viewer.loadSTLFromArrayBuffer(evt.target.result);
             this.showToast(`Loaded ${file.name} into 3D viewer!`, 'success');
+            if (window.LayerStudiosAnalytics) {
+              window.LayerStudiosAnalytics.trackModelPreviewLoaded(document.getElementById('quote-material')?.value || 'PETG');
+            }
           }
         };
         reader.readAsArrayBuffer(file);
@@ -249,8 +264,14 @@ class LayerStudiosQuoteEngine {
               if (geometry && this.viewer) {
                 this.viewer.setGeometry(geometry);
                 this.showToast(`Loaded ${file.name} into 3D viewer!`, 'success');
+                if (window.LayerStudiosAnalytics) {
+                  window.LayerStudiosAnalytics.trackModelPreviewLoaded(document.getElementById('quote-material')?.value || 'PETG');
+                }
               } else {
                 this.showToast(`Could not parse 3D data in ${file.name}`, 'warning');
+                if (window.LayerStudiosAnalytics) {
+                  window.LayerStudiosAnalytics.trackError('model_preview', 'parse_failed');
+                }
               }
             } else {
               this.showToast(`Could not find model data inside ${file.name}`, 'warning');
@@ -258,11 +279,15 @@ class LayerStudiosQuoteEngine {
           } catch (err) {
             console.error('3MF parse error:', err);
             this.showToast(`Uploaded ${file.name} — will be reviewed by our team`, 'info');
+            if (window.LayerStudiosAnalytics) {
+              window.LayerStudiosAnalytics.trackError('model_preview', 'parse_exception');
+            }
           }
         };
         reader.readAsArrayBuffer(file);
       }
     });
+  }   });
 
     this.recalculateQuote();
   }
@@ -660,10 +685,11 @@ class LayerStudiosQuoteEngine {
           const quoteId = data.quoteId || 'LS-1048';
 
           if (window.LayerStudiosAnalytics) {
-            window.LayerStudiosAnalytics.track('quote_submitted', {
+            window.LayerStudiosAnalytics.trackQuoteSubmitted(quoteId, {
               material: payload.material,
               quantity: payload.quantity,
-              hasModel: payload.hasModel
+              hasModel: payload.hasModel,
+              estimatedPrice: payload.pricing?.finalPrice
             });
           }
 
@@ -688,9 +714,15 @@ class LayerStudiosQuoteEngine {
           if (listEl) listEl.innerHTML = '';
         } else {
           window.LayerStudiosApp && window.LayerStudiosApp.showToast('Could not submit quote: ' + (data.error || 'Server error'), 'error');
+          if (window.LayerStudiosAnalytics) {
+            window.LayerStudiosAnalytics.trackError('quote_submit', 'api_error');
+          }
         }
       } catch (err) {
         console.error('Quote submission error:', err);
+        if (window.LayerStudiosAnalytics) {
+          window.LayerStudiosAnalytics.trackError('quote_submit', 'network_error');
+        }
         // Fallback local quote ID for offline demonstration
         const fallbackId = `LS-${Math.floor(1000 + Math.random() * 9000)}`;
         this.showQuoteSuccessModal(payload, fallbackId);

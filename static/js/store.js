@@ -264,6 +264,10 @@ class LayerStudiosStore {
     if (qtyInput) qtyInput.value = 1;
 
     modal.classList.remove('hidden');
+
+    if (window.LayerStudiosAnalytics) {
+      window.LayerStudiosAnalytics.trackViewItem(product);
+    }
   }
 
   setupCartDrawer() {
@@ -347,11 +351,14 @@ class LayerStudiosStore {
 
     this.saveCart();
     if (window.LayerStudiosAnalytics) {
-      window.LayerStudiosAnalytics.track('add_to_cart', {
-        product_id: product.id,
+      window.LayerStudiosAnalytics.trackAddToCart({
+        productId: product.id,
         title: product.title,
-        quantity: quantity,
-        price: product.price
+        price: product.price,
+        category: product.category,
+        material: material,
+        color: color,
+        quantity: quantity
       });
     }
     window.LayerStudiosApp && window.LayerStudiosApp.showToast(`Added ${quantity}x "${product.title}" to cart!`, 'success');
@@ -366,6 +373,9 @@ class LayerStudiosStore {
       setTimeout(() => {
         drawer.classList.remove('translate-x-full');
       }, 10);
+      if (window.LayerStudiosAnalytics) {
+        window.LayerStudiosAnalytics.trackViewCart(this.cart, this.cartSummary?.subtotal || 0);
+      }
     }
   }
 
@@ -449,6 +459,10 @@ class LayerStudiosStore {
       });
 
       el.querySelector('.btn-cart-remove').addEventListener('click', () => {
+        const removedItem = this.cart[idx];
+        if (removedItem && window.LayerStudiosAnalytics) {
+          window.LayerStudiosAnalytics.trackRemoveFromCart(removedItem);
+        }
         this.cart.splice(idx, 1);
         this.saveCart();
       });
@@ -489,10 +503,7 @@ class LayerStudiosStore {
         document.getElementById('checkout-total-badge').textContent = `€${(this.cartSummary?.total || 33.00).toFixed(2)}`;
         checkoutModal.classList.remove('hidden');
         if (window.LayerStudiosAnalytics) {
-          window.LayerStudiosAnalytics.track('checkout_started', {
-            items_count: this.cart.length,
-            total: this.cartSummary?.total || 0
-          });
+          window.LayerStudiosAnalytics.trackBeginCheckout(this.cart, this.cartSummary?.total || 0);
         }
       });
     }
@@ -567,6 +578,14 @@ class LayerStudiosStore {
                 phone: payload.phone || '+351 962 118 770',
                 email: payload.email || '',
                 onSuccess: (method) => {
+                  if (window.LayerStudiosAnalytics) {
+                    window.LayerStudiosAnalytics.trackPurchase(data.orderId, {
+                      items: payload.items,
+                      total: payload.total,
+                      shippingCost: payload.shippingCost,
+                      paymentMethod: method || selectedPayMethod
+                    });
+                  }
                   window.location.href = `/track?id=${data.orderId}&paid=true`;
                 }
               });
@@ -576,6 +595,9 @@ class LayerStudiosStore {
           }
         } catch (err) {
           console.error('Checkout error:', err);
+          if (window.LayerStudiosAnalytics) {
+            window.LayerStudiosAnalytics.trackError('checkout', 'network_error');
+          }
           const fallbackOrderId = `ORD-${Math.floor(10000 + Math.random() * 90000)}`;
           this.cart = [];
           this.saveCart();
