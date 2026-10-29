@@ -697,6 +697,20 @@ class DatabaseManager:
         cur = conn.cursor()
         now_str = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
         quote_id = self.generate_quote_ref()
+        pricing = data.get('pricing') if isinstance(data.get('pricing'), dict) else {}
+
+        qty = max(1, int(data.get('quantity', 1)))
+        min_unit_floor = 4.50 if 'carbon' in str(data.get('material', '')).lower() or 'nylon' in str(data.get('material', '')).lower() else 2.00
+        server_floor = max(9.50, round(qty * min_unit_floor, 2))
+
+        mat_cost = max(2.00, float(pricing.get('materialCost', data.get('materialCost', 6.00)) or 6.00))
+        mach_cost = max(4.00, float(pricing.get('machineCost', data.get('machineCost', 14.00)) or 14.00))
+        des_cost = max(0.00, float(pricing.get('designCost', data.get('designCost', 0.00)) or 0.00))
+        ship_cost = max(0.00, float(pricing.get('shippingCost', data.get('shippingCost', 4.50)) if pricing.get('shippingCost') is not None or data.get('shippingCost') is not None else 4.50))
+        disc_cost = max(0.00, float(pricing.get('discount', data.get('discount', 0.00)) or 0.00))
+        sub_cost = max(9.50, float(pricing.get('subtotal', data.get('subtotal', 20.00)) or 20.00))
+        raw_final = float(pricing.get('finalPrice', data.get('finalPrice', 24.50)) or 24.50)
+        fin_price = max(server_floor, raw_final) if raw_final >= 9.50 else max(server_floor, 24.50)
 
         try:
             cur.execute(self.format_query('''
@@ -716,28 +730,28 @@ class DatabaseManager:
                 data.get('customerName', 'Valued Client'),
                 data.get('phone', ''),
                 data.get('company', ''),
-                data.get('projectName', 'Custom 3D Print Request'),
-                data.get('description', ''),
+                data.get('projectName') or 'Pedido de Impressão 3D',
+                data.get('description') or data.get('customerNotes') or '',
                 data.get('material', 'PETG'),
-                data.get('color', 'Black'),
+                data.get('color', 'Preto'),
                 max(1, int(data.get('quantity', 1))),
                 data.get('quality', 'Standard (0.20mm)'),
-                data.get('strength', 'Standard (30% Infill)'),
-                data.get('turnaround', 'Standard (3-5 Days)'),
+                data.get('strength', 'Standard (20% Infill)'),
+                data.get('turnaround', 'Standard (2-4 Dias)'),
                 data.get('deadline', ''),
                 data.get('shippingCountry', 'Portugal'),
-                data.get('customerNotes', ''),
+                data.get('customerNotes') or data.get('description') or '',
                 1 if data.get('isConfidential') else 0,
                 'Quote Requested',
                 'unpaid',
                 data.get('paymentMethod', ''),
-                float(data.get('materialCost', 6.00)),
-                float(data.get('machineCost', 14.00)),
-                float(data.get('designCost', 0.00)),
-                float(data.get('shippingCost', 4.50)),
-                float(data.get('discount', 0.00)),
-                float(data.get('subtotal', 20.00)),
-                float(data.get('finalPrice', 24.50)),
+                mat_cost,
+                mach_cost,
+                des_cost,
+                ship_cost,
+                disc_cost,
+                sub_cost,
+                fin_price,
                 'Initial quote request received.',
                 'Pending engineering inspection.',
                 now_str,
@@ -966,9 +980,10 @@ class DatabaseManager:
         self.execute('DELETE FROM orders WHERE id = ? OR public_reference = ?', (order_id, order_id))
         return True
 
-    # --- Products & Materials ---
-    def get_products(self):
-        rows = self.fetchall('SELECT * FROM products WHERE active = 1 ORDER BY id ASC')
+    # --- Products, Materials & Promo Codes ---
+    def get_products(self, include_inactive=False):
+        sql = 'SELECT * FROM products ORDER BY id ASC' if include_inactive else 'SELECT * FROM products WHERE active = 1 ORDER BY id ASC'
+        rows = self.fetchall(sql)
         for r in rows:
             if isinstance(r.get('materials'), str):
                 try: r['materials'] = json.loads(r['materials'])
@@ -976,7 +991,119 @@ class DatabaseManager:
             if isinstance(r.get('colors'), str):
                 try: r['colors'] = json.loads(r['colors'])
                 except: pass
+            r['inStock'] = bool(r.get('in_stock', 1))
+            r['defaultMaterial'] = r.get('default_material', 'PLA+ Matte')
+            r['leadTime'] = r.get('lead_time', '1-2 business days')
+            r['customizable'] = bool(r.get('customizable', 0))
+            r['customizationField'] = r.get('customization_field', '')
+            r['price'] = float(r.get('price', 0.0))
         return rows
+
+    def create_product(self, data):
+        now_str = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
+        prod_id = data.get('id') or f'prod_{uuid.uuid4().hex[:6]}'
+        slug = data.get('slug') or prod_id
+        materials = data.get('materials', ['PLA+ Matte', 'PETG'])
+        if isinstance(materials, str):
+            materials = [m.strip() for m in materials.split(',') if m.strip()]
+        colors = data.get('colors', ['Matte Black', 'White', 'Grey'])
+        if isinstance(colors, str):
+            colors = [c.strip() for c in colors.split(',') if c.strip()]
+
+        self.execute('''
+            INSERT INTO products (
+                id, slug, title, category, price, description, dimensions, default_material,
+                materials, colors, in_stock, lead_time, image, customizable, customization_field,
+                active, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
+        ''', (
+            prod_id,
+            slug,
+            data.get('title', 'Novo Produto 3D'),
+            data.get('category', 'Accessories'),
+            float(data.get('price', 15.0)),
+            data.get('description', ''),
+            data.get('dimensions', ''),
+            data.get('defaultMaterial') or data.get('default_material') or (materials[0] if materials else 'PLA+ Matte'),
+            json.dumps(materials),
+            json.dumps(colors),
+            1 if data.get('inStock', True) else 0,
+            data.get('leadTime') or data.get('lead_time') or '1-2 dias úteis',
+            data.get('image', '/static/assets/product-stand.svg'),
+            1 if data.get('customizable', False) else 0,
+            data.get('customizationField') or data.get('customization_field') or '',
+            now_str,
+            now_str
+        ))
+        return self.fetchone('SELECT * FROM products WHERE id = ?', (prod_id,))
+
+    def update_product(self, prod_id, updates):
+        now_str = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
+        fields = ['updated_at = ?']
+        params = [now_str]
+        col_map = {
+            'title': 'title',
+            'category': 'category',
+            'price': 'price',
+            'description': 'description',
+            'dimensions': 'dimensions',
+            'defaultMaterial': 'default_material',
+            'default_material': 'default_material',
+            'inStock': 'in_stock',
+            'in_stock': 'in_stock',
+            'leadTime': 'lead_time',
+            'lead_time': 'lead_time',
+            'image': 'image',
+            'customizable': 'customizable',
+            'customizationField': 'customization_field',
+            'customization_field': 'customization_field',
+            'active': 'active'
+        }
+        for k, v in updates.items():
+            if k in ('materials', 'colors'):
+                if isinstance(v, str):
+                    v = [x.strip() for x in v.split(',') if x.strip()]
+                fields.append(f'{k} = ?')
+                params.append(json.dumps(v))
+            elif k in col_map:
+                col = col_map[k]
+                if col in ('in_stock', 'customizable', 'active'):
+                    v = 1 if v else 0
+                elif col == 'price':
+                    v = float(v)
+                fields.append(f'{col} = ?')
+                params.append(v)
+        params.extend([prod_id, prod_id])
+        self.execute(f"UPDATE products SET {', '.join(fields)} WHERE id = ? OR slug = ?", params)
+        return self.fetchone('SELECT * FROM products WHERE id = ? OR slug = ?', (prod_id, prod_id))
+
+    def delete_product(self, prod_id):
+        self.execute('DELETE FROM products WHERE id = ? OR slug = ?', (prod_id, prod_id))
+        return True
+
+    def get_promo_codes(self):
+        return self.fetchall('SELECT * FROM promo_codes ORDER BY code ASC')
+
+    def create_promo_code(self, data):
+        code = (data.get('code') or '').strip().upper()
+        if not code:
+            raise ValueError('Código promocional inválido')
+        pct = max(1.0, min(100.0, float(data.get('discountPercent') or data.get('discount_percent') or 10.0)))
+        desc = data.get('description') or f'{int(pct)}% Desconto'
+        existing = self.fetchone('SELECT id FROM promo_codes WHERE code = ?', (code,))
+        if existing:
+            self.execute('UPDATE promo_codes SET discount_percent = ?, description = ?, active = 1 WHERE code = ?', (pct, desc, code))
+            return self.fetchone('SELECT * FROM promo_codes WHERE code = ?', (code,))
+        promo_id = f'promo_{uuid.uuid4().hex[:6]}'
+        self.execute('''
+            INSERT INTO promo_codes (id, code, discount_percent, description, active, valid_until)
+            VALUES (?, ?, ?, ?, 1, '2029-12-31T23:59:59Z')
+        ''', (promo_id, code, pct, desc))
+        return self.fetchone('SELECT * FROM promo_codes WHERE id = ?', (promo_id,))
+
+    def delete_promo_code(self, code_or_id):
+        self.execute('DELETE FROM promo_codes WHERE id = ? OR code = ?', (code_or_id, code_or_id.upper()))
+        return True
 
     def get_materials(self):
         rows = self.fetchall('SELECT * FROM materials ORDER BY id ASC')
@@ -1104,8 +1231,18 @@ class DatabaseManager:
         orders = self.fetchall('SELECT * FROM orders')
         payments = self.fetchall('SELECT * FROM payments WHERE status = ?', ('paid',))
 
+        paid_quote_ids = {p.get('quote_id') for p in payments if p.get('quote_id')}
+        paid_order_ids = {p.get('order_id') for p in payments if p.get('order_id')}
+
         total_revenue = sum(float(p.get('amount', 0.0)) for p in payments)
-        active_prints = len([o for o in orders if o.get('status') in ['Printing', 'Preparing']]) + len([q for q in quotes if q.get('status') in ['Printing', 'Preparing']])
+        for q in quotes:
+            if q.get('payment_status') == 'paid' and q.get('id') not in paid_quote_ids and q.get('public_reference') not in paid_quote_ids:
+                total_revenue += float(q.get('final_price', 0.0))
+        for o in orders:
+            if o.get('payment_status') == 'paid' and o.get('id') not in paid_order_ids and o.get('public_reference') not in paid_order_ids:
+                total_revenue += float(o.get('total', 0.0))
+
+        active_prints = len([o for o in orders if o.get('status') in ['Printing', 'Preparing', 'Post-Processing', 'Quality Check']]) + len([q for q in quotes if q.get('status') in ['Printing', 'Preparing', 'Post-Processing', 'Quality Check']])
 
         materials_breakdown = {}
         for q in quotes:

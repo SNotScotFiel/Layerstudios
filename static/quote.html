@@ -156,9 +156,9 @@
 <!-- PAGE HERO -->
 <div class="pt-24 pb-10 px-4 sm:px-6 border-b border-slate-800/60">
   <div class="max-w-6xl mx-auto">
-    <span class="inline-block px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold mb-4">Orçamento Imediato</span>
-    <h1 class="text-3xl sm:text-4xl font-extrabold text-white mb-3">Pedir Orçamento</h1>
-    <p class="text-slate-400 max-w-xl text-base">Carregue o seu ficheiro 3D para obter um cálculo de preço instantâneo, ou descreva o que precisa e desenhamos para si. Sem conta obrigatória.</p>
+    <span class="inline-block px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold mb-4">Orçamento Imediato &bull; Análise CAD 3D</span>
+    <h1 class="text-3xl sm:text-4xl font-extrabold text-white mb-3">Pedir Orçamento de Impressão 3D</h1>
+    <p class="text-slate-400 max-w-2xl text-base">Carregue o seu ficheiro STL ou 3MF para cálculo automático de volume, peso e preço em segundos, ou peça-nos o desenho CAD sob medida. Sem conta obrigatória.</p>
   </div>
 </div>
 
@@ -233,76 +233,117 @@
               <label class="material-option flex items-center gap-2 p-2.5 rounded-lg bg-slate-950 border border-slate-800 cursor-pointer hover:border-slate-700">
                 <input type="radio" name="quote-material" value="ABS" class="sr-only">
                 <span class="w-3 h-3 rounded-full bg-yellow-500 flex-shrink-0"></span>
-                <div><span class="text-xs font-semibold text-white block">ABS</span><span class="text-[10px] text-slate-500">Robusto · Alta temp</span></div>
+                <div><span class="text-xs font-semibold text-white block">ABS / ASA</span><span class="text-[10px] text-slate-500">Robusto · Alta temp</span></div>
               </label>
               <label class="material-option flex items-center gap-2 p-2.5 rounded-lg bg-slate-950 border border-slate-800 cursor-pointer hover:border-slate-700">
                 <input type="radio" name="quote-material" value="TPU" class="sr-only">
                 <span class="w-3 h-3 rounded-full bg-slate-400 flex-shrink-0"></span>
-                <div><span class="text-xs font-semibold text-white block">TPU</span><span class="text-[10px] text-slate-500">Flexível · Impacto</span></div>
+                <div><span class="text-xs font-semibold text-white block">TPU 95A</span><span class="text-[10px] text-slate-500">Flexível · Impacto</span></div>
               </label>
               <label class="material-option flex items-center gap-2 p-2.5 rounded-lg bg-slate-950 border border-slate-800 cursor-pointer hover:border-slate-700">
                 <input type="radio" name="quote-material" value="CF-Nylon" class="sr-only">
                 <span class="w-3 h-3 rounded-full bg-slate-800 border border-slate-600 flex-shrink-0"></span>
-                <div><span class="text-xs font-semibold text-white block">CF-Nylon</span><span class="text-[10px] text-slate-500">Premium · Ultra forte</span></div>
+                <div><span class="text-xs font-semibold text-white block">CF-Nylon</span><span class="text-[10px] text-slate-500">Fibra Carbono · Ultra</span></div>
               </label>
               <a href="/materials" class="flex items-center gap-2 p-2.5 rounded-lg bg-slate-950 border border-dashed border-slate-700 cursor-pointer hover:border-slate-600">
                 <span class="w-3 h-3 rounded-full bg-slate-700 flex-shrink-0"></span>
-                <div><span class="text-xs font-semibold text-blue-400 block">Mais →</span><span class="text-[10px] text-slate-500">Ver todos</span></div>
+                <div><span class="text-xs font-semibold text-blue-400 block">Guia →</span><span class="text-[10px] text-slate-500">Comparar todos</span></div>
               </a>
             </div>
           </div>
 
-          <!-- Quality + Infill -->
-          <div class="grid grid-cols-2 gap-4">
+          <!-- Quality + Infill + Turnaround -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label class="block text-xs font-semibold text-slate-400 mb-2">Qualidade de Impressão</label>
+              <label class="block text-xs font-semibold text-slate-400 mb-2">Qualidade de Camada</label>
               <select id="quote-quality" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-2.5 text-sm text-white focus:border-blue-400 focus:outline-none">
-                <option value="fine">Fina (0.1mm)</option>
-                <option value="standard" selected>Padrão (0.2mm)</option>
-                <option value="draft">Rápida (0.3mm)</option>
+                <option value="Alta Precisão (0.12mm)">Alta Precisão (0.12mm)</option>
+                <option value="Padrão (0.20mm)" selected>Padrão (0.20mm)</option>
+                <option value="Rápida / Draft (0.28mm)">Rápida / Draft (0.28mm)</option>
               </select>
             </div>
             <div>
-              <label class="block text-xs font-semibold text-slate-400 mb-2">Preenchimento / Resistência</label>
+              <label class="block text-xs font-semibold text-slate-400 mb-2">Preenchimento (Infill)</label>
               <select id="quote-infill" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-2.5 text-sm text-white focus:border-blue-400 focus:outline-none">
-                <option value="15">Ligeiro (15%) — Exibição</option>
-                <option value="30" selected>Padrão (30%)</option>
-                <option value="60">Resistente (60%)</option>
-                <option value="100">Maciço (100%)</option>
+                <option value="15% (Leve / Protótipo)">15% — Protótipo / Visual</option>
+                <option value="30% (Funcional Padrão)" selected>30% — Funcional Padrão</option>
+                <option value="60% (Reforçado Mecânico)">60% — Reforçado Mecânico</option>
+                <option value="100% (Maciço Industrial)">100% — Maciço Industrial</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-400 mb-2">Prazo de Produção</label>
+              <select id="quote-turnaround" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-2.5 text-sm text-white focus:border-blue-400 focus:outline-none">
+                <option value="Standard (2-4 Dias)" selected>Standard (2–4 dias úteis)</option>
+                <option value="Expresso 24-48h (+25%)">⚡ Expresso 24–48h (+25%)</option>
               </select>
             </div>
           </div>
 
-          <!-- Quantity + Colour -->
-          <div class="grid grid-cols-2 gap-4">
+          <!-- Quantity + Batch Pills + Colour -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label class="block text-xs font-semibold text-slate-400 mb-2">Quantidade</label>
-              <input id="quote-quantity" type="number" min="1" max="500" value="1" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-2.5 text-sm text-white focus:border-blue-400 focus:outline-none">
+              <div class="flex items-center justify-between mb-2">
+                <label class="text-xs font-semibold text-slate-400">Quantidade</label>
+                <span id="batch-discount-badge" class="hidden px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-mono font-bold"></span>
+              </div>
+              <input id="quote-quantity" type="number" min="1" max="1000" value="1" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-2.5 text-sm text-white font-mono focus:border-blue-400 focus:outline-none">
+              <div class="flex flex-wrap gap-1.5 mt-2">
+                <button type="button" data-qty-preset="1" class="qty-preset-btn px-2 py-1 rounded-lg bg-slate-950 border border-blue-500/50 text-[11px] font-mono text-white">1 un.</button>
+                <button type="button" data-qty-preset="5" class="qty-preset-btn px-2 py-1 rounded-lg bg-slate-950 border border-slate-800 hover:border-slate-700 text-[11px] font-mono text-slate-300">5 <span class="text-emerald-400">-6%</span></button>
+                <button type="button" data-qty-preset="10" class="qty-preset-btn px-2 py-1 rounded-lg bg-slate-950 border border-slate-800 hover:border-slate-700 text-[11px] font-mono text-slate-300">10 <span class="text-emerald-400">-12%</span></button>
+                <button type="button" data-qty-preset="25" class="qty-preset-btn px-2 py-1 rounded-lg bg-slate-950 border border-slate-800 hover:border-slate-700 text-[11px] font-mono text-slate-300">25 <span class="text-emerald-400">-20%</span></button>
+                <button type="button" data-qty-preset="50" class="qty-preset-btn px-2 py-1 rounded-lg bg-slate-950 border border-slate-800 hover:border-slate-700 text-[11px] font-mono text-slate-300">50 <span class="text-emerald-400">-30%</span></button>
+              </div>
             </div>
             <div>
-              <label class="block text-xs font-semibold text-slate-400 mb-2">Cor Preferida</label>
-              <input id="quote-color" type="text" placeholder="ex: Preto, Branco, RAL 5015..." class="w-full rounded-xl bg-slate-950 border border-slate-800 p-2.5 text-sm text-white focus:border-blue-400 focus:outline-none placeholder-slate-600">
+              <label class="block text-xs font-semibold text-slate-400 mb-2">Cor da Peça</label>
+              <input id="quote-color" type="text" value="Preto Matte" placeholder="ex: Preto Matte, Branco, RAL..." class="w-full rounded-xl bg-slate-950 border border-slate-800 p-2.5 text-sm text-white focus:border-blue-400 focus:outline-none placeholder-slate-600">
+              <div class="flex items-center gap-2 mt-2.5">
+                <button type="button" data-color-name="Preto Matte" data-color-hex="#1e293b" title="Preto Matte" class="color-swatch-btn w-6 h-6 rounded-full bg-slate-900 border-2 border-blue-400 ring-2 ring-blue-500/30 transition-transform hover:scale-110"></button>
+                <button type="button" data-color-name="Branco Polar" data-color-hex="#f8fafc" title="Branco Polar" class="color-swatch-btn w-6 h-6 rounded-full bg-slate-100 border border-slate-600 transition-transform hover:scale-110"></button>
+                <button type="button" data-color-name="Cinza Espacial" data-color-hex="#64748b" title="Cinza Espacial" class="color-swatch-btn w-6 h-6 rounded-full bg-slate-500 border border-slate-600 transition-transform hover:scale-110"></button>
+                <button type="button" data-color-name="Azul Cobalto" data-color-hex="#2563eb" title="Azul Cobalto" class="color-swatch-btn w-6 h-6 rounded-full bg-blue-600 border border-slate-600 transition-transform hover:scale-110"></button>
+                <button type="button" data-color-name="Laranja Industrial" data-color-hex="#f97316" title="Laranja Industrial" class="color-swatch-btn w-6 h-6 rounded-full bg-orange-500 border border-slate-600 transition-transform hover:scale-110"></button>
+                <button type="button" data-color-name="Vermelho Racing" data-color-hex="#ef4444" title="Vermelho Racing" class="color-swatch-btn w-6 h-6 rounded-full bg-red-500 border border-slate-600 transition-transform hover:scale-110"></button>
+                <button type="button" data-color-name="Verde Militar" data-color-hex="#10b981" title="Verde Militar" class="color-swatch-btn w-6 h-6 rounded-full bg-emerald-500 border border-slate-600 transition-transform hover:scale-110"></button>
+              </div>
             </div>
           </div>
         </div>
 
         <!-- Contact -->
         <div class="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-4">
-          <h3 class="text-sm font-bold text-white">Os Seus Dados</h3>
+          <h3 class="text-sm font-bold text-white">Os Seus Dados &amp; Envio</h3>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label class="block text-xs font-semibold text-slate-400 mb-1.5">Nome</label>
-              <input id="quote-name" name="name" autocomplete="name" type="text" placeholder="O seu nome completo" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-2.5 text-sm text-white focus:border-blue-400 focus:outline-none placeholder-slate-600">
+              <label class="block text-xs font-semibold text-slate-400 mb-1.5">Nome Completo *</label>
+              <input id="quote-name" name="name" required autocomplete="name" type="text" placeholder="O seu nome completo" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-2.5 text-sm text-white focus:border-blue-400 focus:outline-none placeholder-slate-600">
             </div>
             <div>
-              <label class="block text-xs font-semibold text-slate-400 mb-1.5">Email</label>
-              <input id="quote-email" name="email" autocomplete="email" type="email" placeholder="o.seu.email@exemplo.com" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-2.5 text-sm text-white focus:border-blue-400 focus:outline-none placeholder-slate-600">
+              <label class="block text-xs font-semibold text-slate-400 mb-1.5">Email *</label>
+              <input id="quote-email" name="email" required autocomplete="email" type="email" placeholder="o.seu.email@exemplo.com" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-2.5 text-sm text-white focus:border-blue-400 focus:outline-none placeholder-slate-600">
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-400 mb-1.5">Telemóvel / WhatsApp</label>
+              <input id="quote-phone" name="phone" autocomplete="tel" type="tel" placeholder="+351 912 345 678" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-2.5 text-sm text-white focus:border-blue-400 focus:outline-none placeholder-slate-600">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-400 mb-1.5">Nome do Projeto</label>
+              <input id="quote-project-name" type="text" placeholder="ex: Suporte Sensor / Protótipo V2" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-2.5 text-sm text-white focus:border-blue-400 focus:outline-none placeholder-slate-600">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-400 mb-1.5">Empresa / NIF (Opcional)</label>
+              <input id="quote-company" type="text" placeholder="Empresa ou NIF p/ fatura" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-2.5 text-sm text-white focus:border-blue-400 focus:outline-none placeholder-slate-600">
             </div>
           </div>
           <div>
-            <label class="block text-xs font-semibold text-slate-400 mb-1.5">País de Envio</label>
+            <label class="block text-xs font-semibold text-slate-400 mb-1.5">Destino de Envio</label>
             <select id="quote-shipping-country" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-2.5 text-sm text-white focus:border-blue-400 focus:outline-none">
-              <option value="Portugal" selected>Portugal (€4.50 · Grátis acima de €50)</option>
+              <option value="Portugal" selected>Portugal Continental (€4.50 · Grátis acima de €50)</option>
+              <option value="Portugal Islands">Ilhas — Madeira e Açores (€6.90)</option>
               <option value="European Union">União Europeia (€9.90)</option>
               <option value="International">Internacional Registado (€18.00)</option>
             </select>
@@ -322,8 +363,8 @@
             </div>
           </div>
           <div>
-            <label class="block text-xs font-semibold text-slate-400 mb-1.5">Notas adicionais</label>
-            <input id="quote-notes" type="text" placeholder="ex: inserções roscadas M4 necessárias, acabamento liso superior..." class="w-full rounded-xl bg-slate-950 border border-slate-800 p-2.5 text-sm text-white focus:border-blue-400 focus:outline-none placeholder-slate-600">
+            <label class="block text-xs font-semibold text-slate-400 mb-1.5">Notas adicionais / Tolerâncias</label>
+            <input id="quote-notes" type="text" placeholder="ex: inserções roscadas M4 necessárias, superfície superior visível..." class="w-full rounded-xl bg-slate-950 border border-slate-800 p-2.5 text-sm text-white focus:border-blue-400 focus:outline-none placeholder-slate-600">
           </div>
         </div>
       </div>
@@ -333,21 +374,32 @@
 
         <!-- 3D Viewer -->
         <div class="p-5 rounded-2xl bg-slate-900/90 border border-slate-800">
-          <div class="flex items-center justify-between pb-3 border-b border-slate-800 text-xs font-mono mb-4">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-800 text-xs font-mono mb-3">
             <span class="text-blue-400 font-bold flex items-center gap-2">
-              <span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
-              Análise do Modelo
-              <span class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-500 text-[9px] border border-slate-700">256³ mm</span>
+              <span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse"></span>
+              Inspeção 3D Interativa
+              <span class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 text-[9px] border border-slate-700">256³ mm</span>
             </span>
-            <span class="text-slate-500 text-[10px]">Pré-visualização 3D</span>
+            <div class="flex items-center gap-1">
+              <button type="button" id="btn-3d-rotate" title="Auto-Rotação" class="px-2 py-1 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30 text-[10px] hover:bg-blue-500 hover:text-white transition-colors">🔄 Rodar</button>
+              <button type="button" id="btn-3d-wireframe" title="Ver Malha 3D" class="px-2 py-1 rounded bg-slate-800 text-slate-300 border border-slate-700 text-[10px] hover:text-white transition-colors">🕸️ Malha</button>
+              <button type="button" id="btn-3d-reset" title="Centrar Câmara" class="px-2 py-1 rounded bg-slate-800 text-slate-300 border border-slate-700 text-[10px] hover:text-white transition-colors">🎯</button>
+            </div>
           </div>
 
-          <div class="w-full h-56 rounded-xl bg-[#09090b] border border-slate-800 overflow-hidden relative">
+          <div class="w-full h-60 rounded-xl bg-[#09090b] border border-slate-800 overflow-hidden relative">
             <canvas id="quote-3d-canvas" style="width:100%;height:100%;display:block;"></canvas>
             <div id="quote-fit-badge" class="hidden absolute top-2 right-2 px-2 py-1 rounded-lg text-[9px] font-bold font-mono flex items-center gap-1 backdrop-blur-sm border"></div>
           </div>
 
-          <div class="grid grid-cols-2 gap-2.5 mt-4 text-xs font-mono">
+          <!-- Layer Slicer Preview Slider -->
+          <div class="flex items-center gap-3 mt-3 px-1 text-[10px] font-mono text-slate-400">
+            <span class="shrink-0">Corte Camadas:</span>
+            <input type="range" id="quote-slice-slider" min="5" max="100" value="100" class="w-full accent-blue-500 h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+            <span id="quote-slice-val" class="w-9 text-right text-blue-400">100%</span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2.5 mt-3 text-xs font-mono">
             <div class="p-2 rounded-lg bg-slate-950/60 border border-slate-800">
               <span class="text-slate-500 block text-[9px] uppercase mb-0.5">Dimensões (mm)</span>
               <span id="telemetry-dimensions" class="text-slate-200 font-bold">—</span>
@@ -365,9 +417,9 @@
               <span id="telemetry-time" class="text-slate-200 font-bold">—</span>
             </div>
           </div>
-          <div class="flex items-center justify-between mt-3 pt-2 border-t border-slate-800/60 text-[9px] font-mono text-slate-600">
-            <span>Área: <span class="text-slate-500">256 × 256 × 256 mm</span></span>
-            <span id="quote-layer-count">— camadas @ 0.2mm</span>
+          <div class="flex items-center justify-between mt-3 pt-2 border-t border-slate-800/60 text-[9px] font-mono text-slate-500">
+            <span>Volume Máx: <span class="text-slate-400">256 × 256 × 256 mm</span></span>
+            <span id="quote-layer-count">Carregue um modelo 3D</span>
           </div>
         </div>
 
@@ -375,20 +427,21 @@
         <div class="p-5 rounded-2xl bg-slate-900/80 border border-blue-500/20 shadow-lg shadow-blue-500/5 space-y-4">
           <div class="flex items-center justify-between">
             <h3 class="text-sm font-bold text-white">Custo Estimado</h3>
-            <span class="text-xs text-blue-400">Preços transparentes</span>
+            <span class="text-xs text-blue-400 font-mono">Cálculo Instantâneo</span>
           </div>
           <div class="space-y-2 text-xs font-mono border-t border-slate-800 pt-3">
             <div class="flex justify-between text-slate-300"><span>Custo de material</span><span id="price-material">—</span></div>
-            <div class="flex justify-between text-slate-300"><span>Tempo de impressão</span><span id="price-time">—</span></div>
-            <div class="flex justify-between text-slate-300"><span>Pós-processamento</span><span id="price-post">—</span></div>
-            <div class="flex justify-between text-slate-400"><span>Quantidade ×<span id="price-qty-label">1</span></span><span id="price-qty">—</span></div>
-            <div class="flex justify-between text-slate-400"><span>Envio</span><span id="price-shipping">€4.50</span></div>
+            <div class="flex justify-between text-slate-300"><span>Tempo de máquina</span><span id="price-time">—</span></div>
+            <div class="flex justify-between text-slate-300"><span>Preparação &amp; QC</span><span id="price-post">—</span></div>
+            <div class="flex justify-between text-slate-400"><span>Subtotal ×<span id="price-qty-label">1</span></span><span id="price-qty">—</span></div>
+            <div id="calc-discount-row" class="hidden flex justify-between text-emerald-400 font-bold"><span>Desconto Quantidade</span><span id="calc-discount-amount">-€0.00</span></div>
+            <div class="flex justify-between text-slate-400"><span>Envio Registado</span><span id="price-shipping">€4.50</span></div>
           </div>
           <div class="flex items-center justify-between pt-3 border-t border-slate-700">
             <span class="text-sm font-bold text-white">Total Estimado</span>
-            <span id="price-total" class="text-2xl font-black text-blue-400">—</span>
+            <span id="price-total" class="text-2xl font-black text-blue-400 font-mono">—</span>
           </div>
-          <p class="text-[10px] text-slate-500 italic">Estimativa instantânea. Preço e prazo finais confirmados após análise técnica.</p>
+          <p class="text-[10px] text-slate-500 italic">Pedido mínimo de impressão €9.50. Portes grátis em Portugal Continental acima de €50.</p>
         </div>
 
         <!-- Submit -->
@@ -397,8 +450,8 @@
         </button>
 
         <div class="flex items-center justify-center gap-6 text-xs text-slate-500">
-          <span class="flex items-center gap-1"><span class="text-emerald-400">✓</span> Sem conta necessária</span>
-          <span class="flex items-center gap-1"><span class="text-emerald-400">✓</span> Validação técnica</span>
+          <span class="flex items-center gap-1"><span class="text-emerald-400">✓</span> Confirmação imediata por Email</span>
+          <span class="flex items-center gap-1"><span class="text-emerald-400">✓</span> Revisão técnica incluída</span>
         </div>
       </div>
     </form>
@@ -422,7 +475,7 @@
           Quanto tempo demora a produção?
           <svg class="w-4 h-4 text-slate-400 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
         </summary>
-        <p class="mt-3 text-sm text-slate-400">Encomendas padrão de peça única são normalmente impressas e enviadas em 2–4 dias úteis. Séries maiores ou pedidos de desenho CAD são agendados após confirmação do orçamento.</p>
+        <p class="mt-3 text-sm text-slate-400">Encomendas padrão de peça única são normalmente impressas e enviadas em 2–4 dias úteis (ou 24–48h em modo Expresso). Séries maiores ou pedidos de desenho CAD são agendados após confirmação do orçamento.</p>
       </details>
       <details class="group p-4 rounded-xl bg-slate-900 border border-slate-800 cursor-pointer">
         <summary class="flex justify-between items-center text-sm font-semibold text-slate-200 list-none">
@@ -445,13 +498,13 @@
 <!-- SUCCESS MODAL -->
 <div id="quote-success-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
   <div class="bg-slate-900 border border-slate-700 rounded-3xl p-8 max-w-md w-full text-center space-y-4 shadow-2xl">
-    <div class="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mx-auto text-3xl">✓</div>
-    <h3 class="text-xl font-extrabold text-white">Pedido de orçamento recebido!</h3>
-    <p class="text-slate-400 text-sm">Vamos analisar o seu ficheiro CAD, confirmar a imprimibilidade e enviar-lhe o orçamento final com link de pagamento seguro.</p>
-    <p id="quote-order-id" class="text-xs font-mono text-slate-500 bg-slate-950 rounded-lg p-2"></p>
+    <div class="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mx-auto text-3xl text-emerald-400">✓</div>
+    <h3 class="text-xl font-extrabold text-white">Pedido de orçamento registado!</h3>
+    <p class="text-slate-400 text-sm">Enviámos os detalhes para o seu email. A nossa equipa técnica vai validar o seu modelo 3D e já pode acompanhar o estado ou concluir o pagamento em tempo real.</p>
+    <p id="quote-order-id" class="text-xs font-mono text-blue-400 font-bold bg-slate-950 border border-slate-800 rounded-xl p-3"></p>
     <div class="flex gap-3 justify-center pt-2">
-      <button id="close-success-modal" class="px-6 py-3 rounded-xl bg-blue-500 hover:bg-blue-400 text-white font-bold">Concluir</button>
-      <a href="/track" id="modal-quote-track-btn" class="px-6 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold">Seguir Pedido →</a>
+      <button id="close-success-modal" type="button" class="px-5 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-sm">Fechar</button>
+      <a href="/track" id="modal-quote-track-btn" class="px-6 py-3 rounded-xl bg-blue-500 hover:bg-blue-400 text-white font-bold text-sm shadow-lg shadow-blue-500/25">Seguir Pedido &amp; Pagar →</a>
     </div>
   </div>
 </div>
@@ -479,10 +532,10 @@
   </div>
 </footer>
 
-<script src="/static/js/viewer3d.js"></script>
-<script src="/static/js/quote.js"></script>
+<script src="/static/js/viewer3d.js?v=2.4"></script>
+<script src="/static/js/quote.js?v=2.4"></script>
 <script>
-// Mobile menu
+// Mobile menu & Interactive UI bindings
 (function() {
   const t = document.getElementById('mobile-menu-toggle');
   const d = document.getElementById('mobile-menu-drawer');

@@ -1,8 +1,8 @@
 /**
- * Layer Studios - Instant & Request Quote Engine
+ * Layer Studios - Instant & Request Quote Engine (v2.4)
  * Handles dual-path workflow (Existing 3D model vs CAD design request),
- * drag-and-drop file ingestion, dynamic 3D telemetry parsing, real-time cost breakdown,
- * and API persistence generating unique Quote IDs (LS-XXXX).
+ * drag-and-drop STL/3MF ingestion, WebGL 3D telemetry & slicer preview,
+ * color swatches, batch quantity discounts, and Neon PostgreSQL + Resend integration.
  */
 
 class LayerStudiosQuoteEngine {
@@ -12,43 +12,23 @@ class LayerStudiosQuoteEngine {
     this.hasModel = true;
     this.pricingModel = {
       baseSetup: 4.00,
-      materialCostPerGram: {
-        'PLA / PLA+': 0.08,
-        'PETG': 0.10,
-        'TPU 95A': 0.16,
-        'ABS / ASA': 0.14,
-        'Carbon-Fiber PETG': 0.22
-      },
-      qualityFactor: {
-        'Draft (0.28mm)': 0.85,
-        'Standard (0.20mm)': 1.00,
-        'Fine (0.12mm)': 1.65
-      },
-      infillFactor: {
-        'Light (15% Infill)': 0.75,
-        'Standard (30% Infill)': 1.00,
-        'Heavy Duty (50% Infill / 4 Walls)': 1.40,
-        'Solid Mechanical (100% Infill)': 2.20
-      },
-      turnaroundFactor: {
-        'Standard (3-5 Days)': 1.00,
-        'Express Rush (24-48h)': 1.35
-      },
       shippingRates: {
         'Portugal': 4.50,
+        'Portugal Islands': 6.90,
         'European Union': 9.90,
         'International': 18.00
       }
     };
 
     this.currentTelemetry = null;
-
     this.init();
   }
 
   init() {
+    this.prefillAuthenticatedUser();
     this.setupPathSwitchers();
     this.setupDropzone();
+    this.setupInteractiveControls();
     this.setupDynamicRecalculation();
     this.setupFormSubmission();
     this.initQuoteViewer();
@@ -59,13 +39,27 @@ class LayerStudiosQuoteEngine {
     }
   }
 
+  prefillAuthenticatedUser() {
+    try {
+      const saved = localStorage.getItem('ls_customer_user');
+      if (!saved) return;
+      const user = JSON.parse(saved);
+      const nameEl = document.getElementById('quote-name');
+      const emailEl = document.getElementById('quote-email');
+      const phoneEl = document.getElementById('quote-phone');
+      if (nameEl && !nameEl.value && user.name) nameEl.value = user.name;
+      if (emailEl && !emailEl.value && user.email) emailEl.value = user.email;
+      if (phoneEl && !phoneEl.value && user.phone) phoneEl.value = user.phone;
+    } catch (e) {}
+  }
+
   initQuoteViewer() {
     const canvas = document.getElementById('quote-3d-canvas');
     if (!canvas) return;
 
     this.viewer = new LayerStudiosViewer('quote-3d-canvas', {
       autoRotate: true,
-      initialMaterial: 'petg',
+      initialMaterial: 'cyan',
       showGrid: true,
       showBuildCage: true,
       showAxes: false,
@@ -75,9 +69,8 @@ class LayerStudiosQuoteEngine {
         this.currentTelemetry = telemetry;
         this.updateTelemetryUI(telemetry);
         this.recalculateQuote();
-        // Update layer count footer
         const lc = document.getElementById('quote-layer-count');
-        if (lc) lc.textContent = `${telemetry.layerCount} layers @ 0.2mm`;
+        if (lc) lc.textContent = `~${telemetry.layerCount} camadas @ 0.20mm`;
       },
       onFitResult: (r) => {
         const badge = document.getElementById('quote-fit-badge');
@@ -85,12 +78,101 @@ class LayerStudiosQuoteEngine {
         badge.classList.remove('hidden');
         if (r.fits) {
           badge.className = 'absolute top-2 right-2 px-2 py-1 rounded-lg text-[9px] font-bold font-mono flex items-center space-x-1 backdrop-blur-sm border bg-emerald-950/80 text-emerald-400 border-emerald-500/40';
-          badge.innerHTML = `<span>✓ Fits</span><span class="text-emerald-600">${Math.max(r.pctX, r.pctY, r.pctZ)}%</span>`;
+          badge.innerHTML = `<span>✓ Cabe na Mesa</span><span class="text-emerald-500">${Math.max(r.pctX, r.pctY, r.pctZ)}%</span>`;
         } else {
           badge.className = 'absolute top-2 right-2 px-2 py-1 rounded-lg text-[9px] font-bold font-mono flex items-center space-x-1 backdrop-blur-sm border bg-red-950/80 text-red-400 border-red-500/40';
-          badge.innerHTML = `<span>⚠ Exceeds 256mm</span>`;
+          badge.innerHTML = `<span>⚠ Excede 256mm (Corte multi-peça)</span>`;
         }
       }
+    });
+
+    // Load default demo geometry on start so the 3D viewer looks alive immediately
+    if (this.viewer && typeof this.viewer.loadDefaultPart === 'function') {
+      this.viewer.loadDefaultPart();
+      // Keep currentTelemetry null until user uploads their own file so price starts clean
+      this.currentTelemetry = null;
+      this.updateTelemetryUI(null);
+      const lc = document.getElementById('quote-layer-count');
+      if (lc) lc.textContent = 'Peça de demonstração (carregue o seu STL)';
+    }
+  }
+
+  setupInteractiveControls() {
+    // 1. 3D Viewer Toolbar Buttons
+    const rotateBtn = document.getElementById('btn-3d-rotate');
+    if (rotateBtn) {
+      rotateBtn.addEventListener('click', () => {
+        if (!this.viewer) return;
+        const active = this.viewer.toggleAutoRotate();
+        rotateBtn.className = active
+          ? 'px-2 py-1 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30 text-[10px] transition-colors'
+          : 'px-2 py-1 rounded bg-slate-800 text-slate-400 border border-slate-700 text-[10px] transition-colors';
+      });
+    }
+
+    const wireBtn = document.getElementById('btn-3d-wireframe');
+    if (wireBtn) {
+      wireBtn.addEventListener('click', () => {
+        if (!this.viewer) return;
+        const nextState = !this.viewer.isWireframe;
+        this.viewer.setWireframe(nextState);
+        wireBtn.className = nextState
+          ? 'px-2 py-1 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30 text-[10px] transition-colors'
+          : 'px-2 py-1 rounded bg-slate-800 text-slate-300 border border-slate-700 text-[10px] transition-colors';
+      });
+    }
+
+    const resetBtn = document.getElementById('btn-3d-reset');
+    if (resetBtn) {
+      resetBtn.addEventListener('click', () => {
+        if (this.viewer && typeof this.viewer.resetCamera === 'function') {
+          this.viewer.resetCamera();
+        }
+      });
+    }
+
+    const sliceSlider = document.getElementById('quote-slice-slider');
+    const sliceVal = document.getElementById('quote-slice-val');
+    if (sliceSlider) {
+      sliceSlider.addEventListener('input', (e) => {
+        const pct = parseInt(e.target.value, 10) || 100;
+        if (sliceVal) sliceVal.textContent = `${pct}%`;
+        if (this.viewer) this.viewer.setSliceHeight(pct);
+      });
+    }
+
+    // 2. Quantity Preset Pills
+    const qtyInput = document.getElementById('quote-quantity');
+    const qtyBtns = document.querySelectorAll('.qty-preset-btn');
+    qtyBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const val = parseInt(btn.getAttribute('data-qty-preset'), 10) || 1;
+        if (qtyInput) qtyInput.value = val;
+        qtyBtns.forEach(b => {
+          b.classList.remove('border-blue-500/50', 'text-white');
+          b.classList.add('border-slate-800', 'text-slate-300');
+        });
+        btn.classList.remove('border-slate-800', 'text-slate-300');
+        btn.classList.add('border-blue-500/50', 'text-white');
+        this.recalculateQuote();
+      });
+    });
+
+    // 3. Color Swatch Buttons
+    const colorInput = document.getElementById('quote-color');
+    const swatches = document.querySelectorAll('.color-swatch-btn');
+    swatches.forEach(swatch => {
+      swatch.addEventListener('click', () => {
+        const colorName = swatch.getAttribute('data-color-name') || 'Preto Matte';
+        const colorHex = swatch.getAttribute('data-color-hex') || '#2563eb';
+        if (colorInput) colorInput.value = colorName;
+        swatches.forEach(s => s.classList.remove('border-2', 'border-blue-400', 'ring-2', 'ring-blue-500/30'));
+        swatch.classList.add('border-2', 'border-blue-400', 'ring-2', 'ring-blue-500/30');
+        if (this.viewer && typeof this.viewer.setCustomColor === 'function') {
+          this.viewer.setCustomColor(colorHex);
+        }
+        this.recalculateQuote();
+      });
     });
   }
 
@@ -103,10 +185,10 @@ class LayerStudiosQuoteEngine {
     if (btnHaveModel && btnNeedDesign) {
       btnHaveModel.addEventListener('click', () => {
         this.hasModel = true;
-        btnHaveModel.classList.add('bg-blue-500', 'text-white', 'border-blue-400');
-        btnHaveModel.classList.remove('bg-slate-900', 'text-slate-400', 'border-slate-800');
-        btnNeedDesign.classList.remove('bg-blue-500', 'text-white', 'border-blue-400');
-        btnNeedDesign.classList.add('bg-slate-900', 'text-slate-400', 'border-slate-800');
+        btnHaveModel.classList.add('bg-blue-500', 'text-white');
+        btnHaveModel.classList.remove('text-slate-400');
+        btnNeedDesign.classList.remove('bg-blue-500', 'text-white');
+        btnNeedDesign.classList.add('text-slate-400');
         if (uploadAreaModel) uploadAreaModel.classList.remove('hidden');
         if (uploadAreaDesign) uploadAreaDesign.classList.add('hidden');
         this.recalculateQuote();
@@ -114,10 +196,10 @@ class LayerStudiosQuoteEngine {
 
       btnNeedDesign.addEventListener('click', () => {
         this.hasModel = false;
-        btnNeedDesign.classList.add('bg-blue-500', 'text-white', 'border-blue-400');
-        btnNeedDesign.classList.remove('bg-slate-900', 'text-slate-400', 'border-slate-800');
-        btnHaveModel.classList.remove('bg-blue-500', 'text-white', 'border-blue-400');
-        btnHaveModel.classList.add('bg-slate-900', 'text-slate-400', 'border-slate-800');
+        btnNeedDesign.classList.add('bg-blue-500', 'text-white');
+        btnNeedDesign.classList.remove('text-slate-400');
+        btnHaveModel.classList.remove('bg-blue-500', 'text-white');
+        btnHaveModel.classList.add('text-slate-400');
         if (uploadAreaModel) uploadAreaModel.classList.add('hidden');
         if (uploadAreaDesign) uploadAreaDesign.classList.remove('hidden');
         this.recalculateQuote();
@@ -136,7 +218,6 @@ class LayerStudiosQuoteEngine {
 
     if (!dropzone || !fileInput) return;
 
-    // Clicking anywhere on the dropzone opens the file picker
     dropzone.addEventListener('click', (e) => {
       if (e.target !== fileInput) fileInput.click();
     });
@@ -145,14 +226,14 @@ class LayerStudiosQuoteEngine {
     ['dragenter', 'dragover'].forEach(eventName => {
       dropzone.addEventListener(eventName, (e) => {
         e.preventDefault();
-        dropzone.classList.add('drag-active');
+        dropzone.classList.add('border-blue-400', 'bg-blue-500/5');
       }, false);
     });
 
     ['dragleave', 'drop'].forEach(eventName => {
       dropzone.addEventListener(eventName, (e) => {
         e.preventDefault();
-        dropzone.classList.remove('drag-active');
+        dropzone.classList.remove('border-blue-400', 'bg-blue-500/5');
       }, false);
     });
 
@@ -167,11 +248,12 @@ class LayerStudiosQuoteEngine {
     fileInput.addEventListener('change', (e) => {
       if (e.target.files && e.target.files.length > 0) {
         this.handleFiles(e.target.files);
-        // Reset input so the same file can be re-selected
         fileInput.value = '';
       }
     });
-  }  handleFiles(fileList) {
+  }
+
+  handleFiles(fileList) {
     const fileListContainer = document.getElementById('uploaded-files-list');
     if (!fileListContainer) return;
 
@@ -184,10 +266,7 @@ class LayerStudiosQuoteEngine {
       const validExtensions = ['stl', 'step', 'stp', '3mf', 'obj', 'zip', 'pdf', 'png', 'jpg', 'jpeg'];
       
       if (!validExtensions.includes(ext)) {
-        window.LayerStudiosApp && window.LayerStudiosApp.showToast(`Unsupported format: .${ext}. Please upload STL, 3MF, STEP, OBJ, PDF or Images.`, 'warning');
-        if (window.LayerStudiosAnalytics) {
-          window.LayerStudiosAnalytics.trackError('model_upload', 'unsupported_extension');
-        }
+        this.showToast(`Formato não suportado: .${ext}. Use STL, 3MF, STEP, OBJ ou PDF.`, 'warning');
         return;
       }
 
@@ -195,32 +274,38 @@ class LayerStudiosQuoteEngine {
       const fileRecord = {
         name: file.name,
         size: `${sizeMB} MB`,
+        rawBytes: file.size,
         extension: ext,
         fileObject: file
       };
 
       this.uploadedFiles.push(fileRecord);
 
+      // Auto-populate project name if empty
+      const projInput = document.getElementById('quote-project-name');
+      if (projInput && !projInput.value.trim()) {
+        projInput.value = file.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ');
+      }
+
       const is3D = ['stl', '3mf', 'step', 'stp', 'obj'].includes(ext);
       if (window.LayerStudiosAnalytics) {
         window.LayerStudiosAnalytics.trackModelUploaded(ext, is3D ? '3d_model' : 'reference_file');
       }
 
-      // Render file badge
       const badge = document.createElement('div');
-      badge.className = 'flex items-center justify-between p-3 rounded-lg bg-slate-900/90 border border-slate-800 text-sm animate-fade-in';
+      badge.className = 'flex items-center justify-between p-3 rounded-xl bg-slate-950 border border-slate-800 text-sm animate-fade-in';
       badge.innerHTML = `
         <div class="flex items-center space-x-3 overflow-hidden">
-          <div class="w-8 h-8 rounded bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-blue-400 font-mono text-xs uppercase font-bold flex-shrink-0">
+          <div class="w-8 h-8 rounded-lg bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-blue-400 font-mono text-xs uppercase font-bold flex-shrink-0">
             ${ext}
           </div>
           <div class="truncate">
-            <p class="font-medium text-slate-200 truncate">${file.name}</p>
-            <p class="text-xs text-slate-400 font-mono">${sizeMB} MB</p>
+            <p class="font-semibold text-white truncate text-xs">${file.name}</p>
+            <p class="text-[11px] text-slate-400 font-mono">${sizeMB} MB</p>
           </div>
         </div>
-        <button type="button" class="text-slate-500 hover:text-red-400 p-1 transition-colors" data-filename="${file.name}">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        <button type="button" class="text-slate-500 hover:text-red-400 p-1.5 transition-colors" title="Remover ficheiro">
+          ✕
         </button>
       `;
 
@@ -228,6 +313,9 @@ class LayerStudiosQuoteEngine {
         e.stopPropagation();
         this.uploadedFiles = this.uploadedFiles.filter(f => f.name !== file.name);
         badge.remove();
+        if (this.uploadedFiles.length === 0) {
+          this.currentTelemetry = null;
+        }
         this.recalculateQuote();
       });
 
@@ -239,9 +327,9 @@ class LayerStudiosQuoteEngine {
         reader.onload = (evt) => {
           if (this.viewer) {
             this.viewer.loadSTLFromArrayBuffer(evt.target.result);
-            this.showToast(`Loaded ${file.name} into 3D viewer!`, 'success');
+            this.showToast(`Modelo 3D "${file.name}" analisado com sucesso!`, 'success');
             if (window.LayerStudiosAnalytics) {
-              window.LayerStudiosAnalytics.trackModelPreviewLoaded(document.getElementById('quote-material')?.value || 'PETG');
+              window.LayerStudiosAnalytics.trackModelPreviewLoaded(document.querySelector('input[name="quote-material"]:checked')?.value || 'PETG');
             }
           }
         };
@@ -251,11 +339,10 @@ class LayerStudiosQuoteEngine {
         reader.onload = async (evt) => {
           try {
             if (typeof JSZip === 'undefined') {
-              this.showToast(`Uploaded ${file.name} — will be reviewed by our team`, 'info');
+              this.setFallbackTelemetryForCADFile(file);
               return;
             }
             const zip = await JSZip.loadAsync(evt.target.result);
-            // 3MF files are ZIP archives; find the primary model XML
             const modelEntry = zip.file('3D/3dmodel.model') ||
                                (zip.file(/\.model$/i).length > 0 ? zip.file(/\.model$/i)[0] : null);
             if (modelEntry) {
@@ -263,32 +350,43 @@ class LayerStudiosQuoteEngine {
               const geometry = this.parse3MFModelXML(xmlText);
               if (geometry && this.viewer) {
                 this.viewer.setGeometry(geometry);
-                this.showToast(`Loaded ${file.name} into 3D viewer!`, 'success');
+                this.showToast(`Modelo 3MF "${file.name}" carregado!`, 'success');
                 if (window.LayerStudiosAnalytics) {
-                  window.LayerStudiosAnalytics.trackModelPreviewLoaded(document.getElementById('quote-material')?.value || 'PETG');
+                  window.LayerStudiosAnalytics.trackModelPreviewLoaded(document.querySelector('input[name="quote-material"]:checked')?.value || 'PETG');
                 }
               } else {
-                this.showToast(`Could not parse 3D data in ${file.name}`, 'warning');
-                if (window.LayerStudiosAnalytics) {
-                  window.LayerStudiosAnalytics.trackError('model_preview', 'parse_failed');
-                }
+                this.setFallbackTelemetryForCADFile(file);
               }
             } else {
-              this.showToast(`Could not find model data inside ${file.name}`, 'warning');
+              this.setFallbackTelemetryForCADFile(file);
             }
           } catch (err) {
-            console.error('3MF parse error:', err);
-            this.showToast(`Uploaded ${file.name} — will be reviewed by our team`, 'info');
-            if (window.LayerStudiosAnalytics) {
-              window.LayerStudiosAnalytics.trackError('model_preview', 'parse_exception');
-            }
+            this.setFallbackTelemetryForCADFile(file);
           }
         };
         reader.readAsArrayBuffer(file);
+      } else {
+        // STEP / OBJ / ZIP / PDF — set estimated telemetry so user still gets an instant baseline quote
+        this.setFallbackTelemetryForCADFile(file);
+        this.showToast(`Ficheiro "${file.name}" anexado para validação técnica.`, 'info');
       }
     });
-  }   });
 
+    this.recalculateQuote();
+  }
+
+  setFallbackTelemetryForCADFile(file) {
+    const estVol = Math.max(12, Math.min(180, Math.round((file.size || 250000) / 18000)));
+    const estGrams = Math.max(8, Math.round(estVol * 0.55));
+    this.currentTelemetry = {
+      x: 65, y: 45, z: 35,
+      dimensionsStr: 'Análise CAD STEP/OBJ',
+      volumeCm3: estVol,
+      weightGrams: estGrams,
+      estimatedDuration: '1h 15m',
+      layerCount: 175
+    };
+    this.updateTelemetryUI(this.currentTelemetry);
     this.recalculateQuote();
   }
 
@@ -316,13 +414,11 @@ class LayerStudiosQuoteEngine {
       const doc = parser.parseFromString(xmlText, 'application/xml');
       const ns = 'http://schemas.microsoft.com/3dmanufacturing/core/2015/02';
 
-      // Try with namespace, fall back to without
       let meshes = doc.getElementsByTagNameNS(ns, 'mesh');
       if (meshes.length === 0) meshes = doc.getElementsByTagName('mesh');
       if (meshes.length === 0) return null;
 
       const mesh = meshes[0];
-
       let verticesEl = mesh.getElementsByTagNameNS(ns, 'vertices');
       if (verticesEl.length === 0) verticesEl = mesh.getElementsByTagName('vertices');
       if (verticesEl.length === 0) return null;
@@ -363,7 +459,6 @@ class LayerStudiosQuoteEngine {
       geometry.computeVertexNormals();
       return geometry;
     } catch (err) {
-      console.error('3MF XML parse error:', err);
       return null;
     }
   }
@@ -392,7 +487,6 @@ class LayerStudiosQuoteEngine {
     const ids = [
       'quote-quality',
       'quote-infill',
-      'quote-strength',
       'quote-quantity',
       'quote-turnaround',
       'quote-shipping-country',
@@ -407,7 +501,6 @@ class LayerStudiosQuoteEngine {
       }
     });
 
-    // Material radio buttons
     const matRadios = document.querySelectorAll('input[name="quote-material"]');
     matRadios.forEach(radio => {
       radio.addEventListener('change', () => {
@@ -426,30 +519,26 @@ class LayerStudiosQuoteEngine {
 
   recalculateQuote() {
     const selectedMatRadio = document.querySelector('input[name="quote-material"]:checked');
-    const selectedMatSelect = document.getElementById('quote-material');
-    const material = selectedMatRadio ? selectedMatRadio.value : (selectedMatSelect ? selectedMatSelect.value : 'PLA+');
+    const material = selectedMatRadio ? selectedMatRadio.value : 'PLA+';
 
     const qualEl = document.getElementById('quote-quality');
-    const infillEl = document.getElementById('quote-infill') || document.getElementById('quote-strength');
+    const infillEl = document.getElementById('quote-infill');
+    const turnEl = document.getElementById('quote-turnaround');
     const qtyEl = document.getElementById('quote-quantity');
     const shipEl = document.getElementById('quote-shipping-country');
 
-    const quality = qualEl ? qualEl.value : 'standard';
-    const infillVal = infillEl ? infillEl.value : '30';
-    const quantity = qtyEl ? Math.max(1, parseInt(qtyEl.value) || 1) : 1;
+    const quality = qualEl ? qualEl.value : 'Padrão (0.20mm)';
+    const infillVal = infillEl ? infillEl.value : '30% (Funcional Padrão)';
+    const turnaround = turnEl ? turnEl.value : 'Standard (2-4 Dias)';
+    const quantity = qtyEl ? Math.max(1, parseInt(qtyEl.value, 10) || 1) : 1;
     const country = shipEl ? shipEl.value : 'Portugal';
     const setTxt = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
 
-    let shippingCost = this.pricingModel.shippingRates[country] || 4.50;
+    let shippingCost = this.pricingModel.shippingRates[country] ?? 4.50;
 
     // STATE 1: User has 3D file option selected, but NO model is uploaded yet
     if (this.hasModel && (!this.uploadedFiles || this.uploadedFiles.length === 0 || !this.currentTelemetry)) {
       this.updateTelemetryUI(null);
-      const lc = document.getElementById('quote-layer-count');
-      if (lc) lc.textContent = 'Upload 3D model to preview';
-      const badge = document.getElementById('quote-fit-badge');
-      if (badge) badge.classList.add('hidden');
-
       setTxt('price-material', '—');
       setTxt('price-time', '—');
       setTxt('price-post', '—');
@@ -458,65 +547,51 @@ class LayerStudiosQuoteEngine {
       setTxt('price-shipping', `€${shippingCost.toFixed(2)}`);
       setTxt('price-total', '—');
 
-      setTxt('calc-unit-price', '—');
-      setTxt('calc-quantity-multiplier', `× ${quantity}`);
-      setTxt('calc-shipping-amount', `€${shippingCost.toFixed(2)}`);
-      setTxt('calc-total-amount', '—');
-
       const priceDiscountEl = document.getElementById('calc-discount-row');
       const batchBadge = document.getElementById('batch-discount-badge');
       if (priceDiscountEl) priceDiscountEl.classList.add('hidden');
       if (batchBadge) batchBadge.classList.add('hidden');
 
       this.calculatedBreakdown = {
-        unitPrice: 0,
-        materialCost: 0,
-        machineCost: 0,
+        unitPrice: 15.00,
+        materialCost: 5.00,
+        machineCost: 10.00,
         designCost: 0,
         shippingCost: shippingCost,
         discount: 0,
         discountPercent: 0,
-        subtotal: 0,
-        finalPrice: 0
+        subtotal: 15.00,
+        finalPrice: +(15.00 + shippingCost).toFixed(2)
       };
       return;
     }
 
-    // STATE 2: User chose "I need it designed" (CAD service)
+    // STATE 2: User chose "Preciso de desenho CAD" (CAD service)
     if (!this.hasModel) {
       const designFee = 25.00;
-      const totalRaw = (designFee * quantity);
+      const totalRaw = +(designFee * quantity).toFixed(2);
+      if (totalRaw >= 50.00 && country === 'Portugal') shippingCost = 0.00;
       const finalTotal = +(totalRaw + shippingCost).toFixed(2);
 
-      const dimEl = document.getElementById('telemetry-dimensions');
-      const volEl = document.getElementById('telemetry-volume');
-      const weightEl = document.getElementById('telemetry-weight');
-      const timeEl = document.getElementById('telemetry-time');
-      const lc = document.getElementById('quote-layer-count');
-      if (dimEl) dimEl.textContent = 'CAD Design Service';
-      if (volEl) volEl.textContent = 'Custom Spec';
-      if (weightEl) weightEl.textContent = 'To be modeled';
-      if (timeEl) timeEl.textContent = '24–48h Drafting';
-      if (lc) lc.textContent = 'Custom 3D CAD modeling by our team';
+      setTxt('telemetry-dimensions', 'Modelação CAD 3D');
+      setTxt('telemetry-volume', 'Sob Medida');
+      setTxt('telemetry-weight', 'A definir');
+      setTxt('telemetry-time', '24–48h Desenho');
+      setTxt('quote-layer-count', 'Modelação CAD 3D pela equipa Layer Studios');
 
-      setTxt('price-material', 'Included');
-      setTxt('price-time', `€${(designFee * quantity).toFixed(2)} (CAD)`);
-      setTxt('price-post', 'Included');
+      setTxt('price-material', 'Incluído');
+      setTxt('price-time', `€${totalRaw.toFixed(2)} (CAD)`);
+      setTxt('price-post', 'Incluído');
       setTxt('price-qty-label', `${quantity}`);
-      setTxt('price-qty', `€${(designFee * quantity).toFixed(2)}`);
-      setTxt('price-shipping', `€${shippingCost.toFixed(2)}`);
+      setTxt('price-qty', `€${totalRaw.toFixed(2)}`);
+      setTxt('price-shipping', shippingCost === 0 ? 'GRÁTIS' : `€${shippingCost.toFixed(2)}`);
       setTxt('price-total', `€${finalTotal.toFixed(2)}`);
-
-      setTxt('calc-unit-price', `€${designFee.toFixed(2)}`);
-      setTxt('calc-quantity-multiplier', `× ${quantity}`);
-      setTxt('calc-shipping-amount', `€${shippingCost.toFixed(2)}`);
-      setTxt('calc-total-amount', `€${finalTotal.toFixed(2)}`);
 
       this.calculatedBreakdown = {
         unitPrice: designFee,
         materialCost: 0,
         machineCost: 0,
-        designCost: designFee * quantity,
+        designCost: totalRaw,
         shippingCost: shippingCost,
         discount: 0,
         discountPercent: 0,
@@ -527,43 +602,46 @@ class LayerStudiosQuoteEngine {
     }
 
     // STATE 3: Model is loaded -> Real geometric calculation
-    let gramPrice = 0.10;
-    if (material.includes('PETG')) gramPrice = 0.12;
-    else if (material.includes('TPU')) gramPrice = 0.20;
-    else if (material.includes('ABS')) gramPrice = 0.15;
-    else if (material.includes('CF') || material.includes('Nylon')) gramPrice = 0.28;
+    let gramPrice = 0.09;
+    if (material.includes('PETG')) gramPrice = 0.11;
+    else if (material.includes('TPU')) gramPrice = 0.18;
+    else if (material.includes('ABS')) gramPrice = 0.14;
+    else if (material.includes('CF') || material.includes('Nylon')) gramPrice = 0.26;
 
     let infillFactor = 1.0;
-    if (infillVal.includes('15') || infillVal === '15') infillFactor = 0.55;
-    else if (infillVal.includes('60') || infillVal === '60') infillFactor = 1.50;
-    else if (infillVal.includes('100') || infillVal === '100') infillFactor = 2.20;
+    if (infillVal.includes('15')) infillFactor = 0.65;
+    else if (infillVal.includes('60')) infillFactor = 1.45;
+    else if (infillVal.includes('100')) infillFactor = 2.10;
 
     let qualFactor = 1.0;
-    if (quality === 'fine' || quality.includes('0.1')) qualFactor = 1.60;
-    else if (quality === 'draft' || quality.includes('0.3')) qualFactor = 0.75;
+    if (quality.includes('0.12') || quality === 'fine') qualFactor = 1.55;
+    else if (quality.includes('0.28') || quality === 'draft') qualFactor = 0.78;
+
+    const urgencyMultiplier = turnaround.includes('Expresso') ? 1.25 : 1.0;
 
     const volCm3 = this.currentTelemetry?.volumeCm3 || 25.0;
     const heightZ = this.currentTelemetry?.z || (this.currentTelemetry?.y || 25.0);
-    const rawGrams = this.currentTelemetry?.weightGrams || Math.max(1, Math.round(volCm3 * 1.24 * 0.45));
-    const adjustedGrams = Math.max(0.5, +(rawGrams * infillFactor).toFixed(1));
+    const rawGrams = this.currentTelemetry?.weightGrams || Math.max(2, Math.round(volCm3 * 1.24 * 0.45));
+    const adjustedGrams = Math.max(1.0, +(rawGrams * infillFactor).toFixed(1));
 
-    const unitMaterialCost = Math.max(0.50, +(0.35 + (adjustedGrams * gramPrice)).toFixed(2));
-    const printMinutes = Math.max(8, Math.round((adjustedGrams * 2.5 * qualFactor) + (heightZ * 0.3)));
-    const unitMachineCost = Math.max(0.40, +((printMinutes / 60) * 3.20).toFixed(2));
-    const basePrep = Math.max(0.80, +(0.50 + Math.min(2.50, rawGrams * 0.03)).toFixed(2));
+    const unitMaterialCost = Math.max(1.20, +(0.50 + (adjustedGrams * gramPrice)).toFixed(2));
+    const printMinutes = Math.max(12, Math.round((adjustedGrams * 2.4 * qualFactor) + (heightZ * 0.35)));
+    const unitMachineCost = Math.max(1.50, +((printMinutes / 60) * 3.50 * urgencyMultiplier).toFixed(2));
+    const basePrep = Math.max(1.00, +(0.80 + Math.min(2.50, rawGrams * 0.03)).toFixed(2));
 
     const unitSubtotal = +(unitMaterialCost + unitMachineCost + basePrep).toFixed(2);
-    const totalRaw = (unitSubtotal * quantity);
+    const totalRaw = +(unitSubtotal * quantity).toFixed(2);
 
     let discountPercent = 0;
-    if (quantity >= 100) discountPercent = 40;
+    if (quantity >= 100) discountPercent = 35;
     else if (quantity >= 50) discountPercent = 30;
     else if (quantity >= 25) discountPercent = 20;
     else if (quantity >= 10) discountPercent = 12;
     else if (quantity >= 5) discountPercent = 6;
 
     const discountAmount = +(totalRaw * (discountPercent / 100)).toFixed(2);
-    const subtotalDiscounted = +(totalRaw - discountAmount).toFixed(2);
+    // Minimum order subtotal €9.50
+    const subtotalDiscounted = Math.max(9.50, +(totalRaw - discountAmount).toFixed(2));
 
     if (subtotalDiscounted >= 50.00 && country === 'Portugal') {
       shippingCost = 0.00;
@@ -571,17 +649,12 @@ class LayerStudiosQuoteEngine {
 
     const finalTotal = +(subtotalDiscounted + shippingCost).toFixed(2);
 
-    setTxt('calc-unit-price', `€${unitSubtotal.toFixed(2)}`);
-    setTxt('calc-quantity-multiplier', `× ${quantity}`);
-    setTxt('calc-shipping-amount', shippingCost === 0.00 ? 'FREE' : `€${shippingCost.toFixed(2)}`);
-    setTxt('calc-total-amount', `€${finalTotal.toFixed(2)}`);
-
     setTxt('price-material', `€${(unitMaterialCost * quantity).toFixed(2)}`);
     setTxt('price-time', `€${(unitMachineCost * quantity).toFixed(2)}`);
     setTxt('price-post', `€${(basePrep * quantity).toFixed(2)}`);
     setTxt('price-qty-label', `${quantity}`);
-    setTxt('price-qty', `€${(unitSubtotal * quantity).toFixed(2)}`);
-    setTxt('price-shipping', shippingCost === 0.00 ? 'FREE' : `€${shippingCost.toFixed(2)}`);
+    setTxt('price-qty', `€${subtotalDiscounted.toFixed(2)}`);
+    setTxt('price-shipping', shippingCost === 0.00 ? 'GRÁTIS' : `€${shippingCost.toFixed(2)}`);
     setTxt('price-total', `€${finalTotal.toFixed(2)}`);
 
     const priceDiscountEl = document.getElementById('calc-discount-row');
@@ -590,10 +663,10 @@ class LayerStudiosQuoteEngine {
 
     if (discountPercent > 0) {
       if (priceDiscountEl) priceDiscountEl.classList.remove('hidden');
-      if (priceDiscountVal) priceDiscountVal.textContent = `-€${discountAmount.toFixed(2)} (${discountPercent}% Batch)`;
+      if (priceDiscountVal) priceDiscountVal.textContent = `-€${discountAmount.toFixed(2)} (-${discountPercent}%)`;
       if (batchBadge) {
         batchBadge.classList.remove('hidden');
-        batchBadge.textContent = `${discountPercent}% BATCH SAVINGS`;
+        batchBadge.textContent = `POUPANÇA LOTE -${discountPercent}%`;
       }
     } else {
       if (priceDiscountEl) priceDiscountEl.classList.add('hidden');
@@ -602,13 +675,13 @@ class LayerStudiosQuoteEngine {
 
     this.calculatedBreakdown = {
       unitPrice: unitSubtotal,
-      materialCost: unitMaterialCost * quantity,
-      machineCost: unitMachineCost * quantity,
+      materialCost: +(unitMaterialCost * quantity).toFixed(2),
+      machineCost: +(unitMachineCost * quantity).toFixed(2),
       designCost: 0,
       shippingCost: shippingCost,
       discount: discountAmount,
       discountPercent: discountPercent,
-      subtotal: totalRaw,
+      subtotal: subtotalDiscounted,
       finalPrice: finalTotal
     };
   }
@@ -619,57 +692,59 @@ class LayerStudiosQuoteEngine {
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      
-      const submitBtn = form.querySelector('button[type="submit"]');
-      const originalText = submitBtn ? submitBtn.innerHTML : 'Submit Quote';
+
+      if (this.hasModel && (!this.uploadedFiles || this.uploadedFiles.length === 0)) {
+        this.showToast('Por favor carregue o seu ficheiro 3D (STL/3MF/STEP) ou selecione "Preciso de desenho CAD".', 'warning');
+        return;
+      }
+
+      const submitBtn = document.querySelector('button[form="quote-request-form"]') || form.querySelector('button[type="submit"]');
+      const originalText = submitBtn ? submitBtn.innerHTML : 'Enviar Pedido de Orçamento →';
       if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.innerHTML = `
-          <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-          Generating Quote...
-        `;
+        submitBtn.innerHTML = 'A processar e enviar ficheiros 3D...';
       }
 
-      // Build file metadata (no base64 data — files are uploaded separately after quote creation)
-      let filesMetadata = [];
-      if (this.uploadedFiles && this.uploadedFiles.length > 0) {
-        filesMetadata = this.uploadedFiles.map(file => ({
-          name: file.name,
-          size: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
-          dimensions: { x: this.currentTelemetry?.x || 45, y: this.currentTelemetry?.y || 35, z: this.currentTelemetry?.z || 25 },
-          volumeCm3: this.currentTelemetry?.volumeCm3 || 25.0
-        }));
-      } else {
-        filesMetadata = [{
-          name: 'project_spec.stl',
-          size: '1.8 MB',
-          dimensions: { x: this.currentTelemetry?.x || 45, y: this.currentTelemetry?.y || 35, z: this.currentTelemetry?.z || 25 },
-          volumeCm3: this.currentTelemetry?.volumeCm3 || 25.0
-        }];
-      }
+      const filesToUpload = [...(this.uploadedFiles || [])];
+      const filesMetadata = filesToUpload.length > 0
+        ? filesToUpload.map(f => ({
+            name: f.name,
+            size: typeof f.size === 'string' && f.size.includes('MB') ? f.size : `${((f.rawBytes || 1048576) / (1024 * 1024)).toFixed(2)} MB`,
+            dimensions: { x: this.currentTelemetry?.x || 45, y: this.currentTelemetry?.y || 35, z: this.currentTelemetry?.z || 25 },
+            volumeCm3: this.currentTelemetry?.volumeCm3 || 25.0
+          }))
+        : [{
+            name: 'pedido_cad_2d_3d.pdf',
+            size: '0.50 MB',
+            dimensions: { x: 50, y: 50, z: 50 },
+            volumeCm3: 25.0
+          }];
+
+      const selectedMatRadio = document.querySelector('input[name="quote-material"]:checked');
+      const selectedMaterial = selectedMatRadio ? selectedMatRadio.value : (document.getElementById('quote-material')?.value || 'PLA+');
+
+      const defaultProjName = filesToUpload.length > 0
+        ? filesToUpload[0].name.replace(/\.[^.]+$/, '')
+        : 'Modelação CAD & Impressão 3D';
 
       const payload = {
-        customerName: document.getElementById('quote-name')?.value || 'Anonymous',
-        email: document.getElementById('quote-email')?.value || '',
-        phone: document.getElementById('quote-phone')?.value || '',
-        company: document.getElementById('quote-company')?.value || '',
-        projectName: document.getElementById('quote-project-name')?.value || 'Custom 3D Print Request',
-        description: document.getElementById('quote-description')?.value || '',
+        customerName: document.getElementById('quote-name')?.value.trim() || 'Cliente Layer Studios',
+        email: document.getElementById('quote-email')?.value.trim() || '',
+        phone: document.getElementById('quote-phone')?.value.trim() || '',
+        company: document.getElementById('quote-company')?.value.trim() || '',
+        projectName: document.getElementById('quote-project-name')?.value.trim() || defaultProjName,
+        description: document.getElementById('quote-description')?.value.trim() || '',
         hasModel: this.hasModel,
         files: filesMetadata,
-        material: document.getElementById('quote-material')?.value || 'PETG',
-        color: document.getElementById('quote-selected-color')?.value || 'Matte Black',
-        quality: document.getElementById('quote-quality')?.value || 'Standard (0.20mm)',
-        strength: document.getElementById('quote-strength')?.value || 'Standard (30% Infill)',
-        quantity: parseInt(document.getElementById('quote-quantity')?.value) || 1,
-        turnaround: document.getElementById('quote-turnaround')?.value || 'Standard (3-5 Days)',
-        deadline: document.getElementById('quote-deadline')?.value || '',
+        material: selectedMaterial,
+        color: document.getElementById('quote-color')?.value.trim() || 'Preto Matte',
+        quality: document.getElementById('quote-quality')?.value || 'Padrão (0.20mm)',
+        strength: document.getElementById('quote-infill')?.value || '30% (Funcional Padrão)',
+        quantity: Math.max(1, parseInt(document.getElementById('quote-quantity')?.value, 10) || 1),
+        turnaround: document.getElementById('quote-turnaround')?.value || 'Standard (2-4 Dias)',
         shippingCountry: document.getElementById('quote-shipping-country')?.value || 'Portugal',
         isConfidential: document.getElementById('quote-confidential')?.checked || false,
-        customerNotes: document.getElementById('quote-notes')?.value || '',
+        customerNotes: document.getElementById('quote-notes')?.value.trim() || '',
         pricing: this.calculatedBreakdown || {}
       };
 
@@ -682,7 +757,7 @@ class LayerStudiosQuoteEngine {
         const data = await res.json();
 
         if (res.ok && data.success) {
-          const quoteId = data.quoteId || 'LS-1048';
+          const quoteId = data.quoteId || 'LS-Q-1048';
 
           if (window.LayerStudiosAnalytics) {
             window.LayerStudiosAnalytics.trackQuoteSubmitted(quoteId, {
@@ -693,16 +768,17 @@ class LayerStudiosQuoteEngine {
             });
           }
 
-          // Upload actual binary files separately in the background (non-blocking)
-          if (this.uploadedFiles && this.uploadedFiles.length > 0) {
-            for (const file of this.uploadedFiles) {
+          // Upload actual binary CAD files and wait for completion so Neon PostgreSQL stores the CAD blob
+          if (filesToUpload.length > 0) {
+            for (const file of filesToUpload) {
+              if (!file.fileObject) continue;
               try {
                 const formData = new FormData();
-                formData.append('file', file.fileObject || file);
+                formData.append('file', file.fileObject);
                 formData.append('quoteId', quoteId);
-                fetch('/api/upload-file', { method: 'POST', body: formData }).catch(() => {});
+                await fetch('/api/upload-file', { method: 'POST', body: formData });
               } catch (uploadErr) {
-                console.warn('Background file upload failed:', uploadErr);
+                console.warn('File upload warning:', uploadErr);
               }
             }
           }
@@ -710,22 +786,16 @@ class LayerStudiosQuoteEngine {
           this.showQuoteSuccessModal(data.quote || payload, quoteId);
           form.reset();
           this.uploadedFiles = [];
+          this.currentTelemetry = null;
           const listEl = document.getElementById('uploaded-files-list');
           if (listEl) listEl.innerHTML = '';
+          this.recalculateQuote();
         } else {
-          window.LayerStudiosApp && window.LayerStudiosApp.showToast('Could not submit quote: ' + (data.error || 'Server error'), 'error');
-          if (window.LayerStudiosAnalytics) {
-            window.LayerStudiosAnalytics.trackError('quote_submit', 'api_error');
-          }
+          this.showToast('Erro ao submeter orçamento: ' + (data.error || 'Erro no servidor'), 'error');
         }
       } catch (err) {
         console.error('Quote submission error:', err);
-        if (window.LayerStudiosAnalytics) {
-          window.LayerStudiosAnalytics.trackError('quote_submit', 'network_error');
-        }
-        // Fallback local quote ID for offline demonstration
-        const fallbackId = `LS-${Math.floor(1000 + Math.random() * 9000)}`;
-        this.showQuoteSuccessModal(payload, fallbackId);
+        this.showToast('Erro de ligação. Verifique a sua internet e tente novamente.', 'error');
       } finally {
         if (submitBtn) {
           submitBtn.disabled = false;
@@ -739,20 +809,15 @@ class LayerStudiosQuoteEngine {
     const modal = document.getElementById('quote-success-modal');
     if (!modal) return;
 
-    const setTxt = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
-    setTxt('modal-quote-id', quoteId);
-    setTxt('quote-order-id', `Reference: ${quoteId}`);
-    setTxt('modal-quote-project', quote.projectName || 'Custom 3D Print Request');
-    setTxt('modal-quote-material', `${quote.material || 'PETG'} (${quote.color || 'Black'})`);
-    setTxt('modal-quote-qty', `${quote.quantity || 1} units`);
-    setTxt('modal-quote-total', `€${(quote.pricing?.finalPrice || 40.50).toFixed(2)}`);
+    const finalP = Number(quote.pricing?.finalPrice ?? quote.final_price ?? 24.50);
+    const idEl = document.getElementById('quote-order-id');
+    if (idEl) {
+      idEl.textContent = `Referência: ${quoteId} • Estimativa: €${finalP.toFixed(2)}`;
+    }
 
     const trackBtn = document.getElementById('modal-quote-track-btn');
     if (trackBtn) {
-      trackBtn.onclick = () => {
-        modal.classList.add('hidden');
-        window.location.href = `/track?id=${quoteId}`;
-      };
+      trackBtn.href = `/track?id=${encodeURIComponent(quoteId)}`;
     }
 
     modal.classList.remove('hidden');

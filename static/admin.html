@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
+<html lang="pt-PT" class="scroll-smooth">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Studio Management Portal — Layer Studios</title>
+  <title>Painel de Gestão Studio — Layer Studios</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>tailwind.config = { darkMode:'class', theme:{ extend:{ fontFamily:{ sans:['Inter','system-ui','sans-serif'], mono:['JetBrains Mono','monospace'] } } } }</script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
@@ -24,26 +24,26 @@
     </div>
     
     <div>
-      <h1 class="text-xl font-bold text-white">Studio Management Portal</h1>
-      <p class="text-xs text-slate-400 mt-1">Restricted access for Layer Studios administrators.</p>
+      <h1 class="text-xl font-bold text-white">Painel de Administração — Layer Studios</h1>
+      <p class="text-xs text-slate-400 mt-1">Acesso restrito à gestão de produção, orçamentos 3D e encomendas.</p>
     </div>
 
     <form id="admin-login-form" class="space-y-4 text-left">
       <div>
-        <label class="block text-xs font-semibold text-slate-400 mb-1.5 font-mono">Admin Password / PIN</label>
-        <input type="password" id="admin-password-input" placeholder="Enter studio password..." required autofocus class="w-full rounded-xl bg-slate-950 border border-slate-800 p-3 text-sm text-white focus:border-blue-400 focus:outline-none placeholder-slate-600 font-mono">
+        <label class="block text-xs font-semibold text-slate-400 mb-1.5 font-mono">Password / PIN de Administrador</label>
+        <input type="password" id="admin-password-input" placeholder="Introduza a password de administrador..." required autofocus class="w-full rounded-xl bg-slate-950 border border-slate-800 p-3 text-sm text-white focus:border-blue-400 focus:outline-none placeholder-slate-600 font-mono">
       </div>
 
-      <p id="admin-login-error" class="hidden text-xs text-red-400 font-mono text-center">Incorrect password. Please try again.</p>
+      <p id="admin-login-error" class="hidden text-xs text-red-400 font-mono text-center">Password incorreta. Tente novamente.</p>
 
       <button type="submit" class="w-full py-3.5 rounded-xl bg-blue-500 hover:bg-blue-400 text-white font-bold text-sm shadow-lg shadow-blue-500/25 transition-all">
-        Sign In to Portal →
+        Entrar no Painel →
       </button>
     </form>
 
     <div class="pt-4 border-t border-slate-800/80">
       <a href="/" class="text-xs text-slate-500 hover:text-slate-300 font-mono transition-colors">
-        ← Return to main website
+        ← Voltar ao website principal
       </a>
     </div>
   </div>
@@ -62,16 +62,19 @@
           <img src="/static/assets/logo.svg" alt="Layer Studios" class="w-7 h-7">
           <span class="font-bold text-base text-white tracking-tight">Layer<span class="text-blue-400">Studios</span></span>
         </a>
-        <span class="px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20 text-xs font-mono font-semibold">Studio Lead</span>
+        <span class="px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20 text-xs font-mono font-semibold">Admin Studio</span>
       </div>
       
-      <div class="flex items-center gap-4 text-xs font-mono">
+      <div class="flex items-center gap-3 text-xs font-mono">
         <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-950/40 border border-emerald-500/30 text-emerald-400">
           <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span>Live Farm Online</span>
+          <span>Neon DB + Resend Online</span>
         </div>
+        <a href="/quote" target="_blank" class="hidden md:inline-flex px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 hover:text-white transition-colors">
+          ↗ Abrir Orçamentos
+        </a>
         <button id="admin-logout-btn" type="button" class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 hover:text-red-400 hover:border-red-500/30 transition-colors">
-          🔒 Lock &amp; Logout
+          🔒 Sair
         </button>
       </div>
     </div>
@@ -83,47 +86,67 @@
     <!-- KPI SUMMARY CARDS -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
       <div class="p-5 rounded-2xl bg-slate-900/70 border border-slate-800">
-        <span class="text-xs font-mono text-slate-400 uppercase tracking-wider block mb-1">Total Revenue</span>
+        <span class="text-xs font-mono text-slate-400 uppercase tracking-wider block mb-1">Receita Confirmada</span>
         <span id="admin-kpi-revenue" class="text-2xl sm:text-3xl font-black text-white font-mono">€0.00</span>
       </div>
       <div class="p-5 rounded-2xl bg-slate-900/70 border border-slate-800">
-        <span class="text-xs font-mono text-slate-400 uppercase tracking-wider block mb-1">Active Quotes</span>
+        <span class="text-xs font-mono text-slate-400 uppercase tracking-wider block mb-1">Pedidos de Orçamento</span>
         <span id="admin-kpi-quotes" class="text-2xl sm:text-3xl font-black text-blue-400 font-mono">—</span>
       </div>
       <div class="p-5 rounded-2xl bg-slate-900/70 border border-slate-800">
-        <span class="text-xs font-mono text-slate-400 uppercase tracking-wider block mb-1">Store Orders</span>
+        <span class="text-xs font-mono text-slate-400 uppercase tracking-wider block mb-1">Encomendas Loja</span>
         <span id="admin-kpi-orders" class="text-2xl sm:text-3xl font-black text-white font-mono">—</span>
       </div>
       <div class="p-5 rounded-2xl bg-slate-900/70 border border-slate-800">
-        <span class="text-xs font-mono text-slate-400 uppercase tracking-wider block mb-1">Printer Status</span>
-        <span id="admin-kpi-prints" class="text-2xl sm:text-3xl font-black text-emerald-400 font-mono">Online</span>
+        <span class="text-xs font-mono text-slate-400 uppercase tracking-wider block mb-1">Em Produção 3D</span>
+        <span id="admin-kpi-prints" class="text-2xl sm:text-3xl font-black text-emerald-400 font-mono">0 Ativas</span>
       </div>
     </div>
 
     <!-- NAVIGATION TABS -->
     <div class="flex items-center gap-2 border-b border-slate-800 pb-4 overflow-x-auto">
       <button class="admin-tab-btn px-4 py-2 rounded-xl text-sm font-semibold bg-blue-500 text-white transition-all whitespace-nowrap" data-admin-view="quotes">
-        📋 Incoming Quotes
+        📋 Orçamentos 3D
       </button>
       <button class="admin-tab-btn px-4 py-2 rounded-xl text-sm font-semibold text-slate-400 hover:text-slate-200 transition-all whitespace-nowrap" data-admin-view="orders">
-        📦 Store Orders
+        📦 Encomendas da Loja
+      </button>
+      <button class="admin-tab-btn px-4 py-2 rounded-xl text-sm font-semibold text-slate-400 hover:text-slate-200 transition-all whitespace-nowrap" data-admin-view="catalog">
+        🛍️ Catálogo &amp; Cupões
       </button>
       <button class="admin-tab-btn px-4 py-2 rounded-xl text-sm font-semibold text-slate-400 hover:text-slate-200 transition-all whitespace-nowrap" data-admin-view="analytics">
-        📊 Production Analytics
+        📊 Analítica de Produção
       </button>
     </div>
 
     <!-- VIEW 1: QUOTES TABLE -->
     <section id="admin-view-quotes" class="admin-subview space-y-4">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
-          <h2 class="text-lg font-bold text-white">Custom 3D Printing Quote Requests</h2>
-          <p class="text-xs text-slate-400">Incoming client requests with 3D model telemetry and pricing.</p>
+          <h2 class="text-lg font-bold text-white">Pedidos de Orçamento de Impressão 3D</h2>
+          <p class="text-xs text-slate-400">Clique em "Inspecionar &amp; Editar" para descarregar o ficheiro STL, ajustar o preço final ou alterar o estado.</p>
         </div>
-        <button id="admin-refresh-quotes" class="px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-300 hover:text-white hover:border-slate-700 transition-all flex items-center gap-2 self-start sm:self-auto">
-          <svg class="w-3.5 h-3.5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-          Refresh Data
-        </button>
+        <div class="flex flex-wrap items-center gap-2">
+          <input type="text" id="admin-quotes-search" placeholder="Pesquisar ID, cliente, email, material..." class="rounded-xl bg-slate-900 border border-slate-800 px-3 py-2 text-xs text-white placeholder-slate-500 focus:border-blue-400 focus:outline-none w-60">
+          <select id="admin-quotes-status-filter" class="rounded-xl bg-slate-900 border border-slate-800 px-3 py-2 text-xs text-slate-200 focus:border-blue-400 focus:outline-none">
+            <option value="">Todos os Estados</option>
+            <option value="Quote Requested">Quote Requested</option>
+            <option value="Under Review">Under Review</option>
+            <option value="Quote Sent">Quote Sent</option>
+            <option value="Awaiting Payment">Awaiting Payment</option>
+            <option value="Preparing">Preparing</option>
+            <option value="Printing">Printing</option>
+            <option value="Ready to Ship">Ready to Ship</option>
+            <option value="Shipped">Shipped</option>
+            <option value="Completed">Completed</option>
+          </select>
+          <button id="admin-export-quotes-csv" type="button" class="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-300 hover:text-white hover:border-slate-700 transition-all">
+            ⬇️ CSV
+          </button>
+          <button id="admin-refresh-quotes" type="button" class="px-3.5 py-2 rounded-xl bg-blue-500/10 border border-blue-500/30 text-xs text-blue-400 hover:bg-blue-500 hover:text-white transition-all flex items-center gap-1.5 font-semibold">
+            <span>↻ Atualizar</span>
+          </button>
+        </div>
       </div>
 
       <div class="rounded-2xl bg-slate-900/60 border border-slate-800 overflow-hidden">
@@ -131,18 +154,18 @@
           <table class="w-full text-left text-sm">
             <thead class="bg-slate-950/80 text-xs font-mono text-slate-400 uppercase tracking-wider border-b border-slate-800">
               <tr>
-                <th class="py-3 px-4">Quote ID</th>
-                <th class="py-3 px-4">Project &amp; Customer</th>
-                <th class="py-3 px-4">Material &amp; Infill</th>
-                <th class="py-3 px-4 text-center">Qty</th>
-                <th class="py-3 px-4 text-right">Estimate</th>
-                <th class="py-3 px-4 text-center">Status</th>
-                <th class="py-3 px-4 text-right">Actions</th>
+                <th class="py-3 px-4">Ref. Orçamento</th>
+                <th class="py-3 px-4">Projeto &amp; Cliente</th>
+                <th class="py-3 px-4">Material &amp; Specs</th>
+                <th class="py-3 px-4 text-center">Qtd / Ficheiros</th>
+                <th class="py-3 px-4 text-right">Valor (€)</th>
+                <th class="py-3 px-4 text-center">Estado</th>
+                <th class="py-3 px-4 text-right">Ações</th>
               </tr>
             </thead>
             <tbody id="admin-quotes-tbody">
               <tr>
-                <td colspan="7" class="py-8 text-center text-slate-500 font-mono text-xs">Loading quote records...</td>
+                <td colspan="7" class="py-8 text-center text-slate-500 font-mono text-xs">A carregar pedidos de orçamento...</td>
               </tr>
             </tbody>
           </table>
@@ -152,10 +175,28 @@
 
     <!-- VIEW 2: ORDERS TABLE -->
     <section id="admin-view-orders" class="admin-subview hidden space-y-4">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
-          <h2 class="text-lg font-bold text-white">Store Orders</h2>
-          <p class="text-xs text-slate-400">Direct catalog orders placed via the online store checkout.</p>
+          <h2 class="text-lg font-bold text-white">Encomendas da Loja Online</h2>
+          <p class="text-xs text-slate-400">Encomendas diretas do catálogo. Clique em "Gerir Encomenda" para ver a morada completa e inserir o código CTT.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <input type="text" id="admin-orders-search" placeholder="Pesquisar encomenda, cliente, cidade..." class="rounded-xl bg-slate-900 border border-slate-800 px-3 py-2 text-xs text-white placeholder-slate-500 focus:border-blue-400 focus:outline-none w-60">
+          <select id="admin-orders-status-filter" class="rounded-xl bg-slate-900 border border-slate-800 px-3 py-2 text-xs text-slate-200 focus:border-blue-400 focus:outline-none">
+            <option value="">Todos os Estados</option>
+            <option value="Preparing">Preparing</option>
+            <option value="Printing">Printing</option>
+            <option value="Quality Inspection">Quality Inspection</option>
+            <option value="Ready to Ship">Ready to Ship</option>
+            <option value="Shipped">Shipped</option>
+            <option value="Completed">Completed</option>
+          </select>
+          <button id="admin-export-orders-csv" type="button" class="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-300 hover:text-white hover:border-slate-700 transition-all">
+            ⬇️ CSV
+          </button>
+          <button id="admin-refresh-orders" type="button" class="px-3.5 py-2 rounded-xl bg-blue-500/10 border border-blue-500/30 text-xs text-blue-400 hover:bg-blue-500 hover:text-white transition-all flex items-center gap-1.5 font-semibold">
+            <span>↻ Atualizar</span>
+          </button>
         </div>
       </div>
 
@@ -164,18 +205,18 @@
           <table class="w-full text-left text-sm">
             <thead class="bg-slate-950/80 text-xs font-mono text-slate-400 uppercase tracking-wider border-b border-slate-800">
               <tr>
-                <th class="py-3 px-4">Order ID</th>
-                <th class="py-3 px-4">Customer</th>
-                <th class="py-3 px-4">Items</th>
-                <th class="py-3 px-4 text-center">Payment</th>
+                <th class="py-3 px-4">Ref. Encomenda</th>
+                <th class="py-3 px-4">Cliente &amp; Destino</th>
+                <th class="py-3 px-4">Artigos</th>
+                <th class="py-3 px-4 text-center">Pagamento</th>
                 <th class="py-3 px-4 text-right">Total</th>
-                <th class="py-3 px-4 text-center">Status</th>
-                <th class="py-3 px-4 text-right">Track Link</th>
+                <th class="py-3 px-4 text-center">Estado</th>
+                <th class="py-3 px-4 text-right">Ações</th>
               </tr>
             </thead>
             <tbody id="admin-orders-tbody">
               <tr>
-                <td colspan="7" class="py-8 text-center text-slate-500 font-mono text-xs">Loading store orders...</td>
+                <td colspan="7" class="py-8 text-center text-slate-500 font-mono text-xs">A carregar encomendas da loja...</td>
               </tr>
             </tbody>
           </table>
@@ -183,17 +224,102 @@
       </div>
     </section>
 
-    <!-- VIEW 3: ANALYTICS -->
+    <!-- VIEW 3: CATALOG & PROMOS -->
+    <section id="admin-view-catalog" class="admin-subview hidden space-y-8">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- ADD NEW PRODUCT FORM -->
+        <div class="p-6 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-4">
+          <h3 class="text-base font-bold text-white">➕ Adicionar Produto à Loja</h3>
+          <form id="admin-new-product-form" class="space-y-3 text-xs">
+            <div>
+              <label class="block text-slate-400 mb-1">Nome do Produto *</label>
+              <input type="text" id="prod-title" required placeholder="Ex: Suporte Auscultadores Stealth" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-2.5 text-white focus:border-blue-400 focus:outline-none">
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-slate-400 mb-1">Categoria</label>
+                <select id="prod-category" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-2.5 text-white focus:border-blue-400 focus:outline-none">
+                  <option value="Desk & Tech">Desk &amp; Tech</option>
+                  <option value="Home & Decor">Home &amp; Decor</option>
+                  <option value="Workshop & Parts">Workshop &amp; Parts</option>
+                  <option value="Accessories">Accessories</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-slate-400 mb-1">Preço (€) *</label>
+                <input type="number" step="0.01" min="1" id="prod-price" required placeholder="24.90" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-2.5 text-white font-mono focus:border-blue-400 focus:outline-none">
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-slate-400 mb-1">Dimensões</label>
+                <input type="text" id="prod-dimensions" placeholder="120 × 120 × 245 mm" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-2.5 text-white font-mono focus:border-blue-400 focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-slate-400 mb-1">Prazo de Produção</label>
+                <input type="text" id="prod-leadtime" value="1-2 dias úteis" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-2.5 text-white focus:border-blue-400 focus:outline-none">
+              </div>
+            </div>
+            <div>
+              <label class="block text-slate-400 mb-1">URL da Imagem</label>
+              <input type="text" id="prod-image" value="/static/assets/product-stand.svg" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-2.5 text-white font-mono focus:border-blue-400 focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-slate-400 mb-1">Descrição</label>
+              <textarea id="prod-description" rows="2" placeholder="Descrição técnica da peça..." class="w-full rounded-xl bg-slate-950 border border-slate-800 p-2.5 text-white focus:border-blue-400 focus:outline-none"></textarea>
+            </div>
+            <button type="submit" class="w-full py-2.5 rounded-xl bg-blue-500 hover:bg-blue-400 text-white font-bold transition-all">
+              Publicar Produto na Loja
+            </button>
+          </form>
+
+          <!-- PROMO CODES MANAGER -->
+          <div class="pt-6 border-t border-slate-800 space-y-3">
+            <h4 class="text-sm font-bold text-white">🏷️ Cupões de Desconto</h4>
+            <form id="admin-new-promo-form" class="flex items-center gap-2 text-xs">
+              <input type="text" id="promo-code-input" required placeholder="CÓDIGO (ex: BEMVINDO10)" class="flex-1 rounded-xl bg-slate-950 border border-slate-800 p-2 text-white font-mono uppercase focus:border-blue-400 focus:outline-none">
+              <input type="number" id="promo-pct-input" required min="1" max="90" placeholder="%" value="10" class="w-16 rounded-xl bg-slate-950 border border-slate-800 p-2 text-white font-mono text-center focus:border-blue-400 focus:outline-none">
+              <button type="submit" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold">Criar</button>
+            </form>
+            <div id="admin-promos-list" class="space-y-1.5 text-xs font-mono"></div>
+          </div>
+        </div>
+
+        <!-- PRODUCTS LIST -->
+        <div class="lg:col-span-2 rounded-2xl bg-slate-900/60 border border-slate-800 overflow-hidden">
+          <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+            <h3 class="text-sm font-bold text-white">Produtos Ativos na Loja</h3>
+            <span id="admin-products-count" class="text-xs font-mono text-slate-400">0 produtos</span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+              <thead class="bg-slate-950/80 text-xs font-mono text-slate-400 uppercase tracking-wider border-b border-slate-800">
+                <tr>
+                  <th class="py-3 px-4">Produto</th>
+                  <th class="py-3 px-4">Categoria</th>
+                  <th class="py-3 px-4 text-right">Preço (€)</th>
+                  <th class="py-3 px-4 text-center">Stock</th>
+                  <th class="py-3 px-4 text-right">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="admin-products-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 4: ANALYTICS -->
     <section id="admin-view-analytics" class="admin-subview hidden space-y-6">
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div class="p-6 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-4">
-          <h3 class="text-sm font-bold text-white uppercase font-mono tracking-wider">Revenue Growth Trend (€)</h3>
+          <h3 class="text-sm font-bold text-white uppercase font-mono tracking-wider">Evolução de Receita (€)</h3>
           <div class="relative h-64 w-full">
             <canvas id="admin-chart-revenue"></canvas>
           </div>
         </div>
         <div class="p-6 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-4">
-          <h3 class="text-sm font-bold text-white uppercase font-mono tracking-wider">Material Share (% of volume)</h3>
+          <h3 class="text-sm font-bold text-white uppercase font-mono tracking-wider">Distribuição por Material 3D</h3>
           <div class="relative h-64 w-full flex items-center justify-center">
             <canvas id="admin-chart-materials"></canvas>
           </div>
@@ -205,94 +331,212 @@
 
 </div>
 
-<!-- QUOTE INSPECTOR & STATUS MODAL -->
+<!-- ═══════════════════════════════════════════════════════════════════
+     MODAL 1: QUOTE INSPECTOR & PRICING / STATUS EDITOR
+═══════════════════════════════════════════════════════════════════ -->
 <div id="admin-quote-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-  <div class="bg-slate-900 border border-slate-700 rounded-3xl p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto space-y-6 shadow-2xl">
+  <div class="bg-slate-900 border border-slate-700 rounded-3xl p-6 sm:p-8 max-w-2xl w-full max-h-[92vh] overflow-y-auto space-y-6 shadow-2xl">
     <div class="flex items-center justify-between border-b border-slate-800 pb-4">
       <div>
-        <span id="inspect-quote-id" class="text-xs font-mono font-bold text-blue-400 px-2 py-0.5 rounded bg-blue-500/10 border border-blue-500/20">LS-XXXX</span>
-        <h3 id="inspect-project-name" class="text-lg font-bold text-white mt-1">Project Details</h3>
+        <div class="flex items-center gap-2">
+          <span id="inspect-quote-id" class="text-xs font-mono font-bold text-blue-400 px-2.5 py-0.5 rounded bg-blue-500/10 border border-blue-500/20">LS-XXXX</span>
+          <span id="inspect-quote-date" class="text-xs font-mono text-slate-500"></span>
+        </div>
+        <h3 id="inspect-project-name" class="text-lg font-bold text-white mt-1">Detalhes do Projeto</h3>
       </div>
       <button type="button" id="admin-close-modal" class="text-slate-400 hover:text-white p-2 rounded-xl bg-slate-800 transition-colors">✕</button>
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-mono">
-      <div class="p-4 rounded-xl bg-slate-950/60 border border-slate-800 space-y-2">
-        <span class="text-slate-500 uppercase block font-bold">Customer Contact</span>
-        <p class="text-white font-semibold" id="inspect-customer-name">—</p>
-        <p class="text-slate-300" id="inspect-email">—</p>
-        <p class="text-slate-400" id="inspect-phone">—</p>
+      <div class="p-4 rounded-xl bg-slate-950/60 border border-slate-800 space-y-1.5">
+        <span class="text-slate-500 uppercase block font-bold mb-1">Contacto do Cliente</span>
+        <p class="text-white font-semibold text-sm" id="inspect-customer-name">—</p>
+        <p class="text-blue-400 break-all" id="inspect-email">—</p>
+        <p class="text-slate-300" id="inspect-phone">—</p>
         <p class="text-slate-400" id="inspect-company">—</p>
       </div>
 
-      <div class="p-4 rounded-xl bg-slate-950/60 border border-slate-800 space-y-2">
-        <span class="text-slate-500 uppercase block font-bold">Manufacturing Specs</span>
-        <p class="text-slate-300">Material: <strong class="text-white" id="inspect-material">—</strong></p>
-        <p class="text-slate-300">Quality: <strong class="text-white" id="inspect-quality">—</strong></p>
-        <p class="text-slate-300">Infill: <strong class="text-white" id="inspect-strength">—</strong></p>
-        <p class="text-slate-300">Quantity: <strong class="text-white" id="inspect-qty">—</strong></p>
+      <div class="p-4 rounded-xl bg-slate-950/60 border border-slate-800 space-y-1.5">
+        <span class="text-slate-500 uppercase block font-bold mb-1">Especificações Técnicas 3D</span>
+        <p class="text-slate-300">Material &amp; Cor: <strong class="text-white" id="inspect-material">—</strong></p>
+        <p class="text-slate-300">Camada (Layer): <strong class="text-white" id="inspect-quality">—</strong></p>
+        <p class="text-slate-300">Preenchimento: <strong class="text-white" id="inspect-strength">—</strong></p>
+        <p class="text-slate-300">Quantidade: <strong class="text-white" id="inspect-qty">—</strong></p>
+        <p class="text-slate-300">Prazo: <strong class="text-white" id="inspect-turnaround">—</strong></p>
       </div>
     </div>
 
-    <!-- 3D MODEL TELEMETRY & NOTES -->
-    <div class="p-4 rounded-xl bg-slate-950/60 border border-slate-800 space-y-2 text-xs">
-      <span class="text-slate-500 uppercase font-mono block font-bold">3D Geometry &amp; Files</span>
-      <div id="inspect-files-list" class="space-y-1 text-slate-300 font-mono"></div>
+    <!-- 3D MODEL TELEMETRY & FILES -->
+    <div class="p-4 rounded-xl bg-slate-950/60 border border-slate-800 space-y-3 text-xs">
+      <div class="flex items-center justify-between">
+        <span class="text-slate-400 uppercase font-mono font-bold">Ficheiros CAD / 3D Submetidos</span>
+        <a id="inspect-track-link" href="#" target="_blank" class="text-blue-400 hover:text-blue-300 font-mono font-semibold">
+          Abrir Página de Tracking do Cliente ↗
+        </a>
+      </div>
+      <div id="inspect-files-list" class="space-y-2 text-slate-300 font-mono"></div>
       <div class="pt-2 border-t border-slate-800/80 text-slate-400">
-        <span class="block text-slate-500 text-[10px] uppercase font-mono">Customer Notes:</span>
-        <p id="inspect-notes" class="italic text-slate-300 mt-0.5">No additional notes.</p>
+        <span class="block text-slate-500 text-[10px] uppercase font-mono">Notas / Instruções do Cliente:</span>
+        <p id="inspect-notes" class="italic text-slate-200 mt-1 whitespace-pre-line">Sem notas adicionais.</p>
       </div>
     </div>
 
-    <!-- COST BREAKDOWN -->
-    <div class="p-4 rounded-xl bg-blue-950/20 border border-blue-500/30 flex items-center justify-between text-xs font-mono">
-      <div>
-        <span class="text-slate-400 block">Calculated Total Estimate:</span>
-        <span id="inspect-total" class="text-xl font-bold text-blue-400">€0.00</span>
+    <!-- ADMIN PRICE, PAYMENT & STATUS EDITOR -->
+    <div class="p-5 rounded-2xl bg-blue-950/20 border border-blue-500/30 space-y-4">
+      <div class="flex items-center justify-between">
+        <h4 class="text-xs font-mono uppercase tracking-wider font-bold text-blue-400">Orçamentação &amp; Controlo de Produção</h4>
+        <span class="text-[11px] text-slate-400">Ao guardar, o cliente é notificado por email</span>
       </div>
-      <a id="inspect-track-link" href="#" target="_blank" class="px-3.5 py-2 rounded-xl bg-blue-500 hover:bg-blue-400 text-white font-semibold transition-all">
-        Open Live Tracker ↗
-      </a>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+        <div>
+          <label class="block text-slate-300 font-semibold mb-1">Preço Final (€)</label>
+          <input type="number" step="0.01" min="0" id="inspect-final-price-input" class="w-full rounded-xl bg-slate-950 border border-slate-700 p-2.5 text-sm font-mono font-bold text-white focus:border-blue-400 focus:outline-none">
+        </div>
+        <div>
+          <label class="block text-slate-300 font-semibold mb-1">Estado do Pagamento</label>
+          <select id="inspect-payment-status-select" class="w-full rounded-xl bg-slate-950 border border-slate-700 p-2.5 text-xs font-mono text-white focus:border-blue-400 focus:outline-none">
+            <option value="unpaid">⏳ Por Pagar (unpaid)</option>
+            <option value="paid">✅ Pago (paid)</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-slate-300 font-semibold mb-1">Estado de Produção</label>
+          <select id="inspect-status-select" class="w-full rounded-xl bg-slate-950 border border-slate-700 p-2.5 text-xs text-white focus:border-blue-400 focus:outline-none">
+            <option value="Quote Requested">Quote Requested (Recebido)</option>
+            <option value="Under Review">Under Review (Em Análise CAD)</option>
+            <option value="Quote Sent">Quote Sent (Orçamento Enviado)</option>
+            <option value="Awaiting Payment">Awaiting Payment (Aguarda Pagamento)</option>
+            <option value="Preparing">Preparing (Em Preparação)</option>
+            <option value="Printing">Printing (Em Impressão 3D)</option>
+            <option value="Quality Inspection">Quality Inspection (Controlo Qualidade)</option>
+            <option value="Ready to Ship">Ready to Ship (Pronto p/ Envio)</option>
+            <option value="Shipped">Shipped (Enviado CTT)</option>
+            <option value="Completed">Completed (Concluído)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="text-xs">
+        <label class="block text-slate-300 font-semibold mb-1">Nota Técnica para o Cliente (Opcional — incluída no email e no tracking)</label>
+        <textarea id="inspect-admin-notes-input" rows="2" placeholder="Ex: Malha 3D verificada sem erros. Impressão agendada em Bambu Lab X1C com PETG Carbono." class="w-full rounded-xl bg-slate-950 border border-slate-700 p-2.5 text-xs text-white focus:border-blue-400 focus:outline-none"></textarea>
+      </div>
+
+      <div class="flex items-center justify-end gap-3 pt-1">
+        <button type="button" id="inspect-update-status-btn" class="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/20 transition-all">
+          💾 Guardar Alterações &amp; Notificar Cliente
+        </button>
+      </div>
     </div>
 
     <!-- QUICK ACTIONS (EMAIL, WHATSAPP, DELETE) -->
-    <div class="flex flex-wrap items-center gap-3 pt-2">
+    <div class="flex flex-wrap items-center gap-3 pt-2 border-t border-slate-800">
       <a id="inspect-email-btn" href="#" class="flex-1 inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-400 hover:bg-blue-500 hover:text-white text-xs font-semibold transition-all">
-        <span>✉️ Email Customer</span>
+        <span>✉️ Enviar Email Direto</span>
       </a>
       <a id="inspect-phone-btn" href="#" target="_blank" class="flex-1 inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500 hover:text-white text-xs font-semibold transition-all">
-        <span>💬 Contact WhatsApp</span>
+        <span>💬 Contactar WhatsApp</span>
       </a>
       <button type="button" id="inspect-delete-btn" class="px-4 py-2.5 rounded-xl bg-red-950/40 border border-red-500/30 text-red-400 hover:bg-red-900/60 hover:text-white text-xs font-semibold transition-all">
-        🗑️ Delete
+        🗑️ Eliminar Pedido
       </button>
     </div>
+  </div>
+</div>
 
-    <!-- STATUS UPDATER -->
-    <div class="space-y-2 pt-4 border-t border-slate-800">
-      <label class="block text-xs font-semibold text-slate-300">Update Production Status</label>
-      <div class="flex items-center gap-3">
-        <select id="inspect-status-select" class="flex-1 rounded-xl bg-slate-950 border border-slate-800 p-2.5 text-xs text-white focus:border-blue-400 focus:outline-none">
-          <option value="Quote Requested">Quote Requested</option>
-          <option value="Under Review">Under Review</option>
-          <option value="Quote Sent">Quote Sent</option>
-          <option value="Awaiting Payment">Awaiting Payment</option>
-          <option value="Preparing">Preparing</option>
-          <option value="Printing">Printing</option>
-          <option value="Quality Inspection">Quality Inspection</option>
-          <option value="Ready to Ship">Ready to Ship</option>
-          <option value="Shipped">Shipped</option>
-          <option value="Completed">Completed</option>
-        </select>
-        <button type="button" id="inspect-update-status-btn" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition-all">
-          Save Status
+<!-- ═══════════════════════════════════════════════════════════════════
+     MODAL 2: STORE ORDER INSPECTOR & CTT TRACKING EDITOR
+═══════════════════════════════════════════════════════════════════ -->
+<div id="admin-order-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+  <div class="bg-slate-900 border border-slate-700 rounded-3xl p-6 sm:p-8 max-w-2xl w-full max-h-[92vh] overflow-y-auto space-y-6 shadow-2xl">
+    <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+      <div>
+        <div class="flex items-center gap-2">
+          <span id="order-modal-id" class="text-xs font-mono font-bold text-emerald-400 px-2.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">LS-O-XXXX</span>
+          <span id="order-modal-date" class="text-xs font-mono text-slate-500"></span>
+        </div>
+        <h3 id="order-modal-customer" class="text-lg font-bold text-white mt-1">Detalhes da Encomenda</h3>
+      </div>
+      <button type="button" id="admin-close-order-modal" class="text-slate-400 hover:text-white p-2 rounded-xl bg-slate-800 transition-colors">✕</button>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-mono">
+      <div class="p-4 rounded-xl bg-slate-950/60 border border-slate-800 space-y-1.5">
+        <span class="text-slate-500 uppercase block font-bold mb-1">Dados do Cliente</span>
+        <p class="text-white font-semibold text-sm" id="order-modal-name">—</p>
+        <p class="text-blue-400 break-all" id="order-modal-email">—</p>
+        <p class="text-slate-300" id="order-modal-phone">—</p>
+        <p class="text-slate-400">Método: <strong class="text-white" id="order-modal-method">—</strong></p>
+      </div>
+
+      <div class="p-4 rounded-xl bg-slate-950/60 border border-slate-800 space-y-1.5">
+        <span class="text-slate-500 uppercase block font-bold mb-1">Morada de Envio (Expedição)</span>
+        <p class="text-white font-semibold" id="order-modal-address">—</p>
+        <p class="text-slate-300" id="order-modal-postal-city">—</p>
+        <p class="text-slate-400" id="order-modal-country">—</p>
+        <a id="order-modal-track-link" href="#" target="_blank" class="inline-block pt-1 text-blue-400 hover:text-blue-300 font-semibold">
+          Ver Página de Tracking ↗
+        </a>
+      </div>
+    </div>
+
+    <!-- ORDER ITEMS -->
+    <div class="p-4 rounded-xl bg-slate-950/60 border border-slate-800 space-y-2 text-xs">
+      <div class="flex items-center justify-between">
+        <span class="text-slate-400 uppercase font-mono font-bold">Artigos Encomendados</span>
+        <span id="order-modal-total" class="text-base font-mono font-bold text-white">€0.00</span>
+      </div>
+      <div id="order-modal-items" class="space-y-2 pt-1 font-mono"></div>
+    </div>
+
+    <!-- SHIPPING & STATUS CONTROLS -->
+    <div class="p-5 rounded-2xl bg-emerald-950/20 border border-emerald-500/30 space-y-4 text-xs">
+      <h4 class="font-mono uppercase tracking-wider font-bold text-emerald-400">Expedição CTT &amp; Estado da Encomenda</h4>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label class="block text-slate-300 font-semibold mb-1">Estado de Produção / Envio</label>
+          <select id="order-modal-status-select" class="w-full rounded-xl bg-slate-950 border border-slate-700 p-2.5 text-white focus:border-blue-400 focus:outline-none">
+            <option value="Preparing">Preparing (Em Preparação)</option>
+            <option value="Printing">Printing (Em Impressão 3D)</option>
+            <option value="Quality Inspection">Quality Inspection (Controlo Qualidade)</option>
+            <option value="Ready to Ship">Ready to Ship (Pronto p/ Expedição)</option>
+            <option value="Shipped">Shipped (Enviado)</option>
+            <option value="Completed">Completed (Entregue / Concluído)</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-slate-300 font-semibold mb-1">Estado do Pagamento</label>
+          <select id="order-modal-payment-select" class="w-full rounded-xl bg-slate-950 border border-slate-700 p-2.5 font-mono text-white focus:border-blue-400 focus:outline-none">
+            <option value="unpaid">⏳ Por Pagar (unpaid)</option>
+            <option value="paid">✅ Pago (paid)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label class="block text-slate-300 font-semibold mb-1">Transportadora</label>
+          <input type="text" id="order-modal-carrier-input" value="CTT Expresso" class="w-full rounded-xl bg-slate-950 border border-slate-700 p-2.5 text-white focus:border-blue-400 focus:outline-none">
+        </div>
+        <div>
+          <label class="block text-slate-300 font-semibold mb-1">Código de Seguimento (Tracking Number)</label>
+          <input type="text" id="order-modal-tracking-input" placeholder="Ex: DA123456789PT" class="w-full rounded-xl bg-slate-950 border border-slate-700 p-2.5 font-mono text-white focus:border-blue-400 focus:outline-none">
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between pt-2">
+        <button type="button" id="order-modal-delete-btn" class="px-4 py-2.5 rounded-xl bg-red-950/40 border border-red-500/30 text-red-400 hover:bg-red-900/60 hover:text-white font-semibold transition-all">
+          🗑️ Eliminar Encomenda
+        </button>
+        <button type="button" id="order-modal-save-btn" class="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold shadow-lg shadow-emerald-600/20 transition-all">
+          💾 Guardar &amp; Enviar Tracking por Email
         </button>
       </div>
     </div>
   </div>
 </div>
 
-<script src="/static/js/admin.js"></script>
+<script src="/static/js/admin.js?v=2.4"></script>
 <script>
 // Authentication & Dashboard Controller
 document.addEventListener('DOMContentLoaded', () => {
@@ -307,8 +551,13 @@ document.addEventListener('DOMContentLoaded', () => {
     authScreen.classList.add('hidden');
     dashboardContainer.classList.remove('hidden');
     if (typeof LayerStudiosAdmin !== 'undefined') {
-      window.adminPortal = new LayerStudiosAdmin();
-      window.adminPortal.loadAdminData();
+      if (!window.adminPortal) {
+        window.adminPortal = new LayerStudiosAdmin();
+      } else {
+        window.adminPortal.token = sessionStorage.getItem('ls_admin_token') || '';
+        window.adminPortal.isAuthenticated = true;
+        window.adminPortal.loadAdminData();
+      }
     }
   };
 
@@ -334,7 +583,7 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       const entered = passwordInput ? passwordInput.value.trim() : '';
       const submitBtn = loginForm.querySelector('button[type="submit"]');
-      const origText = submitBtn ? submitBtn.textContent : 'Sign In to Portal →';
+      const origText = submitBtn ? submitBtn.textContent : 'Entrar no Painel →';
       if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'A autenticar...'; }
       if (loginError) loginError.classList.add('hidden');
 
@@ -373,21 +622,30 @@ document.addEventListener('DOMContentLoaded', () => {
     logoutBtn.addEventListener('click', lockPortal);
   }
 
-  // Auto-poll quotes while logged in
+  // Auto-poll quotes while logged in (only when modals are closed)
   setInterval(() => {
-    if (sessionStorage.getItem('ls_admin_token') && window.adminPortal) {
+    const qModal = document.getElementById('admin-quote-modal');
+    const oModal = document.getElementById('admin-order-modal');
+    const modalOpen = (qModal && !qModal.classList.contains('hidden')) || (oModal && !oModal.classList.contains('hidden'));
+    if (sessionStorage.getItem('ls_admin_token') && window.adminPortal && !modalOpen) {
       window.adminPortal.loadAdminData();
     }
-  }, 10000);
+  }, 15000);
 
-  // Refresh button
+  // Refresh buttons
   document.getElementById('admin-refresh-quotes')?.addEventListener('click', () => {
-    window.adminPortal && window.adminPortal.loadAdminData();
+    window.adminPortal && window.adminPortal.loadAdminData(true);
+  });
+  document.getElementById('admin-refresh-orders')?.addEventListener('click', () => {
+    window.adminPortal && window.adminPortal.loadAdminData(true);
   });
 
-  // Close modal
+  // Close modals
   document.getElementById('admin-close-modal')?.addEventListener('click', () => {
     document.getElementById('admin-quote-modal')?.classList.add('hidden');
+  });
+  document.getElementById('admin-close-order-modal')?.addEventListener('click', () => {
+    document.getElementById('admin-order-modal')?.classList.add('hidden');
   });
 });
 </script>

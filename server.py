@@ -301,8 +301,12 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
             # Normalize field names for UI
             for q in quotes:
                 q['customerName'] = q.get('customer_name')
+                q['email'] = q.get('guest_email')
                 q['projectName'] = q.get('project_name')
                 q['paymentStatus'] = q.get('payment_status')
+                q['customerNotes'] = q.get('customer_notes')
+                q['adminNotes'] = q.get('admin_notes')
+                q['createdAt'] = q.get('created_at')
                 q['pricing'] = {
                     'materialCost': float(q.get('estimated_material_cost', 0)),
                     'machineCost': float(q.get('estimated_machine_cost', 0)),
@@ -312,6 +316,11 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
                     'subtotal': float(q.get('subtotal', 0)),
                     'finalPrice': float(q.get('final_price', 0))
                 }
+                for f in q.get('files', []):
+                    f['name'] = f.get('original_filename') or f.get('name', 'model.stl')
+                    f['diskFilename'] = f.get('disk_filename') or f.get('name', 'model.stl')
+                    f['size'] = f.get('file_size') or f.get('size', '1.0 MB')
+                    f['url'] = f.get('storage_url') or f'/api/files/{f["diskFilename"]}'
             return self.send_json(200, quotes)
 
         # 4. Single Quote Lookup
@@ -330,8 +339,12 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
 
             if is_admin or is_owner:
                 quote['customerName'] = quote.get('customer_name')
+                quote['email'] = quote.get('guest_email')
                 quote['projectName'] = quote.get('project_name')
                 quote['paymentStatus'] = quote.get('payment_status')
+                quote['customerNotes'] = quote.get('customer_notes')
+                quote['adminNotes'] = quote.get('admin_notes')
+                quote['createdAt'] = quote.get('created_at')
                 quote['pricing'] = {
                     'materialCost': float(quote.get('estimated_material_cost', 0)),
                     'machineCost': float(quote.get('estimated_machine_cost', 0)),
@@ -341,6 +354,11 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
                     'subtotal': float(quote.get('subtotal', 0)),
                     'finalPrice': float(quote.get('final_price', 0))
                 }
+                for f in quote.get('files', []):
+                    f['name'] = f.get('original_filename') or f.get('name', 'model.stl')
+                    f['diskFilename'] = f.get('disk_filename') or f.get('name', 'model.stl')
+                    f['size'] = f.get('file_size') or f.get('size', '1.0 MB')
+                    f['url'] = f.get('storage_url') or f'/api/files/{f["diskFilename"]}'
                 if not is_admin:
                     quote.pop('internal_notes', None)
                     quote.pop('admin_notes', None)
@@ -366,8 +384,23 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
             for o in orders:
                 o['customerName'] = o.get('customer_name')
                 o['quoteId'] = o.get('quote_id')
+                o['paymentStatus'] = o.get('payment_status')
+                o['paymentMethod'] = o.get('payment_method')
+                o['trackingNumber'] = o.get('tracking_number')
+                o['createdAt'] = o.get('created_at')
                 o['total'] = float(o.get('total', 0))
-                o['shippingAddress'] = {'city': o.get('city'), 'country': o.get('country'), 'address': o.get('shipping_address')}
+                o['subtotal'] = float(o.get('subtotal', 0))
+                o['shippingCost'] = float(o.get('shipping_cost', 4.5))
+                o['discount'] = float(o.get('discount', 0))
+                o['shippingAddress'] = {
+                    'name': o.get('shipping_name') or o.get('customer_name'),
+                    'address': o.get('shipping_address') or '',
+                    'postalCode': o.get('postal_code') or '',
+                    'city': o.get('city') or 'Portugal',
+                    'country': o.get('country') or 'Portugal'
+                }
+                for item in o.get('items', []):
+                    item['title'] = item.get('product_name') or item.get('title', 'Produto 3D')
             return self.send_json(200, orders)
 
         # 6. Single Order Lookup
@@ -387,8 +420,20 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
             if is_admin or is_owner:
                 order['customerName'] = order.get('customer_name')
                 order['quoteId'] = order.get('quote_id')
+                order['paymentStatus'] = order.get('payment_status')
+                order['paymentMethod'] = order.get('payment_method')
+                order['trackingNumber'] = order.get('tracking_number')
+                order['createdAt'] = order.get('created_at')
                 order['total'] = float(order.get('total', 0))
-                order['shippingAddress'] = {'city': order.get('city'), 'country': order.get('country'), 'address': order.get('shipping_address')}
+                order['shippingAddress'] = {
+                    'name': order.get('shipping_name') or order.get('customer_name'),
+                    'address': order.get('shipping_address') or '',
+                    'postalCode': order.get('postal_code') or '',
+                    'city': order.get('city') or 'Portugal',
+                    'country': order.get('country') or 'Portugal'
+                }
+                for item in order.get('items', []):
+                    item['title'] = item.get('product_name') or item.get('title', 'Produto 3D')
                 if not is_admin:
                     order.pop('internal_notes', None)
                     order.pop('admin_notes', None)
@@ -443,9 +488,15 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
 
             return self.send_json(404, {'error': f'No matching quote or order found for reference: {track_id}'})
 
-        # 8. Products, Materials, Portfolio, FAQs
+        # 8. Products, Materials, Promos, Portfolio, FAQs
         if path == '/api/products':
-            return self.send_json(200, db.get_products())
+            include_all = self.is_admin_request() and query_params.get('all', [''])[0] == '1'
+            return self.send_json(200, db.get_products(include_inactive=include_all))
+
+        if path == '/api/promos':
+            if not self.is_admin_request():
+                return self.send_json(403, {'error': 'Unauthorized. Admin authorization required.'})
+            return self.send_json(200, db.get_promo_codes())
 
         if path == '/api/materials':
             return self.send_json(200, db.get_materials())
@@ -1193,6 +1244,25 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
                 print(f'Stripe webhook error: {e}')
                 return self.send_json(400, {'error': str(e)})
 
+        # Admin Create Store Product
+        if path == '/api/products':
+            if not self.is_admin_request():
+                return self.send_json(403, {'error': 'Unauthorized. Admin authorization required.'})
+            payload = self.read_json_body()
+            prod = db.create_product(payload)
+            return self.send_json(201, {'success': True, 'product': prod})
+
+        # Admin Create Promo Code
+        if path == '/api/promos':
+            if not self.is_admin_request():
+                return self.send_json(403, {'error': 'Unauthorized. Admin authorization required.'})
+            payload = self.read_json_body()
+            try:
+                promo = db.create_promo_code(payload)
+                return self.send_json(201, {'success': True, 'promo': promo})
+            except Exception as e:
+                return self.send_json(400, {'error': str(e)})
+
         return self.send_json(404, {'error': 'Endpoint not found'})
 
     def do_PUT(self):
@@ -1209,11 +1279,48 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
             if not quote:
                 return self.send_json(404, {'error': 'Quote not found'})
 
-            updated_quote = db.update_quote(quote['id'], {k: v for k, v in payload.items() if k != 'id'})
-            if updated_quote and ('status' in payload or 'final_price' in payload):
+            allowed_quote_cols = {
+                'status': 'status',
+                'payment_status': 'payment_status',
+                'paymentStatus': 'payment_status',
+                'payment_method': 'payment_method',
+                'paymentMethod': 'payment_method',
+                'final_price': 'final_price',
+                'finalPrice': 'final_price',
+                'subtotal': 'subtotal',
+                'shipping_cost': 'shipping_cost',
+                'shippingCost': 'shipping_cost',
+                'discount': 'discount',
+                'admin_notes': 'admin_notes',
+                'adminNotes': 'admin_notes',
+                'internal_notes': 'internal_notes',
+                'internalNotes': 'internal_notes',
+                'material': 'material',
+                'color': 'color',
+                'quantity': 'quantity',
+                'quality': 'quality',
+                'strength': 'strength',
+                'turnaround': 'turnaround',
+                'project_name': 'project_name',
+                'projectName': 'project_name'
+            }
+            clean_updates = {}
+            for k, v in payload.items():
+                if k in allowed_quote_cols and v is not None:
+                    col = allowed_quote_cols[k]
+                    if col in ('final_price', 'subtotal', 'shipping_cost', 'discount'):
+                        clean_updates[col] = float(v)
+                    elif col == 'quantity':
+                        clean_updates[col] = max(1, int(v))
+                    else:
+                        clean_updates[col] = v
+
+            updated_quote = db.update_quote(quote['id'], clean_updates) if clean_updates else quote
+            if updated_quote and ('status' in clean_updates or 'final_price' in clean_updates):
                 ref_id = updated_quote.get('public_reference') or updated_quote['id']
                 cust_email = (updated_quote.get('guest_email') or '').strip()
                 if cust_email:
+                    notes_html = f'<p><strong>Nota Técnica:</strong> {updated_quote.get("admin_notes")}</p>' if updated_quote.get('admin_notes') and updated_quote.get('admin_notes') != 'Pending engineering inspection.' else ''
                     send_resend_email_async(
                         cust_email,
                         f'Atualização do Pedido {ref_id}: {updated_quote.get("status")} — Layer Studios',
@@ -1221,7 +1328,8 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
                             f'Pedido {ref_id} Atualizado',
                             f'Novo estado: {updated_quote.get("status")}',
                             f'<p>O seu projeto <strong>{updated_quote.get("project_name")}</strong> foi atualizado pela nossa equipa.</p>'
-                            f'<p><strong>Valor Final:</strong> €{float(updated_quote.get("final_price", 0)):.2f}</p>',
+                            f'<p><strong>Valor Final:</strong> €{float(updated_quote.get("final_price", 0)):.2f} ({updated_quote.get("payment_status", "unpaid").upper()})</p>'
+                            f'{notes_html}',
                             'Ver Estado & Pagamento',
                             f'{BASE_URL}/track?id={ref_id}'
                         ),
@@ -1236,8 +1344,34 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
             if not order:
                 return self.send_json(404, {'error': 'Order not found'})
 
-            updated_order = db.update_order(order['id'], {k: v for k, v in payload.items() if k != 'id'})
-            if updated_order and ('status' in payload or 'tracking_number' in payload):
+            allowed_order_cols = {
+                'status': 'status',
+                'payment_status': 'payment_status',
+                'paymentStatus': 'payment_status',
+                'payment_method': 'payment_method',
+                'paymentMethod': 'payment_method',
+                'carrier': 'carrier',
+                'tracking_number': 'tracking_number',
+                'trackingNumber': 'tracking_number',
+                'total': 'total',
+                'shipping_address': 'shipping_address',
+                'shippingAddress': 'shipping_address',
+                'postal_code': 'postal_code',
+                'postalCode': 'postal_code',
+                'city': 'city',
+                'country': 'country'
+            }
+            clean_updates = {}
+            for k, v in payload.items():
+                if k in allowed_order_cols and v is not None:
+                    col = allowed_order_cols[k]
+                    if col == 'total':
+                        clean_updates[col] = float(v)
+                    else:
+                        clean_updates[col] = v
+
+            updated_order = db.update_order(order['id'], clean_updates) if clean_updates else order
+            if updated_order and ('status' in clean_updates or 'tracking_number' in clean_updates):
                 ref_id = updated_order.get('public_reference') or updated_order['id']
                 cust_email = (updated_order.get('email') or '').strip()
                 if cust_email:
@@ -1255,6 +1389,12 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
                         reply_to=ADMIN_ALERT_EMAIL
                     )
             return self.send_json(200, {'success': True, 'order': updated_order})
+
+        if path == '/api/products' or path.startswith('/api/products/'):
+            payload = self.read_json_body()
+            prod_id = path.split('/api/products/')[1] if path.startswith('/api/products/') else payload.get('id', '')
+            updated_prod = db.update_product(prod_id, payload)
+            return self.send_json(200, {'success': True, 'product': updated_prod})
 
         return self.send_json(404, {'error': 'Endpoint not found'})
 
@@ -1280,6 +1420,16 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
                 db.delete_order(order['id'])
                 return self.send_json(200, {'success': True, 'deleted': order_id})
             return self.send_json(404, {'error': 'Order not found'})
+
+        if path.startswith('/api/products/'):
+            prod_id = path.split('/api/products/')[1]
+            db.delete_product(prod_id)
+            return self.send_json(200, {'success': True, 'deleted': prod_id})
+
+        if path.startswith('/api/promos/'):
+            promo_id = path.split('/api/promos/')[1]
+            db.delete_promo_code(promo_id)
+            return self.send_json(200, {'success': True, 'deleted': promo_id})
 
         return self.send_json(404, {'error': 'Endpoint not found'})
 

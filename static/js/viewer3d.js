@@ -208,8 +208,30 @@ class LayerStudiosViewer {
     if (!this.currentMesh) return;
     const mat = this.getMaterial(preset);
     this.currentMesh.traverse(child => {
-      if (child.isMesh) child.material = mat.clone();
+      if (child.isMesh) {
+        child.material = mat.clone();
+        child.material.wireframe = this.isWireframe;
+      }
     });
+  }
+
+  setCustomColor(hexColor) {
+    if (!this.currentMesh) return;
+    this.currentMesh.traverse(child => {
+      if (child.isMesh && child.material && child.material.color) {
+        child.material.color.set(hexColor);
+      }
+    });
+  }
+
+  resetCamera() {
+    if (this.currentGeometry && this.currentGeometry.boundingBox) {
+      this.fitCameraToBox(this.currentGeometry.boundingBox);
+    } else if (this.camera && this.controls) {
+      this.camera.position.set(300, 260, 360);
+      this.controls.target.set(0, 40, 0);
+      this.controls.update();
+    }
   }
 
   setWireframe(enabled) {
