@@ -53,39 +53,55 @@ ADMIN_TOKENS = {}  # token -> {'created': timestamp, 'expires': timestamp}
 
 # Resend Transactional Email Configuration
 RESEND_API_KEY = os.environ.get('RESEND_API_KEY', '').strip()
-RESEND_FROM_EMAIL = os.environ.get('RESEND_FROM_EMAIL', 'Layer Studios <noreply@layerstudios.pt>').strip()
+RESEND_FROM_EMAIL = os.environ.get('RESEND_FROM_EMAIL', 'Layer Studios <onboarding@resend.dev>').strip()
 ADMIN_ALERT_EMAIL = os.environ.get('ADMIN_ALERT_EMAIL', 'contact@layerstudios.pt').strip()
 if RESEND_API_KEY:
     print(f'[Email] Resend transactional email active (From: {RESEND_FROM_EMAIL})')
 else:
     print('[Email] RESEND_API_KEY not configured (emails will be skipped until configured).')
 
-def send_resend_email_async(to_email, subject, html_body, reply_to=None):
+def send_resend_email_async(to_email, subject, html_body, reply_to=None, idempotency_key=None):
     if not RESEND_API_KEY or not to_email or '@' not in str(to_email):
         return
     if str(to_email).strip().lower().endswith('@test.com'):
         return  # Skip automated test suite dummy emails
 
     def _worker():
-        try:
-            payload = {
-                'from': RESEND_FROM_EMAIL,
-                'to': [to_email] if isinstance(to_email, str) else to_email,
-                'subject': subject,
-                'html': html_body
-            }
-            if reply_to and '@' in str(reply_to):
-                payload['reply_to'] = reply_to
-            body_bytes = json.dumps(payload).encode('utf-8')
-            req = urllib.request.Request('https://api.resend.com/emails', data=body_bytes, method='POST')
-            req.add_header('Authorization', f'Bearer {RESEND_API_KEY}')
-            req.add_header('Content-Type', 'application/json')
-            req.add_header('User-Agent', 'LayerStudios/2.0')
-            ssl_ctx = ssl.create_default_context()
-            with urllib.request.urlopen(req, context=ssl_ctx, timeout=12) as res:
-                res.read()
-        except Exception as err:
-            print(f'[Email Warning] Failed sending email to {to_email}: {err}')
+        payload = {
+            'from': RESEND_FROM_EMAIL,
+            'to': [to_email] if isinstance(to_email, str) else to_email,
+            'subject': subject,
+            'html': html_body
+        }
+        if reply_to and '@' in str(reply_to):
+            payload['reply_to'] = reply_to
+        body_bytes = json.dumps(payload).encode('utf-8')
+        ssl_ctx = ssl.create_default_context()
+
+        for attempt in range(3):
+            try:
+                req = urllib.request.Request('https://api.resend.com/emails', data=body_bytes, method='POST')
+                req.add_header('Authorization', f'Bearer {RESEND_API_KEY}')
+                req.add_header('Content-Type', 'application/json')
+                req.add_header('User-Agent', 'LayerStudios/2.0')
+                if idempotency_key:
+                    req.add_header('Idempotency-Key', str(idempotency_key)[:256])
+                with urllib.request.urlopen(req, context=ssl_ctx, timeout=12) as res:
+                    res.read()
+                return
+            except urllib.error.HTTPError as he:
+                if he.code in (429, 500, 502, 503, 504) and attempt < 2:
+                    retry_after = float(he.headers.get('Retry-After', 1.5 * (attempt + 1)))
+                    time.sleep(min(retry_after, 5.0))
+                    continue
+                print(f'[Email Warning] HTTP {he.code} sending email to {to_email}')
+                return
+            except Exception as err:
+                if attempt < 2:
+                    time.sleep(1.5 * (attempt + 1))
+                    continue
+                print(f'[Email Warning] Failed sending email to {to_email}: {err}')
+                return
 
     threading.Thread(target=_worker, daemon=True).start()
 
@@ -698,6 +714,20 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
 
             pwd_hash, salt = hash_password(password)
             user = db.create_user(email=email, password_hash=pwd_hash, salt=salt, name=name or 'Cliente', phone=phone)
+
+            send_resend_email_async(
+                email,
+                'Bem-vindo à Layer Studios Portugal!',
+                build_email_card(
+                    f'Bem-vindo, {user["name"]}!',
+                    'A sua conta Layer Studios está ativa.',
+                    '<p>Já pode gerir os seus pedidos de orçamento 3D, encomendas da loja e acompanhar a produção em tempo real.</p>',
+                    'Pedir Orçamento 3D',
+                    f'{BASE_URL}/quote'
+                ),
+                reply_to=ADMIN_ALERT_EMAIL,
+                idempotency_key=f'welcome-{user["id"]}'
+            )
 
             return self.send_json(201, {
                 'success': True,
