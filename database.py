@@ -5,12 +5,28 @@ import time
 import uuid
 import secrets
 import sqlite3
-from datetime import datetime
+from decimal import Decimal
+from datetime import datetime, date
 
-# Handle PostgreSQL vs SQLite
-DATABASE_URL = os.environ.get('DATABASE_URL', '').strip()
-if DATABASE_URL.startswith('postgres://'):
-    DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Load local .env / .env.local files before reading DATABASE_URL
+for env_filename in ('.env.local', '.env'):
+    env_path = os.path.join(BASE_DIR, env_filename)
+    if os.path.exists(env_path):
+        with open(env_path, 'r', encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith('#') and '=' in line:
+                    k, v = line.split('=', 1)
+                    clean_v = v.strip().strip('"').strip("'")
+                    os.environ.setdefault(k.strip(), clean_v)
+
+# Handle PostgreSQL (Neon pooled or direct) vs SQLite
+RAW_DB_URL = (os.environ.get('DATABASE_URL_POOLED') or os.environ.get('DATABASE_URL') or '').strip().strip('"').strip("'")
+if RAW_DB_URL.startswith('postgres://'):
+    RAW_DB_URL = RAW_DB_URL.replace('postgres://', 'postgresql://', 1)
+DATABASE_URL = RAW_DB_URL
 
 IS_POSTGRES = bool(DATABASE_URL and DATABASE_URL.startswith('postgresql://'))
 PG_MODULE = None
@@ -20,17 +36,16 @@ if IS_POSTGRES:
         import psycopg2
         import psycopg2.extras
         PG_MODULE = psycopg2
-        print(f'[Database] Connected to PostgreSQL target.')
+        print('[Database] Connected to PostgreSQL target (psycopg2).')
     except ImportError:
         try:
             import psycopg
             PG_MODULE = psycopg
-            print(f'[Database] Connected to PostgreSQL (psycopg v3).')
+            print('[Database] Connected to PostgreSQL (psycopg v3).')
         except ImportError:
-            print(f'[Database] Warning: PostgreSQL requested but psycopg2/psycopg not installed. Falling back to SQLite.')
+            print('[Database] Warning: PostgreSQL requested but psycopg2/psycopg not installed. Falling back to SQLite.')
             IS_POSTGRES = False
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, 'data')
 SQLITE_DB_PATH = os.path.join(DATA_DIR, 'layerstudios.db')
 LEGACY_JSON_PATH = os.path.join(DATA_DIR, 'database.json')
@@ -80,6 +95,19 @@ class DatabaseManager:
             if commit:
                 conn.close()
 
+    def _normalize_row(self, d):
+        if d is None:
+            return None
+        out = {}
+        for k, v in d.items():
+            if isinstance(v, Decimal):
+                out[k] = float(v)
+            elif isinstance(v, (datetime, date)):
+                out[k] = v.strftime('%Y-%m-%dT%H:%M:%SZ') if isinstance(v, datetime) else v.isoformat()
+            else:
+                out[k] = v
+        return out
+
     def fetchone(self, query, params=()):
         conn = self.get_connection()
         formatted_query = self.format_query(query)
@@ -92,7 +120,7 @@ class DatabaseManager:
             if self.is_postgres:
                 # Convert tuple to dict based on cursor.description
                 columns = [col[0] for col in cursor.description]
-                return dict(zip(columns, row))
+                return self._normalize_row(dict(zip(columns, row)))
             else:
                 return dict(row)
         finally:
@@ -107,7 +135,7 @@ class DatabaseManager:
             rows = cursor.fetchall()
             if self.is_postgres:
                 columns = [col[0] for col in cursor.description]
-                return [dict(zip(columns, r)) for r in rows]
+                return [self._normalize_row(dict(zip(columns, r))) for r in rows]
             else:
                 return [dict(r) for r in rows]
         finally:
