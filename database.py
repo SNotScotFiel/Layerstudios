@@ -213,6 +213,7 @@ class DatabaseManager:
                 mime_type VARCHAR(100),
                 file_size VARCHAR(50),
                 dimensions VARCHAR(100),
+                file_data {text_type},
                 uploaded_at {timestamp_type} NOT NULL
             );''',
             f'''CREATE TABLE IF NOT EXISTS orders (
@@ -338,6 +339,13 @@ class DatabaseManager:
         try:
             for sql in schemas:
                 cur.execute(self.format_query(sql))
+            if self.is_postgres:
+                cur.execute("ALTER TABLE quote_files ADD COLUMN IF NOT EXISTS file_data TEXT;")
+            else:
+                try:
+                    cur.execute("ALTER TABLE quote_files ADD COLUMN file_data TEXT;")
+                except Exception:
+                    pass
             conn.commit()
             print('[Database] All relational tables and constraints verified.')
         except Exception as e:
@@ -670,14 +678,19 @@ class DatabaseManager:
             rows = self.fetchall('SELECT * FROM quotes ORDER BY created_at DESC LIMIT ? OFFSET ?', (limit, offset))
         
         for q in rows:
-            q['files'] = self.fetchall('SELECT * FROM quote_files WHERE quote_id = ?', (q.get('id'),))
+            q['files'] = self.fetchall('SELECT id, quote_id, original_filename, disk_filename, storage_url, mime_type, file_size, dimensions, uploaded_at FROM quote_files WHERE quote_id = ?', (q.get('id'),))
         return rows
 
     def get_quote_by_id_or_ref(self, ref_or_id):
         q = self.fetchone('SELECT * FROM quotes WHERE id = ? OR public_reference = ?', (ref_or_id, ref_or_id))
         if q:
-            q['files'] = self.fetchall('SELECT * FROM quote_files WHERE quote_id = ?', (q.get('id'),))
+            q['files'] = self.fetchall('SELECT id, quote_id, original_filename, disk_filename, storage_url, mime_type, file_size, dimensions, uploaded_at FROM quote_files WHERE quote_id = ?', (q.get('id'),))
         return q
+
+    def get_file_blob(self, filename):
+        clean_name = os.path.basename(filename).strip()
+        row = self.fetchone('SELECT file_data, mime_type, original_filename FROM quote_files WHERE disk_filename = ? OR original_filename = ? ORDER BY uploaded_at DESC LIMIT 1', (clean_name, clean_name))
+        return row
 
     def create_quote(self, data, files=None):
         conn = self.get_connection()

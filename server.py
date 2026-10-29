@@ -11,6 +11,7 @@ import ssl
 import hashlib
 import hmac
 import secrets
+import threading
 from http.server import HTTPServer, ThreadingHTTPServer, SimpleHTTPRequestHandler
 
 # Load local .env / .env.local file if present before importing database
@@ -49,6 +50,69 @@ else:
 # Server-Side Admin Authentication Configuration (loaded ONLY from Environment Variable)
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', '').strip()
 ADMIN_TOKENS = {}  # token -> {'created': timestamp, 'expires': timestamp}
+
+# Resend Transactional Email Configuration
+RESEND_API_KEY = os.environ.get('RESEND_API_KEY', '').strip()
+RESEND_FROM_EMAIL = os.environ.get('RESEND_FROM_EMAIL', 'Layer Studios <noreply@layerstudios.pt>').strip()
+ADMIN_ALERT_EMAIL = os.environ.get('ADMIN_ALERT_EMAIL', 'contact@layerstudios.pt').strip()
+if RESEND_API_KEY:
+    print(f'[Email] Resend transactional email active (From: {RESEND_FROM_EMAIL})')
+else:
+    print('[Email] RESEND_API_KEY not configured (emails will be skipped until configured).')
+
+def send_resend_email_async(to_email, subject, html_body, reply_to=None):
+    if not RESEND_API_KEY or not to_email or '@' not in str(to_email):
+        return
+    if str(to_email).strip().lower().endswith('@test.com'):
+        return  # Skip automated test suite dummy emails
+
+    def _worker():
+        try:
+            payload = {
+                'from': RESEND_FROM_EMAIL,
+                'to': [to_email] if isinstance(to_email, str) else to_email,
+                'subject': subject,
+                'html': html_body
+            }
+            if reply_to and '@' in str(reply_to):
+                payload['reply_to'] = reply_to
+            body_bytes = json.dumps(payload).encode('utf-8')
+            req = urllib.request.Request('https://api.resend.com/emails', data=body_bytes, method='POST')
+            req.add_header('Authorization', f'Bearer {RESEND_API_KEY}')
+            req.add_header('Content-Type', 'application/json')
+            req.add_header('User-Agent', 'LayerStudios/2.0')
+            ssl_ctx = ssl.create_default_context()
+            with urllib.request.urlopen(req, context=ssl_ctx, timeout=12) as res:
+                res.read()
+        except Exception as err:
+            print(f'[Email Warning] Failed sending email to {to_email}: {err}')
+
+    threading.Thread(target=_worker, daemon=True).start()
+
+def build_email_card(title, subtitle, body_html, cta_text=None, cta_url=None):
+    cta_block = ''
+    if cta_text and cta_url:
+        cta_block = f'''
+        <div style="margin-top:24px;text-align:center;">
+          <a href="{cta_url}" style="display:inline-block;padding:12px 26px;background:#3b82f6;color:#ffffff;text-decoration:none;border-radius:10px;font-weight:700;font-size:14px;">{cta_text} &rarr;</a>
+        </div>'''
+    return f'''
+    <div style="background:#090d16;padding:32px 16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#e2e8f0;">
+      <div style="max-width:560px;margin:0 auto;background:#0f172a;border:1px solid #1e293b;border-radius:16px;padding:28px;">
+        <div style="border-bottom:1px solid #1e293b;padding-bottom:16px;margin-bottom:20px;">
+          <span style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#3b82f6;font-weight:700;">LAYER STUDIOS PORTUGAL</span>
+          <h2 style="margin:6px 0 4px;color:#ffffff;font-size:20px;">{title}</h2>
+          <p style="margin:0;color:#94a3b8;font-size:13px;">{subtitle}</p>
+        </div>
+        <div style="font-size:14px;line-height:1.6;color:#cbd5e1;">
+          {body_html}
+        </div>
+        {cta_block}
+        <div style="margin-top:28px;padding-top:16px;border-top:1px solid #1e293b;font-size:12px;color:#64748b;text-align:center;">
+          Layer Studios &bull; Impressão 3D &amp; Prototipagem Rápida &bull; (+351) 962 118 770 &bull; <a href="{BASE_URL}" style="color:#3b82f6;text-decoration:none;">layerstudios.pt</a>
+        </div>
+      </div>
+    </div>'''
 
 # Rate Limiting Store: ip -> list of failed attempt timestamps
 FAILED_LOGIN_ATTEMPTS = {}
@@ -457,25 +521,37 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
                 print(f'Stripe verification error: {err}')
                 return self.send_json(500, {'error': f'Verification failed: {err}'})
 
-        # 14. Protected Customer Upload File Serving
+        # 14. Protected Customer Upload File Serving (with Neon PostgreSQL auto-restore fallback)
         if path.startswith('/api/files/') or path == '/api/download-file':
             filename = path.split('/api/files/')[1] if path.startswith('/api/files/') else query_params.get('file', [''])[0]
             filename = os.path.basename(filename).strip()
             target_file = os.path.join(UPLOADS_DIR, filename)
 
-            if not os.path.exists(target_file) or not os.path.isfile(target_file):
-                return self.send_json(404, {'error': 'File not found'})
-
             is_admin = self.is_admin_request()
             user = self.get_authenticated_user()
             req_email = query_params.get('email', [''])[0].strip().lower()
 
-            if not db.verify_file_access(filename, user_id=user.get('id') if user else None, email=req_email, is_admin=is_admin):
-                return self.send_json(403, {'error': 'Unauthorized access to customer CAD model.'})
+            if not os.path.exists(target_file) or not os.path.isfile(target_file):
+                # Attempt to restore from Neon PostgreSQL blob if Render ephemeral disk was wiped
+                blob_row = db.get_file_blob(filename)
+                if blob_row and blob_row.get('file_data'):
+                    if not db.verify_file_access(filename, user_id=user.get('id') if user else None, email=req_email, is_admin=is_admin):
+                        return self.send_json(403, {'error': 'Unauthorized access to customer CAD model.'})
+                    file_bytes = base64.b64decode(blob_row['file_data'])
+                    try:
+                        with open(target_file, 'wb') as f:
+                            f.write(file_bytes)
+                    except Exception:
+                        pass
+                else:
+                    return self.send_json(404, {'error': 'File not found'})
+            else:
+                if not db.verify_file_access(filename, user_id=user.get('id') if user else None, email=req_email, is_admin=is_admin):
+                    return self.send_json(403, {'error': 'Unauthorized access to customer CAD model.'})
+                with open(target_file, 'rb') as f:
+                    file_bytes = f.read()
 
             mime_type, _ = mimetypes.guess_type(target_file)
-            with open(target_file, 'rb') as f:
-                file_bytes = f.read()
 
             self.send_response(200)
             self.send_header('Content-Type', mime_type or 'application/octet-stream')
@@ -706,11 +782,54 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
             quote['customerName'] = quote.get('customer_name')
             quote['projectName'] = quote.get('project_name')
             quote['paymentStatus'] = quote.get('payment_status')
+            final_p = float(quote.get('final_price', 24.50))
             quote['pricing'] = {
-                'finalPrice': float(quote.get('final_price', 24.50)),
+                'finalPrice': final_p,
                 'subtotal': float(quote.get('subtotal', 20.00))
             }
-            return self.send_json(201, {'success': True, 'quote': quote, 'quoteId': quote.get('public_reference')})
+            ref_id = quote.get('public_reference')
+            cust_email = (quote.get('guest_email') or payload.get('email') or '').strip()
+            track_url = f'{BASE_URL}/track?id={ref_id}'
+
+            # Send confirmation email to customer & alert to owner via Resend
+            if cust_email:
+                send_resend_email_async(
+                    cust_email,
+                    f'Pedido de Orçamento Recebido ({ref_id}) — Layer Studios',
+                    build_email_card(
+                        f'Pedido de Orçamento {ref_id}',
+                        f'Olá {quote.get("customer_name", "Cliente")}, recebemos o seu pedido de impressão 3D.',
+                        f'<p>A nossa equipa de engenharia está a analisar o seu projeto <strong>{quote.get("project_name")}</strong>.</p>'
+                        f'<ul style="padding-left:18px;color:#e2e8f0;">'
+                        f'<li><strong>Referência:</strong> {ref_id}</li>'
+                        f'<li><strong>Material / Cor:</strong> {quote.get("material")} ({quote.get("color")})</li>'
+                        f'<li><strong>Quantidade:</strong> {quote.get("quantity")} un.</li>'
+                        f'<li><strong>Estimativa Inicial:</strong> €{final_p:.2f}</li>'
+                        f'</ul>'
+                        f'<p>Pode acompanhar o estado em tempo real ou efetuar o pagamento através do botão abaixo:</p>',
+                        'Acompanhar Orçamento',
+                        track_url
+                    ),
+                    reply_to=ADMIN_ALERT_EMAIL
+                )
+            if ADMIN_ALERT_EMAIL:
+                send_resend_email_async(
+                    ADMIN_ALERT_EMAIL,
+                    f'[Novo Orçamento] {ref_id} — {quote.get("customer_name")} (€{final_p:.2f})',
+                    build_email_card(
+                        f'Novo Pedido de Orçamento: {ref_id}',
+                        f'Cliente: {quote.get("customer_name")} ({cust_email or "sem email"} | {quote.get("phone") or "sem tel."})',
+                        f'<p><strong>Projeto:</strong> {quote.get("project_name")}<br>'
+                        f'<strong>Material:</strong> {quote.get("material")} &bull; {quote.get("color")} &bull; Qtd: {quote.get("quantity")}<br>'
+                        f'<strong>Valor Estimado:</strong> €{final_p:.2f}<br>'
+                        f'<strong>Notas:</strong> {quote.get("description") or quote.get("customer_notes") or "—"}</p>',
+                        'Abrir Painel Admin',
+                        f'{BASE_URL}/admin'
+                    ),
+                    reply_to=cust_email or None
+                )
+
+            return self.send_json(201, {'success': True, 'quote': quote, 'quoteId': ref_id})
 
         # Create Store Order (Server-Side Price Calculation)
         if path == '/api/orders':
@@ -720,6 +839,7 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
             promo_code = payload.get('promoCode', '')
 
             pricing = db.calculate_store_pricing(raw_items, shipping_country=shipping_country, promo_code=promo_code)
+            addr_obj = payload.get('shippingAddress', {}) if isinstance(payload.get('shippingAddress'), dict) else {}
             order_data = {
                 'customerId': payload.get('customerId'),
                 'quoteId': payload.get('quoteId', ''),
@@ -727,10 +847,10 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
                 'email': payload.get('email', ''),
                 'phone': payload.get('phone', ''),
                 'shippingName': payload.get('customerName', 'Store Customer'),
-                'shippingAddress': payload.get('shippingAddress', {}).get('address', ''),
-                'postalCode': payload.get('shippingAddress', {}).get('postalCode', ''),
-                'city': payload.get('shippingAddress', {}).get('city', 'Portugal'),
-                'country': shipping_country,
+                'shippingAddress': addr_obj.get('street') or addr_obj.get('address') or '',
+                'postalCode': addr_obj.get('postalCode', ''),
+                'city': addr_obj.get('city', 'Portugal'),
+                'country': addr_obj.get('country') or shipping_country,
                 'subtotal': pricing['subtotal'],
                 'shippingCost': pricing['shippingCost'],
                 'discount': pricing['discount'],
@@ -742,9 +862,47 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
             order = db.create_order(order_data, pricing['items'])
             order['customerName'] = order.get('customer_name')
             order['total'] = float(order.get('total', 0))
-            return self.send_json(201, {'success': True, 'order': order, 'orderId': order.get('public_reference')})
+            ref_id = order.get('public_reference')
+            cust_email = (order.get('email') or '').strip()
+            track_url = f'{BASE_URL}/track?id={ref_id}'
 
-        # File Upload
+            if cust_email:
+                send_resend_email_async(
+                    cust_email,
+                    f'Encomenda Confirmada ({ref_id}) — Layer Studios',
+                    build_email_card(
+                        f'Encomenda {ref_id} Registada',
+                        f'Obrigado pela sua encomenda, {order.get("customer_name", "Cliente")}!',
+                        f'<p>A sua encomenda foi registada com sucesso.</p>'
+                        f'<ul style="padding-left:18px;color:#e2e8f0;">'
+                        f'<li><strong>Referência:</strong> {ref_id}</li>'
+                        f'<li><strong>Total:</strong> €{order["total"]:.2f}</li>'
+                        f'<li><strong>Método de Pagamento:</strong> {order.get("payment_method")}</li>'
+                        f'</ul>'
+                        f'<p>Pode acompanhar todas as etapas de produção e envio em tempo real:</p>',
+                        'Seguir Encomenda',
+                        track_url
+                    ),
+                    reply_to=ADMIN_ALERT_EMAIL
+                )
+            if ADMIN_ALERT_EMAIL:
+                send_resend_email_async(
+                    ADMIN_ALERT_EMAIL,
+                    f'[Nova Encomenda Loja] {ref_id} — {order.get("customer_name")} (€{order["total"]:.2f})',
+                    build_email_card(
+                        f'Nova Encomenda: {ref_id}',
+                        f'Cliente: {order.get("customer_name")} ({cust_email} | {order.get("phone")})',
+                        f'<p><strong>Total:</strong> €{order["total"]:.2f} ({order.get("payment_method")})<br>'
+                        f'<strong>Morada:</strong> {order.get("shipping_address")}, {order.get("postal_code")} {order.get("city")}</p>',
+                        'Abrir Painel Admin',
+                        f'{BASE_URL}/admin'
+                    ),
+                    reply_to=cust_email or None
+                )
+
+            return self.send_json(201, {'success': True, 'order': order, 'orderId': ref_id})
+
+        # File Upload (Persists both to local disk and Neon PostgreSQL so Render restarts never lose CAD files)
         if path == '/api/upload-file':
             try:
                 content_type = self.headers.get('Content-Type', '')
@@ -786,21 +944,37 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
                 with open(save_path, 'wb') as f:
                     f.write(file_data)
 
+                encoded_blob = base64.b64encode(file_data).decode('ascii') if len(file_data) <= 25 * 1024 * 1024 else None
+
                 # Link to quote if quote exists
                 q = db.get_quote_by_id_or_ref(quote_id)
                 if q:
-                    db.execute('''
-                        INSERT INTO quote_files (id, quote_id, original_filename, disk_filename, storage_url, mime_type, file_size, uploaded_at)
-                        VALUES (?, ?, ?, ?, ?, 'application/octet-stream', ?, ?)
-                    ''', (
-                        f'file_{uuid.uuid4().hex[:8]}',
-                        q['id'],
-                        safe_name,
-                        disk_filename,
-                        f'/api/files/{disk_filename}',
-                        f'{round(len(file_data)/(1024*1024), 2)} MB',
-                        time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
-                    ))
+                    existing_qf = db.fetchone('SELECT id FROM quote_files WHERE quote_id = ? AND original_filename = ?', (q['id'], safe_name))
+                    if existing_qf:
+                        db.execute('''
+                            UPDATE quote_files SET disk_filename = ?, storage_url = ?, file_size = ?, file_data = ?
+                            WHERE id = ?
+                        ''', (
+                            disk_filename,
+                            f'/api/files/{disk_filename}',
+                            f'{round(len(file_data)/(1024*1024), 2)} MB',
+                            encoded_blob,
+                            existing_qf['id']
+                        ))
+                    else:
+                        db.execute('''
+                            INSERT INTO quote_files (id, quote_id, original_filename, disk_filename, storage_url, mime_type, file_size, file_data, uploaded_at)
+                            VALUES (?, ?, ?, ?, ?, 'application/octet-stream', ?, ?, ?)
+                        ''', (
+                            f'file_{uuid.uuid4().hex[:8]}',
+                            q['id'],
+                            safe_name,
+                            disk_filename,
+                            f'/api/files/{disk_filename}',
+                            f'{round(len(file_data)/(1024*1024), 2)} MB',
+                            encoded_blob,
+                            time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
+                        ))
 
                 return self.send_json(200, {
                     'success': True,
@@ -810,6 +984,42 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
                 })
             except Exception as e:
                 return self.send_json(400, {'error': f'Upload failed: {e}'})
+
+        # Contact Form Endpoint
+        if path == '/api/contact':
+            payload = self.read_json_body()
+            c_name = payload.get('name', 'Visitante').strip()
+            c_email = payload.get('email', '').strip()
+            c_subject = payload.get('subject', 'Contacto Geral').strip()
+            c_message = payload.get('message', '').strip()
+
+            if ADMIN_ALERT_EMAIL:
+                send_resend_email_async(
+                    ADMIN_ALERT_EMAIL,
+                    f'[Contacto Website] {c_subject} — {c_name}',
+                    build_email_card(
+                        f'Nova Mensagem de Contacto: {c_subject}',
+                        f'De: {c_name} ({c_email})',
+                        f'<p style="white-space:pre-line;">{c_message}</p>',
+                        f'Responder a {c_name}',
+                        f'mailto:{c_email}'
+                    ),
+                    reply_to=c_email or None
+                )
+            if c_email and '@' in c_email:
+                send_resend_email_async(
+                    c_email,
+                    'Recebemos a sua mensagem — Layer Studios',
+                    build_email_card(
+                        'Mensagem Recebida',
+                        f'Olá {c_name}, obrigado por contactar a Layer Studios.',
+                        '<p>A nossa equipa técnica recebeu a sua mensagem e responderá no prazo máximo de 24 horas úteis.</p>',
+                        'Visitar Layer Studios',
+                        BASE_URL
+                    ),
+                    reply_to=ADMIN_ALERT_EMAIL
+                )
+            return self.send_json(200, {'success': True, 'message': 'Mensagem enviada com sucesso! Responderemos em menos de 24 horas.'})
 
         # Validate Promo
         if path == '/api/validate-promo':
@@ -956,8 +1166,25 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
             if not quote:
                 return self.send_json(404, {'error': 'Quote not found'})
 
-            db.update_quote(quote['id'], {k: v for k, v in payload.items() if k != 'id'})
-            return self.send_json(200, {'success': True, 'quote': db.get_quote_by_id_or_ref(quote['id'])})
+            updated_quote = db.update_quote(quote['id'], {k: v for k, v in payload.items() if k != 'id'})
+            if updated_quote and ('status' in payload or 'final_price' in payload):
+                ref_id = updated_quote.get('public_reference') or updated_quote['id']
+                cust_email = (updated_quote.get('guest_email') or '').strip()
+                if cust_email:
+                    send_resend_email_async(
+                        cust_email,
+                        f'Atualização do Pedido {ref_id}: {updated_quote.get("status")} — Layer Studios',
+                        build_email_card(
+                            f'Pedido {ref_id} Atualizado',
+                            f'Novo estado: {updated_quote.get("status")}',
+                            f'<p>O seu projeto <strong>{updated_quote.get("project_name")}</strong> foi atualizado pela nossa equipa.</p>'
+                            f'<p><strong>Valor Final:</strong> €{float(updated_quote.get("final_price", 0)):.2f}</p>',
+                            'Ver Estado & Pagamento',
+                            f'{BASE_URL}/track?id={ref_id}'
+                        ),
+                        reply_to=ADMIN_ALERT_EMAIL
+                    )
+            return self.send_json(200, {'success': True, 'quote': updated_quote})
 
         if path == '/api/orders' or path.startswith('/api/orders/'):
             payload = self.read_json_body()
@@ -966,8 +1193,25 @@ class LayerStudiosHandler(SimpleHTTPRequestHandler):
             if not order:
                 return self.send_json(404, {'error': 'Order not found'})
 
-            db.update_order(order['id'], {k: v for k, v in payload.items() if k != 'id'})
-            return self.send_json(200, {'success': True, 'order': db.get_order_by_id_or_ref(order['id'])})
+            updated_order = db.update_order(order['id'], {k: v for k, v in payload.items() if k != 'id'})
+            if updated_order and ('status' in payload or 'tracking_number' in payload):
+                ref_id = updated_order.get('public_reference') or updated_order['id']
+                cust_email = (updated_order.get('email') or '').strip()
+                if cust_email:
+                    tracking_info = f'<p><strong>Código de Seguimento ({updated_order.get("carrier", "CTT")}):</strong> {updated_order.get("tracking_number")}</p>' if updated_order.get('tracking_number') and updated_order.get('tracking_number') != 'GENERATING' else ''
+                    send_resend_email_async(
+                        cust_email,
+                        f'Encomenda {ref_id}: {updated_order.get("status")} — Layer Studios',
+                        build_email_card(
+                            f'Encomenda {ref_id} Atualizada',
+                            f'Novo estado: {updated_order.get("status")}',
+                            f'<p>A sua encomenda avançou para a etapa <strong>{updated_order.get("status")}</strong>.</p>{tracking_info}',
+                            'Acompanhar Encomenda',
+                            f'{BASE_URL}/track?id={ref_id}'
+                        ),
+                        reply_to=ADMIN_ALERT_EMAIL
+                    )
+            return self.send_json(200, {'success': True, 'order': updated_order})
 
         return self.send_json(404, {'error': 'Endpoint not found'})
 
