@@ -99,19 +99,19 @@ class LayerStudiosViewer {
   }
 
   setupLighting() {
-    this.scene.add(new THREE.HemisphereLight(0xe0f2fe, 0x1e293b, 0.85));
+    this.scene.add(new THREE.HemisphereLight(0xffffff, 0xcbd5e1, 0.92));
 
-    const key = new THREE.DirectionalLight(0xf8fafc, 1.05); // natural studio key light
+    const key = new THREE.DirectionalLight(0xffffff, 0.95); // natural daylight studio key
     key.position.set(220, 320, 180);
     key.castShadow = true;
     key.shadow.mapSize.set(1024, 1024);
     this.scene.add(key);
 
-    const fill = new THREE.DirectionalLight(0x60a5fa, 0.65); // sky-blue studio fill
+    const fill = new THREE.DirectionalLight(0x93c5fd, 0.55); // soft sky studio fill
     fill.position.set(-220, 180, -140);
     this.scene.add(fill);
 
-    const rim = new THREE.DirectionalLight(0x818cf8, 0.4); // soft indigo rim
+    const rim = new THREE.DirectionalLight(0x60a5fa, 0.35); // gentle rim
     rim.position.set(0, -90, 150);
     this.scene.add(rim);
   }
@@ -120,14 +120,14 @@ class LayerStudiosViewer {
     const S = this.options.gridSize; // 256
     const DIV = 16; // 16mm per cell → 16 cells per 256mm
 
-    // Grid lines (crisp sky-blue center & slate-600 subdivisions)
-    const grid = new THREE.GridHelper(S, DIV, 0x38bdf8, 0x334155);
-    grid.position.y = 0.05;
+    // Grid lines (crisp royal-blue center & slate-400 subdivisions)
+    const grid = new THREE.GridHelper(S, DIV, 0x2563eb, 0x94a3b8);
+    grid.position.y = 0.06;
     this.scene.add(grid);
 
-    // Textured Slate PEI Plate surface
+    // Brushed Aluminum / Light Slate Engineering Plate surface
     const plateGeo = new THREE.BoxGeometry(S, 2.0, S);
-    const plateMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.72, metalness: 0.22 });
+    const plateMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.65, metalness: 0.12 });
     const plate = new THREE.Mesh(plateGeo, plateMat);
     plate.position.y = -1.0;
     plate.receiveShadow = true;

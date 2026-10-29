@@ -1,19 +1,22 @@
-/* Layer Studios - Clean Premium Theme */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+/* Layer Studios - Clean, User-Friendly & Professional Studio Theme */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
 :root {
-  --bg-dark: #0f172a;
-  --bg-card: #1e293b;
-  --bg-card-hover: #26354d;
-  --border-subtle: rgba(148, 163, 184, 0.16);
-  --border-active: #3b82f6;
-  --accent-cyan: #38bdf8;
-  --accent-blue: #3b82f6;
-  --accent-glow: rgba(59, 130, 246, 0.18);
-  --accent-orange: #f59e0b;
-  --text-main: #f8fafc;
-  --text-muted: #cbd5e1;
-  --text-dim: #94a3b8;
+  --bg-page: #f8fafc;
+  --bg-page-alt: #f1f5f9;
+  --bg-card: #ffffff;
+  --bg-card-subtle: #f8fafc;
+  --border-subtle: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --border-active: #2563eb;
+  --accent-cyan: #0284c7;
+  --accent-blue: #2563eb;
+  --accent-glow: rgba(37, 99, 235, 0.12);
+  --accent-orange: #ea580c;
+  --text-main: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #475569;
+  --text-dim: #64748b;
 }
 
 * {
@@ -23,9 +26,9 @@
 html {
   scroll-behavior: smooth;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background-color: #0f172a;
-  color: var(--text-main);
-  color-scheme: dark;
+  background-color: #f8fafc;
+  color: #0f172a;
+  color-scheme: light;
 }
 
 /* Monospace font for telemetry, metrics, dimensions */
@@ -33,116 +36,264 @@ html {
   font-family: 'JetBrains Mono', monospace;
 }
 
-/* Friendly, Professional Studio Background across all pages */
+/* ==========================================================================
+   1. SMOOTH, STRIPE-FREE STUDIO DAYLIGHT BACKGROUND (ALL PAGES)
+   ========================================================================== */
 body,
 body.bg-\[\#09090b\],
-body.bg-slate-950 {
-  background-color: #0f172a !important;
-  background-image:
-    radial-gradient(ellipse 80% 50% at 15% -5%, rgba(59, 130, 246, 0.19), transparent 65%),
-    radial-gradient(ellipse 70% 50% at 85% 10%, rgba(14, 165, 233, 0.14), transparent 65%),
-    radial-gradient(ellipse 90% 60% at 50% 55%, rgba(99, 102, 241, 0.09), transparent 70%),
-    linear-gradient(180deg, #0f172a 0%, #142038 48%, #0f172a 100%) !important;
-  background-attachment: fixed;
-}
-
-/* Subtle architectural studio grid + ambient light */
+body.bg-\[\#0f172a\],
+body.bg-slate-950,
 .cad-grid {
-  background-color: #0f172a !important;
-  background-size: 100% 100%, 100% 100%, 100% 100%, 40px 40px, 40px 40px, 100% 100%;
+  background-color: #f8fafc !important;
   background-image:
-    radial-gradient(ellipse 80% 50% at 15% -5%, rgba(59, 130, 246, 0.19), transparent 65%),
-    radial-gradient(ellipse 70% 50% at 85% 10%, rgba(14, 165, 233, 0.14), transparent 65%),
-    radial-gradient(ellipse 90% 60% at 50% 55%, rgba(99, 102, 241, 0.09), transparent 70%),
-    linear-gradient(to right, rgba(148, 163, 184, 0.055) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(148, 163, 184, 0.055) 1px, transparent 1px),
-    linear-gradient(180deg, #0f172a 0%, #142038 48%, #0f172a 100%) !important;
-  background-attachment: fixed;
+    radial-gradient(1100px circle at 12% 4%, rgba(37, 99, 235, 0.08), transparent 60%),
+    radial-gradient(950px circle at 88% 8%, rgba(14, 165, 233, 0.07), transparent 55%),
+    radial-gradient(1200px circle at 50% 60%, rgba(99, 102, 241, 0.04), transparent 65%),
+    linear-gradient(180deg, #f8fafc 0%, #f1f5f9 55%, #f8fafc 100%) !important;
+  background-size: 100% 100% !important;
+  background-repeat: no-repeat !important;
+  background-attachment: fixed !important;
+  color: #0f172a !important;
 }
 
 .cad-grid-dense {
-  background-size: 24px 24px;
-  background-image: 
-    linear-gradient(to right, rgba(148, 163, 184, 0.05) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(148, 163, 184, 0.05) 1px, transparent 1px);
+  background-image: none !important;
 }
 
-/* Soften harsh pure-black utility classes into warm studio slate */
-.bg-\[\#09090b\],
-.bg-\[\#05080f\] {
-  background-color: #131e35 !important;
-}
-
-.bg-\[\#111114\],
-.bg-slate-950\/80,
-.bg-slate-950\/70,
-.bg-slate-950\/60 {
-  background-color: rgba(24, 36, 60, 0.80) !important;
-  border-color: rgba(148, 163, 184, 0.18) !important;
-}
-
+/* ==========================================================================
+   2. NAVBAR & NAVIGATION SURFACES
+   ========================================================================== */
 #main-header {
-  background-color: rgba(15, 23, 42, 0.82) !important;
-  border-bottom-color: rgba(148, 163, 184, 0.16) !important;
+  background-color: rgba(255, 255, 255, 0.88) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  box-shadow: 0 4px 24px -4px rgba(15, 23, 42, 0.05) !important;
 }
 
-/* Glassmorphism - Warmer, elevated frosted studio cards */
-.glass-panel {
-  background: linear-gradient(165deg, rgba(30, 41, 59, 0.84) 0%, rgba(18, 27, 46, 0.88) 100%) !important;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(148, 163, 184, 0.18) !important;
-  box-shadow: 0 20px 45px -15px rgba(2, 6, 23, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.09);
+#mobile-menu-drawer {
+  background-color: #ffffff !important;
+  border-left: 1px solid #e2e8f0 !important;
+}
+
+/* ==========================================================================
+   3. ELEVATED WHITE CARDS, SECTIONS & GLASS PANELS
+   ========================================================================== */
+.glass-panel,
+.bg-slate-950\/80,
+.bg-slate-950\/90,
+.bg-slate-900\/80,
+.bg-slate-900\/70,
+.bg-slate-900\/60,
+.bg-\[\#111114\] {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 12px 32px -8px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.03) !important;
 }
 
 .glass-panel-hover {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .glass-panel-hover:hover {
-  border-color: rgba(255, 255, 255, 0.15);
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.4);
-  transform: translateY(-2px);
+  border-color: #93c5fd !important;
+  box-shadow: 0 20px 40px -12px rgba(37, 99, 235, 0.12), 0 4px 12px -2px rgba(15, 23, 42, 0.05) !important;
+  transform: translateY(-3px);
 }
 
-/* Layer Slicing Animation Effect */
-@keyframes layerScan {
-  0% { transform: translateY(0%); opacity: 0.1; }
-  50% { opacity: 0.8; }
-  100% { transform: translateY(100%); opacity: 0.1; }
+/* Section band backgrounds */
+.bg-slate-950\/40,
+.bg-slate-950\/60,
+.bg-slate-900\/30,
+.bg-slate-900\/40 {
+  background-color: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
 }
 
-.layer-scanner-line {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, #60a5fa, transparent);
-  box-shadow: 0 0 10px #60a5fa;
-  animation: layerScan 4s linear infinite;
+/* Secondary inner surfaces, inputs, selects, pills */
+.bg-slate-900,
+.bg-slate-900\/90,
+.bg-slate-950,
+.bg-\[\#09090b\],
+.bg-\[\#05080f\] {
+  background-color: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
 }
 
-/* Gradient text utility */
-.text-gradient {
-  background: linear-gradient(135deg, #FFFFFF 20%, #a1a1aa 60%, #60a5fa 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+.bg-slate-800,
+.bg-slate-800\/80,
+.bg-slate-800\/60,
+.bg-slate-800\/50 {
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  color: #1e293b !important;
 }
 
+.hover\:bg-slate-800:hover,
+.hover\:bg-slate-900:hover,
+.hover\:bg-slate-900\/60:hover {
+  background-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+/* Gradient banner cards (Portfolio headers, B2B banner, etc.) */
+.from-slate-900 {
+  background: linear-gradient(135deg, #eff6ff 0%, #f8fafc 60%, #e0f2fe 100%) !important;
+}
+
+/* Form inputs & textareas */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+select,
+textarea {
+  background-color: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #0f172a !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+}
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus,
+select:focus,
+textarea:focus {
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
+  outline: none !important;
+}
+input::placeholder,
+textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Borders */
+.border-slate-800,
+.border-slate-800\/80,
+.border-slate-800\/60,
+.border-slate-700,
+.border-slate-700\/80 {
+  border-color: #e2e8f0 !important;
+}
+
+/* ==========================================================================
+   4. TYPOGRAPHY & READABILITY (HIGH CONTRAST ON LIGHT STUDIO)
+   ========================================================================== */
+.text-white,
+.text-slate-100,
+.text-slate-200,
+.text-\[\#fafafa\] {
+  color: #0f172a !important;
+}
+
+.text-slate-300 {
+  color: #334155 !important;
+}
+
+.text-slate-400 {
+  color: #475569 !important;
+}
+
+.text-slate-500,
+.text-slate-600 {
+  color: #64748b !important;
+}
+
+.text-blue-400,
+.text-blue-300 {
+  color: #2563eb !important;
+}
+
+.text-emerald-400 {
+  color: #059669 !important;
+}
+
+.text-amber-400,
+.text-amber-300 {
+  color: #d97706 !important;
+}
+
+/* Keep white text inside solid primary buttons, badges, and gradient logos */
+.bg-blue-500,
+.bg-blue-500 *,
+.bg-blue-600,
+.bg-blue-600 *,
+.bg-emerald-500,
+.bg-emerald-500 *,
+.bg-emerald-600,
+.bg-emerald-600 *,
+.bg-red-500,
+.bg-red-500 *,
+.bg-red-600,
+.bg-red-600 *,
+.bg-amber-500,
+.bg-amber-500 *,
+.bg-indigo-600,
+.bg-indigo-600 *,
+.from-blue-500,
+.from-blue-500 *,
+.from-blue-600,
+.from-blue-600 *,
+.portfolio-filter.active {
+  color: #ffffff !important;
+}
+
+.bg-blue-500 {
+  background-color: #2563eb !important;
+}
+.bg-blue-500:hover,
+.hover\:bg-blue-400:hover {
+  background-color: #1d4ed8 !important;
+}
+
+/* Status & Fit Badges inside 3D Viewer */
+.bg-emerald-950\/80,
+.bg-emerald-950\/90 {
+  background-color: rgba(236, 253, 245, 0.95) !important;
+  border-color: rgba(16, 185, 129, 0.4) !important;
+  color: #047857 !important;
+}
+.bg-emerald-950\/80 *,
+.bg-emerald-950\/90 * {
+  color: #047857 !important;
+}
+
+.bg-red-950\/80,
+.bg-red-950\/90 {
+  background-color: rgba(254, 242, 242, 0.95) !important;
+  border-color: rgba(239, 68, 68, 0.4) !important;
+  color: #b91c1c !important;
+}
+.bg-red-950\/80 *,
+.bg-red-950\/90 * {
+  color: #b91c1c !important;
+}
+
+.bg-blue-950\/90,
+.bg-blue-950\/40,
+.bg-blue-950\/20 {
+  background-color: rgba(239, 246, 255, 0.92) !important;
+  border-color: rgba(59, 130, 246, 0.3) !important;
+  color: #1d4ed8 !important;
+}
+
+/* Hero Headline Gradient ("Nós imprimimos.") */
+.text-gradient,
 .text-gradient-cyan {
-  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 50%, #2563eb 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  background: linear-gradient(135deg, #2563eb 0%, #0284c7 55%, #4f46e5 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
 }
 
-/* Custom 3D Viewport styling - Clean Studio Radial Backdrop */
-#hero-canvas, #quote-3d-canvas, #modal-3d-canvas {
+/* ==========================================================================
+   5. 3D CAD VIEWPORT (CLEAN ENGINEERING STUDIO BACKDROP)
+   ========================================================================== */
+#hero-canvas,
+#quote-3d-canvas,
+#modal-3d-canvas {
   width: 100%;
   height: 100%;
   touch-action: none;
   cursor: grab;
-  background: radial-gradient(circle at 50% 38%, #24344d 0%, #162238 55%, #0f172a 100%);
+  background: radial-gradient(circle at 50% 42%, #ffffff 0%, #f1f5f9 62%, #e2e8f0 100%) !important;
 }
-#hero-canvas:active, #quote-3d-canvas:active {
+#hero-canvas:active,
+#quote-3d-canvas:active {
   cursor: grabbing;
 }
 
@@ -152,20 +303,20 @@ body.bg-slate-950 {
   height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #0f172a;
+  background: #f1f5f9;
 }
 ::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: #cbd5e1;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: #94a3b8;
 }
 
 /* Custom Range Slider */
 input[type=range] {
   -webkit-appearance: none;
-  background: #27272a;
+  background: #cbd5e1 !important;
   height: 6px;
   border-radius: 3px;
   outline: none;
@@ -175,20 +326,20 @@ input[type=range]::-webkit-slider-thumb {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: #3b82f6;
-  box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
+  background: #2563eb;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.35);
   cursor: pointer;
-  border: 2px solid #09090b;
+  border: 2px solid #ffffff;
   transition: transform 0.15s ease;
 }
 input[type=range]::-webkit-slider-thumb:hover {
-  transform: scale(1.2);
+  transform: scale(1.18);
 }
 
 /* Dropzone dragover highlight */
 .dropzone.drag-active {
-  border-color: #3b82f6 !important;
-  background: rgba(59, 130, 246, 0.06) !important;
+  border-color: #2563eb !important;
+  background: rgba(37, 99, 235, 0.05) !important;
 }
 
 /* Live pulse radar indicator */
@@ -216,66 +367,53 @@ input[type=range]::-webkit-slider-thumb:hover {
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Badge glow */
-.badge-glow-cyan {
-  box-shadow: 0 0 8px rgba(59, 130, 246, 0.25);
-}
-
-/* Print Quality Visualizer lines */
-.layer-line-fine { height: 1.2px; background: rgba(96, 165, 250, 0.85); margin-bottom: 1.2px; }
-.layer-line-std  { height: 2.0px; background: rgba(96, 165, 250, 0.70); margin-bottom: 2.0px; }
-.layer-line-draft{ height: 2.8px; background: rgba(96, 165, 250, 0.55); margin-bottom: 2.8px; }
-
 /* Tooltip */
 .tooltip-trigger:hover .tooltip-body {
   visibility: visible;
   opacity: 1;
 }
 
-/* =========================================================
-   STORE THEMES: STUDIO MINIMAL (LUXURY) vs CAD TECHNICAL
-   ========================================================= */
-
-/* Store Section Transition */
+/* ==========================================================================
+   6. STORE CATALOG CARDS (CLEAN STUDIO E-COMMERCE)
+   ========================================================================== */
 #store {
-  transition: background-color 0.4s ease, border-color 0.4s ease;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
-/* 1. STUDIO MINIMAL (LUXURY & SIMPLE THEME) */
-.store-theme-minimal {
+.store-theme-minimal,
+.store-theme-cad {
   background-color: transparent !important;
 }
 
 .store-theme-minimal .store-luxury-card {
-  background: linear-gradient(180deg, rgba(30, 41, 59, 0.78) 0%, rgba(17, 25, 42, 0.92) 100%);
-  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
   border-radius: 1.25rem;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 10px 25px -8px rgba(15, 23, 42, 0.06);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .store-theme-minimal .store-luxury-card:hover {
-  border-color: rgba(255, 255, 255, 0.22);
+  border-color: #93c5fd !important;
   transform: translateY(-4px);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 30px rgba(255, 255, 255, 0.03);
+  box-shadow: 0 20px 40px -12px rgba(37, 99, 235, 0.12) !important;
 }
 
 .store-theme-minimal .store-card-img-wrap {
-  background: radial-gradient(circle at 50% 50%, rgba(30, 35, 48, 0.5) 0%, rgba(9, 11, 16, 0.95) 100%);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: radial-gradient(circle at 50% 50%, #ffffff 0%, #f1f5f9 100%) !important;
+  border-bottom: 1px solid #e2e8f0 !important;
 }
 
 .store-theme-minimal .store-pill-badge {
-  background: rgba(255, 255, 255, 0.06);
-  color: #e2e8f0;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #f1f5f9 !important;
+  color: #334155 !important;
+  border: 1px solid #cbd5e1 !important;
   font-family: 'Inter', sans-serif;
   letter-spacing: 0.04em;
 }
 
 .store-theme-minimal .store-category-tag {
-  color: #94a3b8;
+  color: #64748b !important;
   font-family: 'Inter', sans-serif;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -284,57 +422,51 @@ input[type=range]::-webkit-slider-thumb:hover {
 }
 
 .store-theme-minimal .store-card-title {
-  color: #ffffff;
+  color: #0f172a !important;
   font-family: 'Inter', sans-serif;
   font-weight: 700;
   letter-spacing: -0.02em;
 }
 
 .store-theme-minimal .store-card-price {
-  color: #ffffff;
+  color: #0f172a !important;
   font-family: 'Inter', sans-serif;
   font-weight: 800;
   letter-spacing: -0.03em;
 }
 
 .store-theme-minimal .store-card-btn {
-  background: #ffffff;
-  color: #09090b;
+  background: #2563eb !important;
+  color: #ffffff !important;
   font-family: 'Inter', sans-serif;
   font-weight: 700;
   border: none;
-  box-shadow: 0 4px 14px rgba(255, 255, 255, 0.12);
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .store-theme-minimal .store-card-btn:hover {
-  background: #f1f5f9;
+  background: #1d4ed8 !important;
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(255, 255, 255, 0.22);
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.35);
 }
 
-/* Category Filter Active in Minimal Theme */
 .store-theme-minimal .store-filter-btn.active {
-  background: #ffffff !important;
-  color: #09090b !important;
-  border-color: #ffffff !important;
+  background: #2563eb !important;
+  color: #ffffff !important;
+  border-color: #2563eb !important;
   font-weight: 700 !important;
-  box-shadow: 0 4px 15px rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2) !important;
 }
 
 .store-theme-minimal .store-filter-btn:not(.active) {
-  background: rgba(255, 255, 255, 0.03) !important;
-  color: #94a3b8 !important;
-  border-color: rgba(255, 255, 255, 0.08) !important;
+  background: #ffffff !important;
+  color: #475569 !important;
+  border-color: #cbd5e1 !important;
 }
 
 .store-theme-minimal .store-filter-btn:not(.active):hover {
-  background: rgba(255, 255, 255, 0.08) !important;
-  color: #ffffff !important;
-  border-color: rgba(255, 255, 255, 0.18) !important;
-}
-
-/* 2. CAD BLUEPRINT / TECHNICAL THEME (Original High-Tech Dark) */
-.store-theme-cad {
-  background-color: #090E1A !important;
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+  border-color: #94a3b8 !important;
 }
