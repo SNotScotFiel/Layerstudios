@@ -1011,27 +1011,68 @@ class LayerStudiosSupportChat {
     });
   }
 
+  smoothScrollToBottom() {
+    const container = document.getElementById('ls-chat-messages');
+    if (!container) return;
+    requestAnimationFrame(() => {
+      container.scrollTo({
+        top: container.scrollHeight,
+        behavior: 'smooth'
+      });
+    });
+  }
+
   appendUserMessage(text) {
+    if (!text) return;
     const container = document.getElementById('ls-chat-messages');
     if (!container) return;
     const div = document.createElement('div');
-    div.className = 'flex justify-end';
+    div.className = 'flex justify-end ls-msg-user-enter';
     const bubble = document.createElement('div');
-    bubble.className = 'p-3 rounded-2xl rounded-tr-sm bg-blue-500 text-white max-w-[85%] leading-relaxed shadow-sm';
+    bubble.className = 'px-3.5 py-2.5 rounded-2xl rounded-br-sm bg-blue-500 text-white max-w-[85%] leading-relaxed shadow-md shadow-blue-500/15';
     bubble.textContent = text;
     div.appendChild(bubble);
     container.appendChild(div);
-    container.scrollTop = container.scrollHeight;
+    this.smoothScrollToBottom();
   }
 
   appendBotMessage(html) {
     const container = document.getElementById('ls-chat-messages');
     if (!container) return;
     const div = document.createElement('div');
-    div.className = 'ls-chat-bot-bubble p-3.5 rounded-2xl rounded-tl-sm bg-slate-800/90 border border-slate-700/80 text-slate-200 leading-relaxed space-y-1.5';
+    div.className = 'ls-chat-bot-bubble ls-msg-bot-enter p-3.5 rounded-2xl rounded-bl-sm bg-slate-800/90 border border-slate-700/80 text-slate-200 leading-relaxed space-y-1.5 shadow-sm';
     div.innerHTML = html;
     container.appendChild(div);
-    container.scrollTop = container.scrollHeight;
+    this.smoothScrollToBottom();
+  }
+
+  showTypingIndicator() {
+    const container = document.getElementById('ls-chat-messages');
+    if (!container) return null;
+    this.removeTypingIndicator();
+    const div = document.createElement('div');
+    div.id = 'ls-chat-typing-bubble';
+    div.className = 'ls-chat-bot-bubble ls-msg-bot-enter px-3.5 py-3 rounded-2xl rounded-bl-sm bg-slate-800/90 border border-slate-700/80 w-fit shadow-sm';
+    div.innerHTML = '<div class="ls-typing-dots"><span></span><span></span><span></span></div>';
+    container.appendChild(div);
+    this.smoothScrollToBottom();
+    return div;
+  }
+
+  removeTypingIndicator() {
+    const existing = document.getElementById('ls-chat-typing-bubble');
+    if (existing) existing.remove();
+  }
+
+  replyWithTyping(html, delayMs = 540, afterCallback = null) {
+    setTimeout(() => {
+      this.showTypingIndicator();
+      setTimeout(() => {
+        this.removeTypingIndicator();
+        this.appendBotMessage(html);
+        if (typeof afterCallback === 'function') afterCallback();
+      }, delayMs);
+    }, 150);
   }
 
   openTicketForm(prefillText = '') {
@@ -1043,24 +1084,31 @@ class LayerStudiosSupportChat {
       if (prefillText) {
         document.getElementById('ls-ticket-msg').value = prefillText;
       }
-      document.getElementById('ls-ticket-email')?.focus();
+      setTimeout(() => document.getElementById('ls-ticket-email')?.focus(), 180);
     }
   }
 
   handleChip(chip, label) {
     if (chip === 'human') {
-      this.openTicketForm();
+      if (label) this.appendUserMessage(label);
+      this.replyWithTyping(
+        this.isPt
+          ? `👨‍🔧 Claro! Preencha o seu email e a sua questão aqui em baixo — a nossa equipa técnica responde diretamente para o seu email:`
+          : `👨‍🔧 Of course! Fill in your email and question below — our engineering team will reply directly to your inbox:`,
+        420,
+        () => this.openTicketForm()
+      );
       return;
     }
-    this.appendUserMessage(label);
+    if (label) this.appendUserMessage(label);
     if (chip === 'track') {
-      this.appendBotMessage(
+      this.replyWithTyping(
         this.isPt
           ? `📦 Escreva aqui em baixo o seu código de referência (ex: <code>LS-...</code>) e eu consulto o estado em direto!<br><span class="text-[11px] text-slate-400">Ou abra a página <a href="/track" class="text-blue-400 underline font-semibold">Seguir Encomenda →</a></span>`
           : `📦 Type your order or quote reference below (e.g. <code>LS-...</code>) and I'll look up its live status!`
       );
     } else if (chip === 'materials') {
-      this.appendBotMessage(
+      this.replyWithTyping(
         this.isPt
           ? `🧪 <strong>Guia Rápido de Materiais:</strong><br>
              • <strong>PLA+:</strong> Económico, acabamento super nítido, ideal para protótipos visuais.<br>
@@ -1072,7 +1120,7 @@ class LayerStudiosSupportChat {
           : `🧪 <strong>Material Quick Guide:</strong><br>• <strong>PLA+:</strong> Crisp detail & economical.<br>• <strong>PETG:</strong> Tough, weather & heat resistant (up to 75°C).<br>• <strong>ABS/ASA:</strong> High temp (100°C) & UV stable.<br>• <strong>TPU 95A:</strong> Flexible & shock-absorbing.<br>• <strong>CF-Nylon:</strong> Carbon-fiber reinforced strength.`
       );
     } else if (chip === 'cad') {
-      this.appendBotMessage(
+      this.replyWithTyping(
         this.isPt
           ? `📐 <strong>Formatos 3D & Desenho CAD:</strong><br>
              • No nosso <a href="/quote" class="text-blue-400 underline font-semibold">Slicer 3D Online</a> pode carregar <code>.STL</code>, <code>.3MF</code> e <code>.OBJ</code> com cálculo automático de volume e separação de peças.<br>
@@ -1081,7 +1129,7 @@ class LayerStudiosSupportChat {
           : `📐 <strong>3D Formats & CAD Service:</strong><br>Upload <code>.STL</code>, <code>.3MF</code>, <code>.OBJ</code>, or <code>.STEP</code> in our <a href="/quote" class="text-blue-400 underline font-semibold">Instant 3D Slicer</a>. Need CAD modeling? Select <em>"I need it designed"</em> on the Quote page!`
       );
     } else if (chip === 'pricing') {
-      this.appendBotMessage(
+      this.replyWithTyping(
         this.isPt
           ? `💶 <strong>Preços, Descontos de Lote e Envios:</strong><br>
              • O preço é calculado na hora em <a href="/quote" class="text-blue-400 underline font-semibold">Pedir Orçamento</a> conforme o volume (cm³), material e infill.<br>
@@ -1099,10 +1147,14 @@ class LayerStudiosSupportChat {
     const refMatch = upper.match(/\b(LS-[A-Z0-9-]+)\b/);
     if (refMatch) {
       const refId = refMatch[1];
-      this.appendBotMessage(this.isPt ? `🔍 A procurar o pedido <code>${refId}</code>...` : `🔍 Looking up <code>${refId}</code>...`);
+      this.showTypingIndicator();
       try {
-        const res = await fetch(`/api/track/${encodeURIComponent(refId)}`);
+        const [res] = await Promise.all([
+          fetch(`/api/track/${encodeURIComponent(refId)}`),
+          new Promise(r => setTimeout(r, 480))
+        ]);
         const payload = await res.json();
+        this.removeTypingIndicator();
         if (res.ok && payload && payload.data) {
           const d = payload.data;
           const isPaid = String(d.paymentStatus || '').toLowerCase() === 'paid';
@@ -1133,7 +1185,9 @@ class LayerStudiosSupportChat {
           );
           return;
         }
-      } catch (e) {}
+      } catch (e) {
+        this.removeTypingIndicator();
+      }
     }
 
     const lower = text.toLowerCase();
@@ -1150,7 +1204,7 @@ class LayerStudiosSupportChat {
       return;
     }
     if (lower.includes('envio') || lower.includes('porte') || lower.includes('ctt') || lower.includes('prazo') || lower.includes('entrega')) {
-      this.appendBotMessage(
+      this.replyWithTyping(
         this.isPt
           ? `🚚 <strong>Envios e Prazos:</strong><br>• <strong>Portugal Continental:</strong> €4.50 (Grátis ≥ €50) · 24–48h úteis via CTT Expresso.<br>• <strong>Ilhas:</strong> €6.90 · <strong>União Europeia:</strong> €9.90.<br>• Produção padrão em 2–4 dias úteis (ou Urgente 24–48h).`
           : `🚚 <strong>Shipping & Lead Times:</strong><br>Portugal Mainland €4.50 (Free ≥ €50, 24–48h CTT). Islands €6.90, EU €9.90. Standard production takes 2–4 business days.`
@@ -1159,11 +1213,12 @@ class LayerStudiosSupportChat {
     }
 
     // Default: offer to send their exact message directly to the engineering team or WhatsApp
-    this.appendBotMessage(
+    this.replyWithTyping(
       this.isPt
         ? `Posso encaminhar já a sua mensagem <em>"${text.replace(/</g, '&lt;')}"</em> diretamente para o nosso engenheiro responder por email, ou pode falar connosco no WhatsApp:`
-        : `I can forward your message directly to our engineer for a fast email reply, or you can message us on WhatsApp:`
+        : `I can forward your message directly to our engineer for a fast email reply, or you can message us on WhatsApp:`,
+      480,
+      () => this.openTicketForm(text)
     );
-    this.openTicketForm(text);
   }
 }
