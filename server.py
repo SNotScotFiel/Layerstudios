@@ -95,6 +95,19 @@ def send_resend_email_async(to_email, subject, html_body, reply_to=None, idempot
                     time.sleep(min(retry_after, 5.0))
                     continue
                 print(f'[Email Warning] HTTP {he.code} sending email to {to_email}')
+                if he.code == 403 and to_email == ADMIN_ALERT_EMAIL and to_email != 'luckypt846@gmail.com':
+                    # Fallback to Resend account owner email while domain is unverified
+                    payload['to'] = ['luckypt846@gmail.com']
+                    body_bytes = json.dumps(payload).encode('utf-8')
+                    try:
+                        req_fb = urllib.request.Request('https://api.resend.com/emails', data=body_bytes, method='POST')
+                        req_fb.add_header('Authorization', f'Bearer {RESEND_API_KEY}')
+                        req_fb.add_header('Content-Type', 'application/json')
+                        req_fb.add_header('User-Agent', 'LayerStudios/2.0')
+                        with urllib.request.urlopen(req_fb, context=ssl_ctx, timeout=12) as res_fb:
+                            res_fb.read()
+                    except Exception:
+                        pass
                 return
             except Exception as err:
                 if attempt < 2:
