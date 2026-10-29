@@ -672,5 +672,95 @@ if (typeof window !== 'undefined') {
 
       langBtn.parentElement.insertBefore(themeBtn, langBtn);
     }
+
+    // Laser Slicer / Studio Curtain Page Transition Controller
+    let curtain = document.getElementById('ls-slicer-curtain');
+    if (!curtain) {
+      curtain = document.createElement('div');
+      curtain.id = 'ls-slicer-curtain';
+      curtain.innerHTML = `
+        <div class="ls-laser-top"></div>
+        <div class="ls-curtain-badge">
+          <span class="w-2 h-2 rounded-full bg-blue-400 animate-ping"></span>
+          <span id="ls-curtain-label">LAYER STUDIOS // 0.20mm SLICER</span>
+        </div>
+        <div class="ls-laser-beam"></div>
+      `;
+      document.body.appendChild(curtain);
+    }
+
+    // Check if arriving from an internal Laser Slicer transition
+    try {
+      const pendingLabel = sessionStorage.getItem('ls_slicer_transition');
+      if (pendingLabel) {
+        sessionStorage.removeItem('ls_slicer_transition');
+        const labelEl = document.getElementById('ls-curtain-label');
+        if (labelEl) labelEl.textContent = pendingLabel;
+        document.body.classList.add('ls-page-entering');
+        curtain.classList.remove('is-sweeping-in');
+        curtain.classList.add('is-sweeping-out');
+        setTimeout(() => {
+          curtain.classList.remove('is-sweeping-out');
+          document.body.classList.remove('ls-page-entering');
+        }, 520);
+      }
+    } catch (e) {}
+
+    window.addEventListener('pageshow', (evt) => {
+      if (evt.persisted && curtain) {
+        curtain.classList.remove('is-sweeping-in', 'is-sweeping-out');
+      }
+    });
+
+    const getRouteLabel = (pathname) => {
+      const p = (pathname || '/').toLowerCase();
+      if (p.includes('/quote')) return 'SLICER 3D // ORÇAMENTO IMEDIATO';
+      if (p.includes('/store')) return 'LAYER STUDIOS // CATÁLOGO LOJA';
+      if (p.includes('/materials')) return 'ENGENHARIA // GUIA DE MATERIAIS';
+      if (p.includes('/track')) return 'TELEMETRIA // SEGUIR ENCOMENDA';
+      if (p.includes('/login')) return 'CONTA CLIENTE // LAYER STUDIOS';
+      if (p.includes('/admin')) return 'ADMIN PORTAL // LAYER STUDIOS';
+      return 'LAYER STUDIOS // ESTÚDIO 3D';
+    };
+
+    document.addEventListener('click', (e) => {
+      const link = e.target.closest('a[href]');
+      if (!link) return;
+      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      if (link.target && link.target !== '_self') return;
+      if (link.hasAttribute('download')) return;
+
+      const rawHref = link.getAttribute('href') || '';
+      if (!rawHref || rawHref.startsWith('#') || rawHref.startsWith('mailto:') || rawHref.startsWith('tel:') || rawHref.startsWith('javascript:')) return;
+
+      let targetUrl;
+      try {
+        targetUrl = new URL(link.href, window.location.origin);
+      } catch (err) {
+        return;
+      }
+
+      if (targetUrl.origin !== window.location.origin) return;
+      // Same page hash navigation -> let browser scroll smoothly without curtain
+      if (targetUrl.pathname === window.location.pathname && targetUrl.search === window.location.search) return;
+
+      e.preventDefault();
+      const label = getRouteLabel(targetUrl.pathname);
+      const labelEl = document.getElementById('ls-curtain-label');
+      if (labelEl) labelEl.textContent = label;
+
+      try {
+        sessionStorage.setItem('ls_slicer_transition', label);
+      } catch (err) {}
+
+      curtain.classList.remove('is-sweeping-out');
+      // Force reflow so transition always plays cleanly
+      void curtain.offsetWidth;
+      curtain.classList.add('is-sweeping-in');
+
+      setTimeout(() => {
+        window.location.href = targetUrl.href;
+      }, 330);
+    });
   });
 }
