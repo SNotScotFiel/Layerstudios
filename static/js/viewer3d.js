@@ -95,23 +95,26 @@ class LayerStudiosViewer {
     this.clipPlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), LS_BUILD.z + 10);
 
     window.addEventListener('resize', () => this.onResize());
+    window.addEventListener('ls-theme-change', () => {
+      if (this.options.showGrid) this.setupBuildPlate();
+    });
     this.animate();
   }
 
   setupLighting() {
-    this.scene.add(new THREE.HemisphereLight(0xffffff, 0xcbd5e1, 0.92));
+    this.scene.add(new THREE.HemisphereLight(0xe0f2fe, 0x1e293b, 0.85));
 
-    const key = new THREE.DirectionalLight(0xffffff, 0.95); // natural daylight studio key
+    const key = new THREE.DirectionalLight(0xffffff, 1.0);
     key.position.set(220, 320, 180);
     key.castShadow = true;
     key.shadow.mapSize.set(1024, 1024);
     this.scene.add(key);
 
-    const fill = new THREE.DirectionalLight(0x93c5fd, 0.55); // soft sky studio fill
+    const fill = new THREE.DirectionalLight(0x60a5fa, 0.6);
     fill.position.set(-220, 180, -140);
     this.scene.add(fill);
 
-    const rim = new THREE.DirectionalLight(0x60a5fa, 0.35); // gentle rim
+    const rim = new THREE.DirectionalLight(0x818cf8, 0.38);
     rim.position.set(0, -90, 150);
     this.scene.add(rim);
   }
@@ -119,18 +122,37 @@ class LayerStudiosViewer {
   setupBuildPlate() {
     const S = this.options.gridSize; // 256
     const DIV = 16; // 16mm per cell → 16 cells per 256mm
+    const isLight = document.documentElement.classList.contains('theme-light');
 
-    // Grid lines (crisp royal-blue center & slate-400 subdivisions)
-    const grid = new THREE.GridHelper(S, DIV, 0x2563eb, 0x94a3b8);
+    if (this.gridHelperObj) {
+      this.scene.remove(this.gridHelperObj);
+    }
+    if (this.plateMeshObj) {
+      this.scene.remove(this.plateMeshObj);
+    }
+
+    // Grid lines
+    const grid = new THREE.GridHelper(
+      S,
+      DIV,
+      isLight ? 0x2563eb : 0x3b82f6,
+      isLight ? 0x94a3b8 : 0x222c42
+    );
     grid.position.y = 0.06;
+    this.gridHelperObj = grid;
     this.scene.add(grid);
 
-    // Brushed Aluminum / Light Slate Engineering Plate surface
+    // Plate surface (Dark PEI by default, Brushed Aluminum in Light Mode)
     const plateGeo = new THREE.BoxGeometry(S, 2.0, S);
-    const plateMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.65, metalness: 0.12 });
+    const plateMat = new THREE.MeshStandardMaterial({
+      color: isLight ? 0xe2e8f0 : 0x131a29,
+      roughness: isLight ? 0.65 : 0.82,
+      metalness: isLight ? 0.12 : 0.18
+    });
     const plate = new THREE.Mesh(plateGeo, plateMat);
     plate.position.y = -1.0;
     plate.receiveShadow = true;
+    this.plateMeshObj = plate;
     this.scene.add(plate);
   }
 

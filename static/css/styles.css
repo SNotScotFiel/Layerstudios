@@ -1,21 +1,18 @@
-/* Layer Studios - Clean, User-Friendly & Professional Studio Theme */
+/* Layer Studios - Dual Theme System: Default = Smooth Dark/Black Studio | Option = Daylight Studio (html.theme-light) */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
 :root {
-  --bg-page: #f8fafc;
-  --bg-page-alt: #f1f5f9;
-  --bg-card: #ffffff;
-  --bg-card-subtle: #f8fafc;
-  --border-subtle: #e2e8f0;
-  --border-strong: #cbd5e1;
-  --border-active: #2563eb;
-  --accent-cyan: #0284c7;
-  --accent-blue: #2563eb;
-  --accent-glow: rgba(37, 99, 235, 0.12);
-  --accent-orange: #ea580c;
-  --text-main: #0f172a;
-  --text-secondary: #334155;
-  --text-muted: #475569;
+  --bg-dark: #090c14;
+  --bg-card: #111726;
+  --bg-card-hover: #172033;
+  --border-subtle: rgba(255, 255, 255, 0.09);
+  --border-active: #3b82f6;
+  --accent-cyan: #60a5fa;
+  --accent-blue: #3b82f6;
+  --accent-glow: rgba(59, 130, 246, 0.15);
+  --accent-orange: #f59e0b;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
   --text-dim: #64748b;
 }
 
@@ -26,263 +23,70 @@
 html {
   scroll-behavior: smooth;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background-color: #f8fafc;
-  color: #0f172a;
-  color-scheme: light;
+  background-color: #090c14;
+  color: var(--text-main);
+  color-scheme: dark;
 }
 
-/* Monospace font for telemetry, metrics, dimensions */
 .font-mono {
   font-family: 'JetBrains Mono', monospace;
 }
 
 /* ==========================================================================
-   1. SMOOTH, STRIPE-FREE STUDIO DAYLIGHT BACKGROUND (ALL PAGES)
+   1. DEFAULT THEME: SMOOTH, STRIPE-FREE DARK / BLACK STUDIO
    ========================================================================== */
 body,
 body.bg-\[\#09090b\],
 body.bg-\[\#0f172a\],
 body.bg-slate-950,
 .cad-grid {
-  background-color: #f8fafc !important;
+  background-color: #090c14 !important;
   background-image:
-    radial-gradient(1100px circle at 12% 4%, rgba(37, 99, 235, 0.08), transparent 60%),
-    radial-gradient(950px circle at 88% 8%, rgba(14, 165, 233, 0.07), transparent 55%),
-    radial-gradient(1200px circle at 50% 60%, rgba(99, 102, 241, 0.04), transparent 65%),
-    linear-gradient(180deg, #f8fafc 0%, #f1f5f9 55%, #f8fafc 100%) !important;
+    radial-gradient(1000px circle at 18% 0%, rgba(59, 130, 246, 0.11), transparent 55%),
+    radial-gradient(850px circle at 85% 6%, rgba(99, 102, 241, 0.08), transparent 50%),
+    linear-gradient(180deg, #090c14 0%, #0d1322 50%, #090c14 100%) !important;
   background-size: 100% 100% !important;
   background-repeat: no-repeat !important;
   background-attachment: fixed !important;
-  color: #0f172a !important;
+  color: #f8fafc;
 }
 
 .cad-grid-dense {
   background-image: none !important;
 }
 
-/* ==========================================================================
-   2. NAVBAR & NAVIGATION SURFACES
-   ========================================================================== */
-#main-header {
-  background-color: rgba(255, 255, 255, 0.88) !important;
-  backdrop-filter: blur(16px) !important;
-  -webkit-backdrop-filter: blur(16px) !important;
-  border-bottom: 1px solid #e2e8f0 !important;
-  box-shadow: 0 4px 24px -4px rgba(15, 23, 42, 0.05) !important;
-}
-
-#mobile-menu-drawer {
-  background-color: #ffffff !important;
-  border-left: 1px solid #e2e8f0 !important;
-}
-
-/* ==========================================================================
-   3. ELEVATED WHITE CARDS, SECTIONS & GLASS PANELS
-   ========================================================================== */
-.glass-panel,
-.bg-slate-950\/80,
-.bg-slate-950\/90,
-.bg-slate-900\/80,
-.bg-slate-900\/70,
-.bg-slate-900\/60,
-.bg-\[\#111114\] {
-  background: #ffffff !important;
-  border: 1px solid #e2e8f0 !important;
-  box-shadow: 0 12px 32px -8px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.03) !important;
+/* Glassmorphism in Dark Mode */
+.glass-panel {
+  background: linear-gradient(165deg, rgba(20, 27, 45, 0.85) 0%, rgba(12, 17, 29, 0.92) 100%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: 0 20px 45px -15px rgba(0, 0, 0, 0.6), inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
 }
 
 .glass-panel-hover {
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .glass-panel-hover:hover {
-  border-color: #93c5fd !important;
-  box-shadow: 0 20px 40px -12px rgba(37, 99, 235, 0.12), 0 4px 12px -2px rgba(15, 23, 42, 0.05) !important;
-  transform: translateY(-3px);
+  border-color: rgba(96, 165, 250, 0.35);
+  box-shadow: 0 16px 36px -12px rgba(0, 0, 0, 0.55);
+  transform: translateY(-2px);
 }
 
-/* Section band backgrounds */
-.bg-slate-950\/40,
-.bg-slate-950\/60,
-.bg-slate-900\/30,
-.bg-slate-900\/40 {
-  background-color: #f1f5f9 !important;
-  border-color: #e2e8f0 !important;
+/* Gradient text utility */
+.text-gradient {
+  background: linear-gradient(135deg, #ffffff 15%, #cbd5e1 55%, #60a5fa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-/* Secondary inner surfaces, inputs, selects, pills */
-.bg-slate-900,
-.bg-slate-900\/90,
-.bg-slate-950,
-.bg-\[\#09090b\],
-.bg-\[\#05080f\] {
-  background-color: #f8fafc !important;
-  border-color: #cbd5e1 !important;
-  color: #0f172a !important;
-}
-
-.bg-slate-800,
-.bg-slate-800\/80,
-.bg-slate-800\/60,
-.bg-slate-800\/50 {
-  background-color: #f1f5f9 !important;
-  border-color: #cbd5e1 !important;
-  color: #1e293b !important;
-}
-
-.hover\:bg-slate-800:hover,
-.hover\:bg-slate-900:hover,
-.hover\:bg-slate-900\/60:hover {
-  background-color: #e2e8f0 !important;
-  color: #0f172a !important;
-}
-
-/* Gradient banner cards (Portfolio headers, B2B banner, etc.) */
-.from-slate-900 {
-  background: linear-gradient(135deg, #eff6ff 0%, #f8fafc 60%, #e0f2fe 100%) !important;
-}
-
-/* Form inputs & textareas */
-input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
-select,
-textarea {
-  background-color: #ffffff !important;
-  border: 1px solid #cbd5e1 !important;
-  color: #0f172a !important;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
-}
-input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus,
-select:focus,
-textarea:focus {
-  border-color: #2563eb !important;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
-  outline: none !important;
-}
-input::placeholder,
-textarea::placeholder {
-  color: #94a3b8 !important;
-}
-
-/* Borders */
-.border-slate-800,
-.border-slate-800\/80,
-.border-slate-800\/60,
-.border-slate-700,
-.border-slate-700\/80 {
-  border-color: #e2e8f0 !important;
-}
-
-/* ==========================================================================
-   4. TYPOGRAPHY & READABILITY (HIGH CONTRAST ON LIGHT STUDIO)
-   ========================================================================== */
-.text-white,
-.text-slate-100,
-.text-slate-200,
-.text-\[\#fafafa\] {
-  color: #0f172a !important;
-}
-
-.text-slate-300 {
-  color: #334155 !important;
-}
-
-.text-slate-400 {
-  color: #475569 !important;
-}
-
-.text-slate-500,
-.text-slate-600 {
-  color: #64748b !important;
-}
-
-.text-blue-400,
-.text-blue-300 {
-  color: #2563eb !important;
-}
-
-.text-emerald-400 {
-  color: #059669 !important;
-}
-
-.text-amber-400,
-.text-amber-300 {
-  color: #d97706 !important;
-}
-
-/* Keep white text inside solid primary buttons, badges, and gradient logos */
-.bg-blue-500,
-.bg-blue-500 *,
-.bg-blue-600,
-.bg-blue-600 *,
-.bg-emerald-500,
-.bg-emerald-500 *,
-.bg-emerald-600,
-.bg-emerald-600 *,
-.bg-red-500,
-.bg-red-500 *,
-.bg-red-600,
-.bg-red-600 *,
-.bg-amber-500,
-.bg-amber-500 *,
-.bg-indigo-600,
-.bg-indigo-600 *,
-.from-blue-500,
-.from-blue-500 *,
-.from-blue-600,
-.from-blue-600 *,
-.portfolio-filter.active {
-  color: #ffffff !important;
-}
-
-.bg-blue-500 {
-  background-color: #2563eb !important;
-}
-.bg-blue-500:hover,
-.hover\:bg-blue-400:hover {
-  background-color: #1d4ed8 !important;
-}
-
-/* Status & Fit Badges inside 3D Viewer */
-.bg-emerald-950\/80,
-.bg-emerald-950\/90 {
-  background-color: rgba(236, 253, 245, 0.95) !important;
-  border-color: rgba(16, 185, 129, 0.4) !important;
-  color: #047857 !important;
-}
-.bg-emerald-950\/80 *,
-.bg-emerald-950\/90 * {
-  color: #047857 !important;
-}
-
-.bg-red-950\/80,
-.bg-red-950\/90 {
-  background-color: rgba(254, 242, 242, 0.95) !important;
-  border-color: rgba(239, 68, 68, 0.4) !important;
-  color: #b91c1c !important;
-}
-.bg-red-950\/80 *,
-.bg-red-950\/90 * {
-  color: #b91c1c !important;
-}
-
-.bg-blue-950\/90,
-.bg-blue-950\/40,
-.bg-blue-950\/20 {
-  background-color: rgba(239, 246, 255, 0.92) !important;
-  border-color: rgba(59, 130, 246, 0.3) !important;
-  color: #1d4ed8 !important;
-}
-
-/* Hero Headline Gradient ("Nós imprimimos.") */
-.text-gradient,
 .text-gradient-cyan {
-  background: linear-gradient(135deg, #2563eb 0%, #0284c7 55%, #4f46e5 100%) !important;
-  -webkit-background-clip: text !important;
-  -webkit-text-fill-color: transparent !important;
+  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 50%, #2563eb 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-/* ==========================================================================
-   5. 3D CAD VIEWPORT (CLEAN ENGINEERING STUDIO BACKDROP)
-   ========================================================================== */
+/* 3D Viewport in Dark Mode */
 #hero-canvas,
 #quote-3d-canvas,
 #modal-3d-canvas {
@@ -290,7 +94,7 @@ textarea::placeholder {
   height: 100%;
   touch-action: none;
   cursor: grab;
-  background: radial-gradient(circle at 50% 42%, #ffffff 0%, #f1f5f9 62%, #e2e8f0 100%) !important;
+  background: radial-gradient(circle at 50% 42%, #182235 0%, #0e1525 62%, #080b12 100%);
 }
 #hero-canvas:active,
 #quote-3d-canvas:active {
@@ -303,20 +107,20 @@ textarea::placeholder {
   height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #090c14;
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #27272a;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #3f3f46;
 }
 
 /* Custom Range Slider */
 input[type=range] {
   -webkit-appearance: none;
-  background: #cbd5e1 !important;
+  background: #27272a;
   height: 6px;
   border-radius: 3px;
   outline: none;
@@ -326,10 +130,10 @@ input[type=range]::-webkit-slider-thumb {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: #2563eb;
-  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.35);
+  background: #3b82f6;
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
   cursor: pointer;
-  border: 2px solid #ffffff;
+  border: 2px solid #09090b;
   transition: transform 0.15s ease;
 }
 input[type=range]::-webkit-slider-thumb:hover {
@@ -338,8 +142,8 @@ input[type=range]::-webkit-slider-thumb:hover {
 
 /* Dropzone dragover highlight */
 .dropzone.drag-active {
-  border-color: #2563eb !important;
-  background: rgba(37, 99, 235, 0.05) !important;
+  border-color: #3b82f6 !important;
+  background: rgba(59, 130, 246, 0.06) !important;
 }
 
 /* Live pulse radar indicator */
@@ -359,114 +163,277 @@ input[type=range]::-webkit-slider-thumb:hover {
   animation: liveRadar 2s cubic-bezier(0, 0.2, 0.8, 1) infinite;
 }
 
-/* Modal and Drawer Animations */
 .modal-backdrop {
   transition: opacity 0.25s ease-in-out;
 }
 .drawer-content {
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
-
-/* Tooltip */
 .tooltip-trigger:hover .tooltip-body {
   visibility: visible;
   opacity: 1;
 }
 
-/* ==========================================================================
-   6. STORE CATALOG CARDS (CLEAN STUDIO E-COMMERCE)
-   ========================================================================== */
+/* Store Catalog Dark Mode */
 #store {
   transition: background-color 0.3s ease, border-color 0.3s ease;
 }
-
-.store-theme-minimal,
-.store-theme-cad {
+.store-theme-minimal {
   background-color: transparent !important;
 }
-
 .store-theme-minimal .store-luxury-card {
-  background: #ffffff !important;
-  border: 1px solid #e2e8f0 !important;
+  background: linear-gradient(180deg, rgba(20, 27, 42, 0.78) 0%, rgba(11, 15, 25, 0.92) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.09);
   border-radius: 1.25rem;
-  box-shadow: 0 10px 25px -8px rgba(15, 23, 42, 0.06);
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
-
 .store-theme-minimal .store-luxury-card:hover {
-  border-color: #93c5fd !important;
+  border-color: rgba(255, 255, 255, 0.22);
   transform: translateY(-4px);
-  box-shadow: 0 20px 40px -12px rgba(37, 99, 235, 0.12) !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
 }
-
 .store-theme-minimal .store-card-img-wrap {
-  background: radial-gradient(circle at 50% 50%, #ffffff 0%, #f1f5f9 100%) !important;
-  border-bottom: 1px solid #e2e8f0 !important;
+  background: radial-gradient(circle at 50% 50%, rgba(30, 41, 59, 0.5) 0%, rgba(9, 12, 20, 0.95) 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
-
 .store-theme-minimal .store-pill-badge {
-  background: #f1f5f9 !important;
-  color: #334155 !important;
-  border: 1px solid #cbd5e1 !important;
-  font-family: 'Inter', sans-serif;
-  letter-spacing: 0.04em;
+  background: rgba(255, 255, 255, 0.06);
+  color: #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
-
 .store-theme-minimal .store-category-tag {
-  color: #64748b !important;
-  font-family: 'Inter', sans-serif;
+  color: #94a3b8;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-size: 0.65rem;
   font-weight: 600;
 }
-
-.store-theme-minimal .store-card-title {
-  color: #0f172a !important;
-  font-family: 'Inter', sans-serif;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-}
-
+.store-theme-minimal .store-card-title,
 .store-theme-minimal .store-card-price {
-  color: #0f172a !important;
-  font-family: 'Inter', sans-serif;
-  font-weight: 800;
-  letter-spacing: -0.03em;
+  color: #ffffff;
+  font-weight: 700;
 }
-
 .store-theme-minimal .store-card-btn {
-  background: #2563eb !important;
-  color: #ffffff !important;
-  font-family: 'Inter', sans-serif;
+  background: #ffffff;
+  color: #09090b;
   font-weight: 700;
   border: none;
-  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25);
+  box-shadow: 0 4px 14px rgba(255, 255, 255, 0.12);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
-
 .store-theme-minimal .store-card-btn:hover {
-  background: #1d4ed8 !important;
+  background: #f1f5f9;
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.35);
+}
+.store-theme-minimal .store-filter-btn.active {
+  background: #ffffff !important;
+  color: #09090b !important;
+  border-color: #ffffff !important;
+  font-weight: 700 !important;
+}
+.store-theme-minimal .store-filter-btn:not(.active) {
+  background: rgba(255, 255, 255, 0.03) !important;
+  color: #94a3b8 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
 }
 
-.store-theme-minimal .store-filter-btn.active {
+/* ==========================================================================
+   2. OPTIONAL LIGHT STUDIO THEME (html.theme-light)
+   ========================================================================== */
+html.theme-light {
+  background-color: #f8fafc;
+  color: #0f172a;
+  color-scheme: light;
+}
+
+html.theme-light body,
+html.theme-light body.bg-\[\#09090b\],
+html.theme-light body.bg-\[\#0f172a\],
+html.theme-light body.bg-slate-950,
+html.theme-light .cad-grid {
+  background-color: #f8fafc !important;
+  background-image:
+    radial-gradient(1100px circle at 12% 4%, rgba(37, 99, 235, 0.08), transparent 60%),
+    radial-gradient(950px circle at 88% 8%, rgba(14, 165, 233, 0.07), transparent 55%),
+    radial-gradient(1200px circle at 50% 60%, rgba(99, 102, 241, 0.04), transparent 65%),
+    linear-gradient(180deg, #f8fafc 0%, #f1f5f9 55%, #f8fafc 100%) !important;
+  background-size: 100% 100% !important;
+  background-repeat: no-repeat !important;
+  background-attachment: fixed !important;
+  color: #0f172a !important;
+}
+
+html.theme-light #main-header {
+  background-color: rgba(255, 255, 255, 0.88) !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  box-shadow: 0 4px 24px -4px rgba(15, 23, 42, 0.05) !important;
+}
+
+html.theme-light #mobile-menu-drawer {
+  background-color: #ffffff !important;
+  border-left: 1px solid #e2e8f0 !important;
+}
+
+html.theme-light .glass-panel,
+html.theme-light .bg-slate-950\/80,
+html.theme-light .bg-slate-950\/90,
+html.theme-light .bg-slate-900\/80,
+html.theme-light .bg-slate-900\/70,
+html.theme-light .bg-slate-900\/60,
+html.theme-light .bg-\[\#111114\] {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 12px 32px -8px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.03) !important;
+}
+
+html.theme-light .bg-slate-950\/40,
+html.theme-light .bg-slate-950\/60,
+html.theme-light .bg-slate-900\/30,
+html.theme-light .bg-slate-900\/40 {
+  background-color: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+}
+
+html.theme-light .bg-slate-900,
+html.theme-light .bg-slate-900\/90,
+html.theme-light .bg-slate-950,
+html.theme-light .bg-\[\#09090b\],
+html.theme-light .bg-\[\#05080f\] {
+  background-color: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+html.theme-light .bg-slate-800,
+html.theme-light .bg-slate-800\/80,
+html.theme-light .bg-slate-800\/60,
+html.theme-light .bg-slate-800\/50 {
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  color: #1e293b !important;
+}
+
+html.theme-light .hover\:bg-slate-800:hover,
+html.theme-light .hover\:bg-slate-900:hover,
+html.theme-light .hover\:bg-slate-900\/60:hover {
+  background-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+html.theme-light .from-slate-900 {
+  background: linear-gradient(135deg, #eff6ff 0%, #f8fafc 60%, #e0f2fe 100%) !important;
+}
+
+html.theme-light input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+html.theme-light select,
+html.theme-light textarea {
+  background-color: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+html.theme-light .border-slate-800,
+html.theme-light .border-slate-800\/80,
+html.theme-light .border-slate-800\/60,
+html.theme-light .border-slate-700,
+html.theme-light .border-slate-700\/80 {
+  border-color: #e2e8f0 !important;
+}
+
+html.theme-light .text-white,
+html.theme-light .text-slate-100,
+html.theme-light .text-slate-200,
+html.theme-light .text-\[\#fafafa\] {
+  color: #0f172a !important;
+}
+
+html.theme-light .text-slate-300 { color: #334155 !important; }
+html.theme-light .text-slate-400 { color: #475569 !important; }
+html.theme-light .text-slate-500,
+html.theme-light .text-slate-600 { color: #64748b !important; }
+html.theme-light .text-blue-400,
+html.theme-light .text-blue-300 { color: #2563eb !important; }
+html.theme-light .text-emerald-400 { color: #059669 !important; }
+html.theme-light .text-amber-400,
+html.theme-light .text-amber-300 { color: #d97706 !important; }
+
+html.theme-light .bg-blue-500,
+html.theme-light .bg-blue-500 *,
+html.theme-light .bg-blue-600,
+html.theme-light .bg-blue-600 *,
+html.theme-light .bg-emerald-500,
+html.theme-light .bg-emerald-500 *,
+html.theme-light .bg-emerald-600,
+html.theme-light .bg-emerald-600 *,
+html.theme-light .bg-red-500,
+html.theme-light .bg-red-500 *,
+html.theme-light .bg-indigo-600,
+html.theme-light .bg-indigo-600 *,
+html.theme-light .from-blue-500,
+html.theme-light .from-blue-500 *,
+html.theme-light .portfolio-filter.active {
+  color: #ffffff !important;
+}
+
+html.theme-light .bg-emerald-950\/80,
+html.theme-light .bg-emerald-950\/90 {
+  background-color: rgba(236, 253, 245, 0.95) !important;
+  border-color: rgba(16, 185, 129, 0.4) !important;
+  color: #047857 !important;
+}
+html.theme-light .bg-emerald-950\/80 *,
+html.theme-light .bg-emerald-950\/90 * {
+  color: #047857 !important;
+}
+
+html.theme-light .text-gradient,
+html.theme-light .text-gradient-cyan {
+  background: linear-gradient(135deg, #2563eb 0%, #0284c7 55%, #4f46e5 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+html.theme-light #hero-canvas,
+html.theme-light #quote-3d-canvas,
+html.theme-light #modal-3d-canvas {
+  background: radial-gradient(circle at 50% 42%, #ffffff 0%, #f1f5f9 62%, #e2e8f0 100%) !important;
+}
+
+html.theme-light input[type=range] {
+  background: #cbd5e1 !important;
+}
+
+html.theme-light .store-theme-minimal .store-luxury-card {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 10px 25px -8px rgba(15, 23, 42, 0.06);
+}
+html.theme-light .store-theme-minimal .store-card-img-wrap {
+  background: radial-gradient(circle at 50% 50%, #ffffff 0%, #f1f5f9 100%) !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+html.theme-light .store-theme-minimal .store-pill-badge {
+  background: #f1f5f9 !important;
+  color: #334155 !important;
+  border: 1px solid #cbd5e1 !important;
+}
+html.theme-light .store-theme-minimal .store-card-title,
+html.theme-light .store-theme-minimal .store-card-price {
+  color: #0f172a !important;
+}
+html.theme-light .store-theme-minimal .store-card-btn {
+  background: #2563eb !important;
+  color: #ffffff !important;
+}
+html.theme-light .store-theme-minimal .store-filter-btn.active {
   background: #2563eb !important;
   color: #ffffff !important;
   border-color: #2563eb !important;
-  font-weight: 700 !important;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2) !important;
 }
-
-.store-theme-minimal .store-filter-btn:not(.active) {
+html.theme-light .store-theme-minimal .store-filter-btn:not(.active) {
   background: #ffffff !important;
   color: #475569 !important;
   border-color: #cbd5e1 !important;
-}
-
-.store-theme-minimal .store-filter-btn:not(.active):hover {
-  background: #f1f5f9 !important;
-  color: #0f172a !important;
-  border-color: #94a3b8 !important;
 }

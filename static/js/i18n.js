@@ -630,9 +630,47 @@ class LayerStudiosI18n {
   }
 }
 
-// Global initialization
+// Global Theme & I18n Initialization (Default Theme = Dark / Preto)
 if (typeof window !== 'undefined') {
+  try {
+    const savedTheme = localStorage.getItem('ls_theme') || 'dark';
+    if (savedTheme === 'light') {
+      document.documentElement.classList.add('theme-light');
+    } else {
+      document.documentElement.classList.remove('theme-light');
+    }
+  } catch (e) {}
+
   window.addEventListener('DOMContentLoaded', () => {
     window.LayerStudiosI18n = new LayerStudiosI18n();
+
+    // Inject Theme Toggle Button (Dark default / Light option) into navbar
+    const langBtn = document.getElementById('lang-toggle-btn') || document.querySelector('.lang-toggle-btn');
+    if (langBtn && langBtn.parentElement && !document.getElementById('theme-toggle-btn')) {
+      const themeBtn = document.createElement('button');
+      themeBtn.id = 'theme-toggle-btn';
+      themeBtn.type = 'button';
+      themeBtn.className = 'inline-flex items-center space-x-1 px-2.5 py-2 rounded-xl text-xs font-mono font-bold bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 transition-colors';
+      themeBtn.title = 'Alternar Tema Escuro / Claro';
+
+      const updateBtnUI = () => {
+        const isLight = document.documentElement.classList.contains('theme-light');
+        themeBtn.innerHTML = isLight
+          ? '<span>☀️</span><span class="hidden sm:inline text-[11px]">Claro</span>'
+          : '<span>🌙</span><span class="hidden sm:inline text-[11px]">Escuro</span>';
+      };
+      updateBtnUI();
+
+      themeBtn.addEventListener('click', () => {
+        const isLight = document.documentElement.classList.toggle('theme-light');
+        try {
+          localStorage.setItem('ls_theme', isLight ? 'light' : 'dark');
+        } catch (e) {}
+        updateBtnUI();
+        window.dispatchEvent(new CustomEvent('ls-theme-change', { detail: { theme: isLight ? 'light' : 'dark' } }));
+      });
+
+      langBtn.parentElement.insertBefore(themeBtn, langBtn);
+    }
   });
 }
