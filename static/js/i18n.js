@@ -765,6 +765,55 @@ if (typeof window !== 'undefined') {
     if (!window.location.pathname.toLowerCase().startsWith('/admin')) {
       window.LayerStudiosChat = new LayerStudiosSupportChat();
     }
+
+    // Global iOS Staggered Scroll-Reveal & Filter Micro-Physics
+    try {
+      const revealTargets = document.querySelectorAll(
+        '#services .grid > div, #how-it-works .grid > div, .portfolio-card, #business .rounded-3xl, #faq details, #contact .grid > div, .store-luxury-card'
+      );
+      if ('IntersectionObserver' in window && revealTargets.length > 0) {
+        const io = new IntersectionObserver((entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('is-visible');
+              io.unobserve(entry.target);
+            }
+          });
+        }, { threshold: 0.08, rootMargin: '0px 0px -30px 0px' });
+
+        revealTargets.forEach((el, idx) => {
+          el.classList.add('ios-reveal');
+          el.style.transitionDelay = `${(idx % 4) * 55}ms`;
+          io.observe(el);
+        });
+      }
+
+      // iOS Spring Pop when filtering Portfolio or Store cards
+      document.querySelectorAll('.portfolio-filter, .store-filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          requestAnimationFrame(() => {
+            const visibleCards = document.querySelectorAll('.portfolio-card:not(.hidden), .store-luxury-card:not(.hidden)');
+            visibleCards.forEach((card, i) => {
+              card.classList.remove('ios-filter-pop');
+              void card.offsetWidth;
+              card.style.animationDelay = `${Math.min(i * 45, 220)}ms`;
+              card.classList.add('ios-filter-pop');
+            });
+          });
+        });
+      });
+
+      // Subtle iOS spring pulse when total price updates on Quote page
+      const summaryTotal = document.getElementById('summary-total');
+      if (summaryTotal && 'MutationObserver' in window) {
+        const mo = new MutationObserver(() => {
+          summaryTotal.classList.remove('ios-number-pulse');
+          void summaryTotal.offsetWidth;
+          summaryTotal.classList.add('ios-number-pulse');
+        });
+        mo.observe(summaryTotal, { childList: true, characterData: true, subtree: true });
+      }
+    } catch (e) {}
   });
 }
 

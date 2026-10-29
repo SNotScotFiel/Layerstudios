@@ -670,4 +670,147 @@ html.theme-light .ls-chat-bot-bubble {
   color: #0f172a !important;
 }
 
+/* ==========================================================================
+   5. GLOBAL iOS / macOS SYSTEM POLISH (SPRING PHYSICS, VIBRANCY & REVEALS)
+   ========================================================================== */
+
+/* 5.1 Apple Acrylic Vibrancy Navbar & Glass Surfaces */
+#main-header {
+  backdrop-filter: blur(24px) saturate(185%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(185%) !important;
+  transition: background-color 0.35s cubic-bezier(0.32, 0.72, 0, 1),
+              border-color 0.35s cubic-bezier(0.32, 0.72, 0, 1),
+              box-shadow 0.35s cubic-bezier(0.32, 0.72, 0, 1) !important;
+}
+
+.glass-panel,
+.portfolio-card,
+.store-luxury-card,
+.material-option {
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  transition:
+    transform 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 0.32s cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+/* 5.2 iOS Tactile Spring Buttons, Pills & Swatches */
+button,
+a[class*="rounded-"],
+.material-option,
+.qty-preset-btn,
+.color-swatch-btn,
+.portfolio-filter,
+.store-filter-btn {
+  transition:
+    transform 0.32s cubic-bezier(0.32, 0.72, 0, 1),
+    background-color 0.25s cubic-bezier(0.32, 0.72, 0, 1),
+    border-color 0.25s cubic-bezier(0.32, 0.72, 0, 1),
+    box-shadow 0.32s cubic-bezier(0.32, 0.72, 0, 1),
+    color 0.2s ease !important;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:active:not(:disabled),
+a[class*="rounded-"]:active,
+.material-option:active,
+.qty-preset-btn:active,
+.color-swatch-btn:active {
+  transform: scale(0.96) !important;
+}
+
+/* 5.3 Smooth iOS Focus Ring & Input Transitions */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+select,
+textarea {
+  transition:
+    border-color 0.28s cubic-bezier(0.32, 0.72, 0, 1),
+    box-shadow 0.28s cubic-bezier(0.32, 0.72, 0, 1),
+    background-color 0.28s cubic-bezier(0.32, 0.72, 0, 1) !important;
+}
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus,
+select:focus,
+textarea:focus {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2) !important;
+  outline: none !important;
+}
+
+/* 5.4 iOS Spring Modals, Sheets & Notification Popovers */
+#ls-legal-modal > div,
+#quote-success-modal > div,
+#checkout-modal > div,
+#ls-cookie-modal > div,
+#product-3d-modal > div {
+  animation: iosModalSpringIn 0.42s cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+@keyframes iosModalSpringIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.91) translateY(16px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* 5.5 iOS Staggered Scroll-Reveal Cards & Sections */
+.ios-reveal {
+  opacity: 0;
+  transform: translateY(20px) scale(0.985);
+  transition:
+    opacity 0.58s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.58s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+
+.ios-reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* Smooth iOS Pop when filtering Portfolio or Store cards */
+.ios-filter-pop {
+  animation: iosCardFilterPop 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes iosCardFilterPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.94) translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Smooth numeric price & telemetry transitions */
+#summary-total,
+#summary-subtotal,
+#summary-material-cost,
+#summary-machine-cost,
+#quote-telemetry-dims,
+#quote-telemetry-vol,
+#quote-telemetry-weight,
+#quote-telemetry-time {
+  transition: transform 0.25s cubic-bezier(0.32, 0.72, 0, 1), color 0.25s ease;
+}
+
+.ios-number-pulse {
+  animation: iosNumberBump 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@keyframes iosNumberBump {
+  0%   { transform: scale(1); }
+  45%  { transform: scale(1.06); }
+  100% { transform: scale(1); }
+}
+
+
 
