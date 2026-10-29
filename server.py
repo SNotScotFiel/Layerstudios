@@ -54,7 +54,7 @@ ADMIN_TOKENS = {}  # token -> {'created': timestamp, 'expires': timestamp}
 # Resend Transactional Email Configuration
 RESEND_API_KEY = os.environ.get('RESEND_API_KEY', '').strip()
 RESEND_FROM_EMAIL = os.environ.get('RESEND_FROM_EMAIL', 'Layer Studios <onboarding@resend.dev>').strip()
-ADMIN_ALERT_EMAIL = os.environ.get('ADMIN_ALERT_EMAIL', 'contact@layerstudios.pt').strip()
+ADMIN_ALERT_EMAIL = os.environ.get('ADMIN_ALERT_EMAIL', 'guicardoso.kma@gmail.com').strip()
 if RESEND_API_KEY:
     print(f'[Email] Resend transactional email active (From: {RESEND_FROM_EMAIL})')
 else:
