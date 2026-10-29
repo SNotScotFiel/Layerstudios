@@ -760,5 +760,410 @@ if (typeof window !== 'undefined') {
         window.location.href = targetUrl.href;
       }, 140);
     });
+
+    // Mount Floating Support Chatbox on all customer pages (exclude /admin)
+    if (!window.location.pathname.toLowerCase().startsWith('/admin')) {
+      window.LayerStudiosChat = new LayerStudiosSupportChat();
+    }
   });
+}
+
+class LayerStudiosSupportChat {
+  constructor() {
+    this.isOpen = false;
+    this.isPt = (localStorage.getItem('ls_lang') || 'pt') === 'pt';
+    this.mount();
+  }
+
+  mount() {
+    if (document.getElementById('ls-chat-widget')) return;
+
+    const widget = document.createElement('div');
+    widget.id = 'ls-chat-widget';
+
+    const t = this.isPt ? {
+      btnLabel: 'Suporte 3D',
+      title: 'Apoio Técnico Layer Studios',
+      status: 'Online · Resposta Imediata',
+      welcome: 'Olá! 👋 Bem-vindo à <strong>Layer Studios</strong>. Como podemos ajudar com a sua impressão 3D ou encomenda hoje?',
+      chipTrack: '📦 Seguir Encomenda',
+      chipMat: '🧪 Qual material escolher?',
+      chipCad: '📐 Formatos 3D & CAD',
+      chipPrice: '💶 Preços & Descontos',
+      chipHuman: '✉️ Falar com Engenheiro',
+      placeholder: 'Escreva a sua dúvida ou código LS-...',
+      sendBtn: 'Enviar',
+      waLabel: 'WhatsApp',
+      ticketTitle: 'Enviar Mensagem à Equipa Técnica',
+      ticketName: 'O seu nome',
+      ticketEmail: 'O seu email para resposta',
+      ticketMsg: 'Descreva a sua dúvida, peça ou projeto...',
+      ticketSubmit: 'Enviar Pedido de Suporte →',
+      ticketCancel: 'Cancelar'
+    } : {
+      btnLabel: '3D Support',
+      title: 'Layer Studios Tech Support',
+      status: 'Online · Instant Reply',
+      welcome: 'Hello! 👋 Welcome to <strong>Layer Studios</strong>. How can we help with your 3D print or order today?',
+      chipTrack: '📦 Track Order',
+      chipMat: '🧪 Best Material?',
+      chipCad: '📐 3D Formats & CAD',
+      chipPrice: '💶 Pricing & Discounts',
+      chipHuman: '✉️ Message Engineer',
+      placeholder: 'Ask a question or type LS-...',
+      sendBtn: 'Send',
+      waLabel: 'WhatsApp',
+      ticketTitle: 'Send Message to Engineering Team',
+      ticketName: 'Your name',
+      ticketEmail: 'Your email for reply',
+      ticketMsg: 'Describe your question, part, or project...',
+      ticketSubmit: 'Send Support Request →',
+      ticketCancel: 'Cancel'
+    };
+
+    widget.innerHTML = `
+      <!-- Chat Window -->
+      <div id="ls-chat-panel" class="chat-closed mb-3 w-[345px] sm:w-[385px] rounded-3xl bg-slate-900/95 border border-slate-700/90 backdrop-blur-xl shadow-2xl overflow-hidden flex flex-col max-h-[78vh]">
+        
+        <!-- Header -->
+        <div class="px-4 py-3.5 bg-slate-950 border-b border-slate-800 flex items-center justify-between gap-2">
+          <div class="flex items-center gap-2.5">
+            <div class="relative w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-black text-xs shadow-md">
+              LS
+              <span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 ring-2 ring-slate-950"></span>
+            </div>
+            <div>
+              <h4 class="text-xs font-extrabold text-white leading-tight">${t.title}</h4>
+              <p class="text-[10px] text-emerald-400 font-mono flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>${t.status}</span>
+              </p>
+            </div>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <a href="https://wa.me/351962118770?text=Ol%C3%A1%20Layer%20Studios!%20Preciso%20de%20ajuda%20com%20uma%20impress%C3%A3o%203D." target="_blank" rel="noopener" class="px-2.5 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500 text-emerald-400 hover:text-white border border-emerald-500/30 text-[10px] font-bold transition-colors flex items-center gap-1" title="Abrir WhatsApp Direto (+351 962 118 770)">
+              <span>💬</span><span>${t.waLabel}</span>
+            </a>
+            <button type="button" id="ls-chat-close" class="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors" aria-label="Fechar">
+              ✕
+            </button>
+          </div>
+        </div>
+
+        <!-- Scrollable Messages Container -->
+        <div id="ls-chat-messages" class="p-4 overflow-y-auto space-y-3 text-xs max-h-[330px] min-h-[250px]">
+          <div class="ls-chat-bot-bubble p-3.5 rounded-2xl rounded-tl-sm bg-slate-800/90 border border-slate-700/80 text-slate-200 leading-relaxed">
+            ${t.welcome}
+          </div>
+
+          <!-- Quick Action Chips -->
+          <div id="ls-chat-chips" class="flex flex-wrap gap-1.5 pt-1">
+            <button type="button" data-chip="track" class="ls-chat-chip px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-blue-500/20 text-slate-300 hover:text-blue-300 border border-slate-700 hover:border-blue-500/40 text-[11px] font-semibold transition-all">${t.chipTrack}</button>
+            <button type="button" data-chip="materials" class="ls-chat-chip px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-blue-500/20 text-slate-300 hover:text-blue-300 border border-slate-700 hover:border-blue-500/40 text-[11px] font-semibold transition-all">${t.chipMat}</button>
+            <button type="button" data-chip="cad" class="ls-chat-chip px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-blue-500/20 text-slate-300 hover:text-blue-300 border border-slate-700 hover:border-blue-500/40 text-[11px] font-semibold transition-all">${t.chipCad}</button>
+            <button type="button" data-chip="pricing" class="ls-chat-chip px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-blue-500/20 text-slate-300 hover:text-blue-300 border border-slate-700 hover:border-blue-500/40 text-[11px] font-semibold transition-all">${t.chipPrice}</button>
+            <button type="button" data-chip="human" class="ls-chat-chip px-2.5 py-1.5 rounded-xl bg-blue-500/15 hover:bg-blue-500 text-blue-400 hover:text-white border border-blue-500/30 text-[11px] font-bold transition-all">${t.chipHuman}</button>
+          </div>
+        </div>
+
+        <!-- Inline Ticket Form (Hidden by default) -->
+        <form id="ls-chat-ticket-form" class="hidden p-4 bg-slate-950/95 border-t border-slate-800 space-y-2.5 text-xs">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-blue-400 text-[11px] uppercase tracking-wider">${t.ticketTitle}</span>
+            <button type="button" id="ls-chat-ticket-cancel" class="text-[11px] text-slate-400 hover:text-white">${t.ticketCancel}</button>
+          </div>
+          <input type="text" id="ls-ticket-name" required placeholder="${t.ticketName}" class="w-full rounded-xl bg-slate-900 border border-slate-700 px-3 py-2 text-xs text-white focus:border-blue-500 focus:outline-none">
+          <input type="email" id="ls-ticket-email" required placeholder="${t.ticketEmail}" class="w-full rounded-xl bg-slate-900 border border-slate-700 px-3 py-2 text-xs text-white focus:border-blue-500 focus:outline-none">
+          <textarea id="ls-ticket-msg" required rows="2" placeholder="${t.ticketMsg}" class="w-full rounded-xl bg-slate-900 border border-slate-700 px-3 py-2 text-xs text-white focus:border-blue-500 focus:outline-none resize-none"></textarea>
+          <button type="submit" id="ls-ticket-submit" class="w-full py-2.5 rounded-xl bg-blue-500 hover:bg-blue-400 text-white font-bold text-xs shadow-lg shadow-blue-500/25 transition-all">
+            ${t.ticketSubmit}
+          </button>
+        </form>
+
+        <!-- Bottom Input Bar -->
+        <form id="ls-chat-input-form" class="p-3 bg-slate-950 border-t border-slate-800 flex items-center gap-2">
+          <input type="text" id="ls-chat-input" autocomplete="off" placeholder="${t.placeholder}" class="flex-1 rounded-xl bg-slate-900 border border-slate-800 px-3.5 py-2.5 text-xs text-white focus:border-blue-500 focus:outline-none">
+          <button type="submit" class="px-3.5 py-2.5 rounded-xl bg-blue-500 hover:bg-blue-400 text-white font-bold text-xs shadow-md shadow-blue-500/20 transition-all shrink-0">
+            ${t.sendBtn}
+          </button>
+        </form>
+
+      </div>
+
+      <!-- Floating Launcher Button -->
+      <div class="flex justify-end">
+        <button type="button" id="ls-chat-launcher" class="group flex items-center gap-2.5 px-4 py-3 rounded-2xl bg-blue-500 hover:bg-blue-400 text-white font-bold text-xs shadow-xl shadow-blue-500/30 hover:shadow-blue-500/50 transition-all transform hover:-translate-y-0.5">
+          <span class="relative flex h-2.5 w-2.5">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-300 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-400"></span>
+          </span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+          <span>${t.btnLabel}</span>
+        </button>
+      </div>
+    `;
+
+    document.body.appendChild(widget);
+
+    // Pre-fill logged-in user info in ticket form
+    try {
+      const user = JSON.parse(localStorage.getItem('ls_user') || 'null');
+      if (user) {
+        if (user.name) document.getElementById('ls-ticket-name').value = user.name;
+        if (user.email) document.getElementById('ls-ticket-email').value = user.email;
+      }
+    } catch (e) {}
+
+    this.bindEvents();
+  }
+
+  bindEvents() {
+    const launcher = document.getElementById('ls-chat-launcher');
+    const closeBtn = document.getElementById('ls-chat-close');
+    const panel = document.getElementById('ls-chat-panel');
+    const inputForm = document.getElementById('ls-chat-input-form');
+    const inputEl = document.getElementById('ls-chat-input');
+    const ticketForm = document.getElementById('ls-chat-ticket-form');
+    const ticketCancel = document.getElementById('ls-chat-ticket-cancel');
+
+    const toggle = (openState) => {
+      this.isOpen = typeof openState === 'boolean' ? openState : !this.isOpen;
+      if (this.isOpen) {
+        panel.classList.remove('chat-closed');
+        panel.classList.add('chat-open');
+        setTimeout(() => inputEl?.focus(), 150);
+      } else {
+        panel.classList.remove('chat-open');
+        panel.classList.add('chat-closed');
+      }
+    };
+
+    launcher?.addEventListener('click', () => toggle());
+    closeBtn?.addEventListener('click', () => toggle(false));
+
+    document.querySelectorAll('.ls-chat-chip').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const chip = btn.getAttribute('data-chip');
+        this.handleChip(chip, btn.textContent);
+      });
+    });
+
+    ticketCancel?.addEventListener('click', () => {
+      ticketForm.classList.add('hidden');
+      inputForm.classList.remove('hidden');
+    });
+
+    ticketForm?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('ls-ticket-name').value.trim();
+      const email = document.getElementById('ls-ticket-email').value.trim();
+      const message = document.getElementById('ls-ticket-msg').value.trim();
+      const submitBtn = document.getElementById('ls-ticket-submit');
+      if (!email || !message) return;
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = this.isPt ? 'A enviar...' : 'Sending...';
+
+      try {
+        const res = await fetch('/api/contact', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: name || 'Cliente Chatbox',
+            email,
+            subject: 'Pedido de Suporte via Chatbox',
+            message
+          })
+        });
+        const data = await res.json();
+        ticketForm.classList.add('hidden');
+        inputForm.classList.remove('hidden');
+        document.getElementById('ls-ticket-msg').value = '';
+        this.appendUserMessage(message);
+        if (res.ok && data.success) {
+          this.appendBotMessage(
+            this.isPt
+              ? `✅ <strong>Mensagem enviada para a nossa equipa técnica!</strong><br>Enviámos também confirmação para <code>${email}</code>. Responderemos muito em breve (ou fale connosco já no <a href="https://wa.me/351962118770" target="_blank" class="text-emerald-400 underline font-bold">WhatsApp ↗</a>).`
+              : `✅ <strong>Message sent to our engineering team!</strong><br>We also sent a confirmation to <code>${email}</code>. We will reply shortly.`
+          );
+        } else {
+          throw new Error('Request failed');
+        }
+      } catch (err) {
+        this.appendBotMessage(
+          this.isPt
+            ? `⚠️ Não foi possível enviar automaticamente. Por favor contacte-nos diretamente em <a href="mailto:contact@layerstudios.pt" class="text-blue-400 underline">contact@layerstudios.pt</a> ou no <a href="https://wa.me/351962118770" target="_blank" class="text-emerald-400 underline font-bold">WhatsApp (+351 962 118 770)</a>.`
+            : `⚠️ Could not send automatically. Please email <a href="mailto:contact@layerstudios.pt" class="text-blue-400 underline">contact@layerstudios.pt</a> or message us on WhatsApp.`
+        );
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = this.isPt ? 'Enviar Pedido de Suporte →' : 'Send Support Request →';
+      }
+    });
+
+    inputForm?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const text = inputEl.value.trim();
+      if (!text) return;
+      inputEl.value = '';
+      this.appendUserMessage(text);
+      this.processUserText(text);
+    });
+  }
+
+  appendUserMessage(text) {
+    const container = document.getElementById('ls-chat-messages');
+    if (!container) return;
+    const div = document.createElement('div');
+    div.className = 'flex justify-end';
+    const bubble = document.createElement('div');
+    bubble.className = 'p-3 rounded-2xl rounded-tr-sm bg-blue-500 text-white max-w-[85%] leading-relaxed shadow-sm';
+    bubble.textContent = text;
+    div.appendChild(bubble);
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+  }
+
+  appendBotMessage(html) {
+    const container = document.getElementById('ls-chat-messages');
+    if (!container) return;
+    const div = document.createElement('div');
+    div.className = 'ls-chat-bot-bubble p-3.5 rounded-2xl rounded-tl-sm bg-slate-800/90 border border-slate-700/80 text-slate-200 leading-relaxed space-y-1.5';
+    div.innerHTML = html;
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+  }
+
+  openTicketForm(prefillText = '') {
+    const ticketForm = document.getElementById('ls-chat-ticket-form');
+    const inputForm = document.getElementById('ls-chat-input-form');
+    if (ticketForm && inputForm) {
+      inputForm.classList.add('hidden');
+      ticketForm.classList.remove('hidden');
+      if (prefillText) {
+        document.getElementById('ls-ticket-msg').value = prefillText;
+      }
+      document.getElementById('ls-ticket-email')?.focus();
+    }
+  }
+
+  handleChip(chip, label) {
+    if (chip === 'human') {
+      this.openTicketForm();
+      return;
+    }
+    this.appendUserMessage(label);
+    if (chip === 'track') {
+      this.appendBotMessage(
+        this.isPt
+          ? `📦 Escreva aqui em baixo o seu código de referência (ex: <code>LS-...</code>) e eu consulto o estado em direto!<br><span class="text-[11px] text-slate-400">Ou abra a página <a href="/track" class="text-blue-400 underline font-semibold">Seguir Encomenda →</a></span>`
+          : `📦 Type your order or quote reference below (e.g. <code>LS-...</code>) and I'll look up its live status!`
+      );
+    } else if (chip === 'materials') {
+      this.appendBotMessage(
+        this.isPt
+          ? `🧪 <strong>Guia Rápido de Materiais:</strong><br>
+             • <strong>PLA+:</strong> Económico, acabamento super nítido, ideal para protótipos visuais.<br>
+             • <strong>PETG:</strong> Forte, resistente ao sol/água e até 75°C (o mais versátil!).<br>
+             • <strong>ABS / ASA:</strong> Alta temperatura (100°C) e uso exterior severo.<br>
+             • <strong>TPU 95A:</strong> Flexível tipo borracha, absorve impactos.<br>
+             • <strong>CF-Nylon:</strong> Compósito com fibra de carbono para máxima rigidez mecânica.<br>
+             <a href="/materials" class="inline-block mt-1 text-blue-400 underline font-semibold">Ver tabela comparativa completa →</a>`
+          : `🧪 <strong>Material Quick Guide:</strong><br>• <strong>PLA+:</strong> Crisp detail & economical.<br>• <strong>PETG:</strong> Tough, weather & heat resistant (up to 75°C).<br>• <strong>ABS/ASA:</strong> High temp (100°C) & UV stable.<br>• <strong>TPU 95A:</strong> Flexible & shock-absorbing.<br>• <strong>CF-Nylon:</strong> Carbon-fiber reinforced strength.`
+      );
+    } else if (chip === 'cad') {
+      this.appendBotMessage(
+        this.isPt
+          ? `📐 <strong>Formatos 3D & Desenho CAD:</strong><br>
+             • No nosso <a href="/quote" class="text-blue-400 underline font-semibold">Slicer 3D Online</a> pode carregar <code>.STL</code>, <code>.3MF</code> e <code>.OBJ</code> com cálculo automático de volume e separação de peças.<br>
+             • Também aceitamos <code>.STEP</code> e desenhos <code>.PDF</code>.<br>
+             • <strong>Não tem ficheiro 3D?</strong> Escolha a aba <em>"Preciso de desenho CAD"</em> em <a href="/quote" class="text-blue-400 underline font-semibold">Pedir Orçamento</a> e envie-nos uma foto ou esboço com medidas!`
+          : `📐 <strong>3D Formats & CAD Service:</strong><br>Upload <code>.STL</code>, <code>.3MF</code>, <code>.OBJ</code>, or <code>.STEP</code> in our <a href="/quote" class="text-blue-400 underline font-semibold">Instant 3D Slicer</a>. Need CAD modeling? Select <em>"I need it designed"</em> on the Quote page!`
+      );
+    } else if (chip === 'pricing') {
+      this.appendBotMessage(
+        this.isPt
+          ? `💶 <strong>Preços, Descontos de Lote e Envios:</strong><br>
+             • O preço é calculado na hora em <a href="/quote" class="text-blue-400 underline font-semibold">Pedir Orçamento</a> conforme o volume (cm³), material e infill.<br>
+             • <strong>Descontos automáticos de quantidade:</strong> 5+ un (-10%), 10+ un (-15%), 25+ un (-22%), 50+ un (-30%).<br>
+             • <strong>Envio Registado Portugal:</strong> €4.50 (<strong>Grátis</strong> em encomendas ≥ €50!).<br>
+             • Pagamento seguro via <strong>MB WAY, Multibanco, Cartão, Apple Pay e Google Pay</strong>.`
+          : `💶 <strong>Pricing & Batch Discounts:</strong><br>Instant calculation at <a href="/quote" class="text-blue-400 underline font-semibold">Get a Quote</a>. Automatic volume discounts: 5+ (-10%), 10+ (-15%), 25+ (-22%), 50+ (-30%). Free shipping in Portugal over €50!`
+      );
+    }
+  }
+
+  async processUserText(text) {
+    const upper = text.toUpperCase();
+    // 1. Check if text contains an order/quote reference like LS-...
+    const refMatch = upper.match(/\b(LS-[A-Z0-9-]+)\b/);
+    if (refMatch) {
+      const refId = refMatch[1];
+      this.appendBotMessage(this.isPt ? `🔍 A procurar o pedido <code>${refId}</code>...` : `🔍 Looking up <code>${refId}</code>...`);
+      try {
+        const res = await fetch(`/api/track/${encodeURIComponent(refId)}`);
+        const payload = await res.json();
+        if (res.ok && payload && payload.data) {
+          const d = payload.data;
+          const isPaid = String(d.paymentStatus || '').toLowerCase() === 'paid';
+          const trackingHtml = d.trackingNumber
+            ? `<div class="mt-1 text-emerald-400">🚚 Tracking (${d.carrier || 'CTT'}): <strong>${d.trackingNumber}</strong></div>`
+            : '';
+          this.appendBotMessage(`
+            <div class="space-y-1">
+              <div class="font-bold text-white flex items-center justify-between">
+                <span>📦 ${d.id}</span>
+                <span class="px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 text-[10px] font-mono">${d.status || 'Em análise'}</span>
+              </div>
+              <div class="text-[11px] text-slate-300 font-mono">
+                Valor: <strong>€${Number(d.total || 0).toFixed(2)}</strong> · Pagamento: <strong class="${isPaid ? 'text-emerald-400' : 'text-amber-400'}">${isPaid ? 'Pago ✓' : 'Pendente'}</strong>
+              </div>
+              ${trackingHtml}
+              <div class="pt-1.5">
+                <a href="/track?id=${encodeURIComponent(d.id)}" class="inline-block px-3 py-1.5 rounded-lg bg-blue-500 hover:bg-blue-400 text-white font-bold text-[11px]">Abrir Detalhes & Pagamento →</a>
+              </div>
+            </div>
+          `);
+          return;
+        } else {
+          this.appendBotMessage(
+            this.isPt
+              ? `Não encontrei nenhum pedido com a referência <code>${refId}</code>. Verifique o código no seu email ou consulte em <a href="/track" class="text-blue-400 underline">Seguir Encomenda</a>.`
+              : `No order or quote found with reference <code>${refId}</code>. Please check your confirmation email or visit <a href="/track" class="text-blue-400 underline">Track Order</a>.`
+          );
+          return;
+        }
+      } catch (e) {}
+    }
+
+    const lower = text.toLowerCase();
+    if (lower.includes('material') || lower.includes('pla') || lower.includes('petg') || lower.includes('tpu') || lower.includes('abs') || lower.includes('asa') || lower.includes('carbon')) {
+      this.handleChip('materials', '');
+      return;
+    }
+    if (lower.includes('preço') || lower.includes('preco') || lower.includes('custo') || lower.includes('orçamento') || lower.includes('orcamento') || lower.includes('desconto') || lower.includes('quanto custa')) {
+      this.handleChip('pricing', '');
+      return;
+    }
+    if (lower.includes('stl') || lower.includes('3mf') || lower.includes('step') || lower.includes('cad') || lower.includes('ficheiro') || lower.includes('desenho')) {
+      this.handleChip('cad', '');
+      return;
+    }
+    if (lower.includes('envio') || lower.includes('porte') || lower.includes('ctt') || lower.includes('prazo') || lower.includes('entrega')) {
+      this.appendBotMessage(
+        this.isPt
+          ? `🚚 <strong>Envios e Prazos:</strong><br>• <strong>Portugal Continental:</strong> €4.50 (Grátis ≥ €50) · 24–48h úteis via CTT Expresso.<br>• <strong>Ilhas:</strong> €6.90 · <strong>União Europeia:</strong> €9.90.<br>• Produção padrão em 2–4 dias úteis (ou Urgente 24–48h).`
+          : `🚚 <strong>Shipping & Lead Times:</strong><br>Portugal Mainland €4.50 (Free ≥ €50, 24–48h CTT). Islands €6.90, EU €9.90. Standard production takes 2–4 business days.`
+      );
+      return;
+    }
+
+    // Default: offer to send their exact message directly to the engineering team or WhatsApp
+    this.appendBotMessage(
+      this.isPt
+        ? `Posso encaminhar já a sua mensagem <em>"${text.replace(/</g, '&lt;')}"</em> diretamente para o nosso engenheiro responder por email, ou pode falar connosco no WhatsApp:`
+        : `I can forward your message directly to our engineer for a fast email reply, or you can message us on WhatsApp:`
+    );
+    this.openTicketForm(text);
+  }
 }

@@ -539,3 +539,48 @@ body.ls-page-leaving > main {
   }
 }
 
+/* ==========================================================================
+   4. FLOATING SUPPORT CHATBOX WIDGET (DARK & LIGHT THEME READY)
+   ========================================================================== */
+#toast-container {
+  bottom: 5.5rem !important;
+}
+
+#ls-chat-widget {
+  position: fixed;
+  bottom: 1.25rem;
+  right: 1.25rem;
+  z-index: 48;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+#ls-chat-panel {
+  transform-origin: bottom right;
+  transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#ls-chat-panel.chat-closed {
+  opacity: 0;
+  transform: scale(0.92) translateY(12px);
+  pointer-events: none;
+}
+
+#ls-chat-panel.chat-open {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+  pointer-events: auto;
+}
+
+html.theme-light #ls-chat-panel {
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 24px 48px -12px rgba(15, 23, 42, 0.18) !important;
+}
+
+html.theme-light .ls-chat-bot-bubble {
+  background: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+
