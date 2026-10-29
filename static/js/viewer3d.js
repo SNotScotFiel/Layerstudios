@@ -55,9 +55,9 @@ class LayerStudiosViewer {
     const width  = parent ? parent.clientWidth  : 500;
     const height = parent ? parent.clientHeight : 400;
 
-    // Scene
+    // Scene (transparent so the CSS Studio Radial Gradient shines through)
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0x09090b);
+    this.scene.background = null;
 
     // Camera
     this.camera = new THREE.PerspectiveCamera(45, width / height, 1, 3000);
@@ -99,20 +99,20 @@ class LayerStudiosViewer {
   }
 
   setupLighting() {
-    this.scene.add(new THREE.AmbientLight(0xffffff, 0.65));
+    this.scene.add(new THREE.HemisphereLight(0xe0f2fe, 0x1e293b, 0.85));
 
-    const key = new THREE.DirectionalLight(0x60a5fa, 1.1); // soft blue key
-    key.position.set(200, 300, 160);
+    const key = new THREE.DirectionalLight(0xf8fafc, 1.05); // natural studio key light
+    key.position.set(220, 320, 180);
     key.castShadow = true;
     key.shadow.mapSize.set(1024, 1024);
     this.scene.add(key);
 
-    const fill = new THREE.DirectionalLight(0x818cf8, 0.5); // indigo fill
-    fill.position.set(-200, 150, -120);
+    const fill = new THREE.DirectionalLight(0x60a5fa, 0.65); // sky-blue studio fill
+    fill.position.set(-220, 180, -140);
     this.scene.add(fill);
 
-    const rim = new THREE.DirectionalLight(0x3b82f6, 0.3); // blue rim
-    rim.position.set(0, -80, 120);
+    const rim = new THREE.DirectionalLight(0x818cf8, 0.4); // soft indigo rim
+    rim.position.set(0, -90, 150);
     this.scene.add(rim);
   }
 
@@ -120,16 +120,16 @@ class LayerStudiosViewer {
     const S = this.options.gridSize; // 256
     const DIV = 16; // 16mm per cell → 16 cells per 256mm
 
-    // Grid lines
-    const grid = new THREE.GridHelper(S, DIV, 0x3b82f6, 0x1c1c1f);
-    grid.position.y = 0;
+    // Grid lines (crisp sky-blue center & slate-600 subdivisions)
+    const grid = new THREE.GridHelper(S, DIV, 0x38bdf8, 0x334155);
+    grid.position.y = 0.05;
     this.scene.add(grid);
 
-    // Plate surface
-    const plateGeo = new THREE.BoxGeometry(S, 1.5, S);
-    const plateMat = new THREE.MeshStandardMaterial({ color: 0x111117, roughness: 0.9, metalness: 0.15 });
+    // Textured Slate PEI Plate surface
+    const plateGeo = new THREE.BoxGeometry(S, 2.0, S);
+    const plateMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.72, metalness: 0.22 });
     const plate = new THREE.Mesh(plateGeo, plateMat);
-    plate.position.y = -0.75;
+    plate.position.y = -1.0;
     plate.receiveShadow = true;
     this.scene.add(plate);
   }
