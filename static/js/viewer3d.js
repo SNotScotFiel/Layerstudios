@@ -426,29 +426,35 @@ class LayerStudiosViewer {
     const sY = +((bb.max.y - bb.min.y).toFixed(1));
     const sZ = +((bb.max.z - bb.min.z).toFixed(1));
 
-    let volume = 0;
     const pos = geometry.attributes.position;
-    const p1 = new THREE.Vector3(), p2 = new THREE.Vector3(), p3 = new THREE.Vector3();
-    if (geometry.index) {
-      const idx = geometry.index;
-      for (let i = 0; i < idx.count; i += 3) {
-        p1.fromBufferAttribute(pos, idx.getX(i));
-        p2.fromBufferAttribute(pos, idx.getX(i+1));
-        p3.fromBufferAttribute(pos, idx.getX(i+2));
-        volume += this._signedVol(p1, p2, p3);
-      }
-    } else {
-      for (let i = 0; i < pos.count; i += 3) {
-        p1.fromBufferAttribute(pos, i); p2.fromBufferAttribute(pos, i+1); p3.fromBufferAttribute(pos, i+2);
-        volume += this._signedVol(p1, p2, p3);
-      }
-    }
-    const volCm3 = Math.max(0.1, +(Math.abs(volume) / 1000).toFixed(1));
-    const grams  = Math.max(1, Math.round(volCm3 * 1.24 * 0.45));
-    const tris   = Math.round(pos.count / 3);
+    let volCm3 = geometry.userData?.trueVolumeCm3;
 
-    this._emitTelemetry(sX, sY, sZ, volCm3, grams, tris);
-    return { sX, sY, sZ, volCm3, grams, tris };
+    if (!volCm3) {
+      let volume = 0;
+      const p1 = new THREE.Vector3(), p2 = new THREE.Vector3(), p3 = new THREE.Vector3();
+      if (geometry.index) {
+        const idx = geometry.index;
+        for (let i = 0; i < idx.count; i += 3) {
+          p1.fromBufferAttribute(pos, idx.getX(i));
+          p2.fromBufferAttribute(pos, idx.getX(i+1));
+          p3.fromBufferAttribute(pos, idx.getX(i+2));
+          volume += this._signedVol(p1, p2, p3);
+        }
+      } else {
+        for (let i = 0; i < pos.count; i += 3) {
+          p1.fromBufferAttribute(pos, i); p2.fromBufferAttribute(pos, i+1); p3.fromBufferAttribute(pos, i+2);
+          volume += this._signedVol(p1, p2, p3);
+        }
+      }
+      volCm3 = Math.max(0.1, +(Math.abs(volume) / 1000).toFixed(1));
+    }
+
+    const grams = Math.max(1, Math.round(volCm3 * 1.24 * 0.45));
+    const tris  = Math.round(pos.count / 3);
+    const partCount = geometry.userData?.partCount || 1;
+
+    this._emitTelemetry(sX, sY, sZ, volCm3, grams, tris, partCount);
+    return { sX, sY, sZ, volCm3, grams, tris, partCount };
   }
 
   computeGroupTelemetry(box, tris) {
@@ -457,10 +463,10 @@ class LayerStudiosViewer {
     const sZ = +((box.max.z - box.min.z).toFixed(1));
     const volCm3 = Math.max(0.1, +((sX * sY * sZ * 0.35) / 1000).toFixed(1));
     const grams  = Math.max(1, Math.round(volCm3 * 1.24 * 0.45));
-    this._emitTelemetry(sX, sY, sZ, volCm3, grams, tris);
+    this._emitTelemetry(sX, sY, sZ, volCm3, grams, tris, 1);
   }
 
-  _emitTelemetry(sX, sY, sZ, volCm3, grams, tris) {
+  _emitTelemetry(sX, sY, sZ, volCm3, grams, tris, partCount = 1) {
     const hrs  = Math.floor(grams / 18);
     const mins = Math.round((grams % 18) * 3.3);
     const duration = hrs > 0 ? `${hrs}h ${mins}m` : `${Math.max(10, mins)}m`;
@@ -471,6 +477,7 @@ class LayerStudiosViewer {
       volumeCm3: volCm3,
       weightGrams: grams,
       triangles: tris,
+      partCount: partCount,
       estimatedDuration: duration,
       layerCount: Math.round(sY / 0.2) // 0.2mm standard layer height
     };

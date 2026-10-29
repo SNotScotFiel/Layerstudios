@@ -127,6 +127,13 @@ class LayerStudiosQuoteEngine {
       });
     }
 
+    const arrangeBtn = document.getElementById('btn-3d-arrange');
+    if (arrangeBtn) {
+      arrangeBtn.addEventListener('click', () => {
+        this.arrangeCurrentModelOnPlate();
+      });
+    }
+
     const sliceSlider = document.getElementById('quote-slice-slider');
     const sliceVal = document.getElementById('quote-slice-val');
     if (sliceSlider) {
@@ -425,77 +432,444 @@ class LayerStudiosQuoteEngine {
   }
 
   async parse3MFZipArchive(zip) {
-    // Bambu Studio, OrcaSlicer, PrusaSlicer and MakerWorld .3mf files store meshes
-    // across 3D/3dmodel.model AND/OR 3D/Objects/*.model. Scan all .model files!
+    // Full 3MF Scene-Graph Parser (Bambu Studio / OrcaSlicer / PrusaSlicer / MakerWorld)
+    // 1. Parse all .model files for <object id="..."> (<mesh> and <components>) and <build><item>
     const modelFiles = zip.file(/\.model$/i);
     if (!modelFiles || modelFiles.length === 0) return null;
 
-    const allPositions = [];
+    const modelsByPath = {};
+    let rootPath = null;
+
     for (const entry of modelFiles) {
       try {
         const xmlText = await entry.async('string');
-        this.extractPositionsFrom3MFXML(xmlText, allPositions);
+        const normPath = '/' + entry.name.replace(/^\/+/, '');
+        modelsByPath[normPath] = this.parse3MFDocument(xmlText, normPath);
+        if (normPath.toLowerCase().endsWith('3d/3dmodel.model') || !rootPath) {
+          rootPath = normPath;
+        }
       } catch (e) {}
     }
 
-    if (allPositions.length === 0) return null;
+    const partMeshes = [];
+
+    // Helper: multiply two 4x4 matrices (column-major THREE.Matrix4)
+    const resolveObjectParts = (modelPath, objId, parentMatrix, depth = 0) => {
+      if (depth > 8) return;
+      const modelDoc = modelsByPath[modelPath];
+      if (!modelDoc) return;
+      const obj = modelDoc.objects[objId];
+      if (!obj) return;
+
+      if (obj.meshPositions && obj.meshPositions.length > 0) {
+        const transformed = this.applyMatrixToPositions(obj.meshPositions, parentMatrix);
+        partMeshes.push(transformed);
+      }
+
+      if (obj.components && obj.components.length > 0) {
+        for (const comp of obj.components) {
+          const targetPath = comp.path ? ('/' + comp.path.replace(/^\/+/, '')) : modelPath;
+          const childMatrix = parentMatrix.clone().multiply(comp.matrix);
+          resolveObjectParts(targetPath, comp.objectId, childMatrix, depth + 1);
+        }
+      }
+    };
+
+    const rootDoc = rootPath ? modelsByPath[rootPath] : null;
+    if (rootDoc && rootDoc.buildItems.length > 0) {
+      for (const item of rootDoc.buildItems) {
+        resolveObjectParts(rootPath, item.objectId, item.matrix, 0);
+      }
+    }
+
+    // Fallback if build items didn't resolve all meshes
+    if (partMeshes.length === 0) {
+      for (const p of Object.keys(modelsByPath)) {
+        const doc = modelsByPath[p];
+        for (const oid of Object.keys(doc.objects)) {
+          const o = doc.objects[oid];
+          if (o.meshPositions && o.meshPositions.length > 0) {
+            partMeshes.push(new Float32Array(o.meshPositions));
+          }
+        }
+      }
+    }
+
+    if (partMeshes.length === 0) return null;
+
+    // 2. If only 1 mesh object was found, check if it contains multiple disconnected 3D shells that collide
+    if (partMeshes.length === 1) {
+      const shells = this.splitDisconnectedShells(partMeshes[0]);
+      if (shells.length > 1) {
+        partMeshes.length = 0;
+        for (const s of shells) partMeshes.push(s);
+      }
+    }
+
+    // 3. Compute true physical volume of each individual part before any plate translation
+    let totalVolumeMm3 = 0;
+    for (const partPos of partMeshes) {
+      totalVolumeMm3 += this.computePartVolumeMm3(partPos);
+    }
+
+    // 4. Check if multiple parts collide/overlap on the plate and auto-arrange them with 8mm spacing
+    if (partMeshes.length > 1) {
+      this.resolveMultiPartCollisions(partMeshes, 8.0, false);
+    }
+
+    // 5. Merge all non-colliding parts into one BufferGeometry
+    let totalFloats = 0;
+    for (const p of partMeshes) totalFloats += p.length;
+    const mergedPositions = new Float32Array(totalFloats);
+    let offset = 0;
+    for (const p of partMeshes) {
+      mergedPositions.set(p, offset);
+      offset += p.length;
+    }
+
     const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.Float32BufferAttribute(allPositions, 3));
+    geometry.setAttribute('position', new THREE.BufferAttribute(mergedPositions, 3));
     geometry.computeVertexNormals();
+    geometry.userData = {
+      trueVolumeCm3: Math.max(0.1, +(totalVolumeMm3 / 1000).toFixed(1)),
+      partCount: partMeshes.length,
+      partMeshes: partMeshes
+    };
     return geometry;
   }
 
-  extractPositionsFrom3MFXML(xmlText, targetPositions) {
+  splitDisconnectedShells(positions) {
+    const numTris = Math.floor(positions.length / 9);
+    if (numTris < 2 || numTris > 250000) return [positions];
+
+    const parent = new Int32Array(numTris);
+    for (let i = 0; i < numTris; i++) parent[i] = i;
+    const find = (i) => {
+      let root = i;
+      while (parent[root] !== root) root = parent[root];
+      let curr = i;
+      while (curr !== root) {
+        const nxt = parent[curr];
+        parent[curr] = root;
+        curr = nxt;
+      }
+      return root;
+    };
+
+    const vertexMap = new Map();
+    for (let t = 0; t < numTris; t++) {
+      const base = t * 9;
+      for (let v = 0; v < 3; v++) {
+        const vx = Math.round(positions[base + v * 3] * 200);
+        const vy = Math.round(positions[base + v * 3 + 1] * 200);
+        const vz = Math.round(positions[base + v * 3 + 2] * 200);
+        const key = `${vx},${vy},${vz}`;
+        const prevT = vertexMap.get(key);
+        if (prevT !== undefined) {
+          const r1 = find(t);
+          const r2 = find(prevT);
+          if (r1 !== r2) parent[r1] = r2;
+        } else {
+          vertexMap.set(key, t);
+        }
+      }
+    }
+
+    const groups = new Map();
+    for (let t = 0; t < numTris; t++) {
+      const r = find(t);
+      let list = groups.get(r);
+      if (!list) {
+        list = [];
+        groups.set(r, list);
+      }
+      list.push(t);
+    }
+
+    if (groups.size <= 1) return [positions];
+
+    // Filter out tiny noise shells (< 12 triangles) into the main shell, keep real part shells
+    const shells = [];
+    for (const triList of groups.values()) {
+      const arr = new Float32Array(triList.length * 9);
+      let outIdx = 0;
+      for (let i = 0; i < triList.length; i++) {
+        const base = triList[i] * 9;
+        for (let k = 0; k < 9; k++) arr[outIdx++] = positions[base + k];
+      }
+      shells.push(arr);
+    }
+    return shells.length <= 64 ? shells : [positions];
+  }
+
+  arrangeCurrentModelOnPlate() {
+    if (!this.viewer || !this.viewer.currentMesh || !this.viewer.currentMesh.geometry) {
+      this.showToast('Carregue primeiro um modelo 3D (STL / 3MF / OBJ).', 'warning');
+      return;
+    }
+    const geom = this.viewer.currentMesh.geometry;
+    const posAttr = geom.getAttribute('position');
+    if (!posAttr) return;
+
+    // Extract raw Z-up positions from stored partMeshes or convert current mesh from Y-up back to Z-up
+    let parts;
+    if (geom.userData && geom.userData.partMeshes && geom.userData.partMeshes.length > 1) {
+      parts = geom.userData.partMeshes.map(p => new Float32Array(p));
+    } else {
+      const zUpPos = new Float32Array(posAttr.array.length);
+      const src = posAttr.array;
+      for (let i = 0; i < src.length; i += 3) {
+        zUpPos[i]     = src[i];
+        zUpPos[i + 1] = -src[i + 2];
+        zUpPos[i + 2] = src[i + 1];
+      }
+      parts = this.splitDisconnectedShells(zUpPos);
+    }
+
+    if (parts.length <= 1) {
+      this.viewer.resetCamera();
+      this.showToast('Peça única centrada e pousada na mesa 256×256 mm.', 'info');
+      return;
+    }
+
+    let totalVolumeMm3 = 0;
+    for (const p of parts) totalVolumeMm3 += this.computePartVolumeMm3(p);
+
+    // Force auto-arrange on the Z=0 build plate with 10mm spacing
+    this.resolveMultiPartCollisions(parts, 10.0, true);
+
+    let totalFloats = 0;
+    for (const p of parts) totalFloats += p.length;
+    const merged = new Float32Array(totalFloats);
+    let offset = 0;
+    for (const p of parts) {
+      merged.set(p, offset);
+      offset += p.length;
+    }
+
+    const newGeom = new THREE.BufferGeometry();
+    newGeom.setAttribute('position', new THREE.BufferAttribute(merged, 3));
+    newGeom.computeVertexNormals();
+    newGeom.userData = {
+      trueVolumeCm3: Math.max(0.1, +(totalVolumeMm3 / 1000).toFixed(1)),
+      partCount: parts.length,
+      partMeshes: parts
+    };
+    this.viewer.setGeometry(newGeom, true);
+    this.showToast(`${parts.length} partes separadas e arrumadas na mesa 256×256 mm!`, 'success');
+  }
+
+  parse3MFMatrix(transformStr) {
+    const mat = new THREE.Matrix4();
+    if (!transformStr) return mat;
+    const n = transformStr.trim().split(/\s+/).map(Number);
+    if (n.length === 12 && !n.some(isNaN)) {
+      // 3MF 3D affine matrix: m00 m01 m02 m10 m11 m12 m20 m21 m22 m30(tx) m31(ty) m32(tz)
+      mat.set(
+        n[0], n[3], n[6], n[9],
+        n[1], n[4], n[7], n[10],
+        n[2], n[5], n[8], n[11],
+        0,    0,    0,    1
+      );
+    }
+    return mat;
+  }
+
+  applyMatrixToPositions(positions, matrix) {
+    const out = new Float32Array(positions.length);
+    const e = matrix.elements;
+    for (let i = 0; i < positions.length; i += 3) {
+      const x = positions[i], y = positions[i + 1], z = positions[i + 2];
+      out[i]     = e[0] * x + e[4] * y + e[8]  * z + e[12];
+      out[i + 1] = e[1] * x + e[5] * y + e[9]  * z + e[13];
+      out[i + 2] = e[2] * x + e[6] * y + e[10] * z + e[14];
+    }
+    return out;
+  }
+
+  parse3MFDocument(xmlText, currentPath) {
     const parser = new DOMParser();
     const doc = parser.parseFromString(xmlText, 'application/xml');
-    const ns = 'http://schemas.microsoft.com/3dmanufacturing/core/2015/02';
+    const objects = {};
+    const buildItems = [];
 
-    let meshes = doc.getElementsByTagNameNS(ns, 'mesh');
-    if (meshes.length === 0) meshes = doc.getElementsByTagName('mesh');
-    if (!meshes || meshes.length === 0) return;
+    const objEls = doc.getElementsByTagName('object');
+    for (let i = 0; i < objEls.length; i++) {
+      const objEl = objEls[i];
+      const id = objEl.getAttribute('id');
+      if (!id) continue;
 
-    for (let m = 0; m < meshes.length; m++) {
-      const mesh = meshes[m];
-      let verticesEl = mesh.getElementsByTagNameNS(ns, 'vertices');
-      if (verticesEl.length === 0) verticesEl = mesh.getElementsByTagName('vertices');
-      if (verticesEl.length === 0) continue;
+      const meshEls = objEl.getElementsByTagName('mesh');
+      let meshPositions = null;
 
-      let vertexEls = verticesEl[0].getElementsByTagNameNS(ns, 'vertex');
-      if (vertexEls.length === 0) vertexEls = verticesEl[0].getElementsByTagName('vertex');
-
-      const verts = new Float32Array(vertexEls.length * 3);
-      for (let i = 0; i < vertexEls.length; i++) {
-        verts[i * 3]     = parseFloat(vertexEls[i].getAttribute('x')) || 0;
-        verts[i * 3 + 1] = parseFloat(vertexEls[i].getAttribute('y')) || 0;
-        verts[i * 3 + 2] = parseFloat(vertexEls[i].getAttribute('z')) || 0;
+      if (meshEls.length > 0) {
+        const tempPos = [];
+        for (let m = 0; m < meshEls.length; m++) {
+          const mesh = meshEls[m];
+          const vertEls = mesh.getElementsByTagName('vertex');
+          const verts = new Float32Array(vertEls.length * 3);
+          for (let v = 0; v < vertEls.length; v++) {
+            verts[v * 3]     = parseFloat(vertEls[v].getAttribute('x')) || 0;
+            verts[v * 3 + 1] = parseFloat(vertEls[v].getAttribute('y')) || 0;
+            verts[v * 3 + 2] = parseFloat(vertEls[v].getAttribute('z')) || 0;
+          }
+          const triEls = mesh.getElementsByTagName('triangle');
+          for (let t = 0; t < triEls.length; t++) {
+            const v1 = parseInt(triEls[t].getAttribute('v1'), 10);
+            const v2 = parseInt(triEls[t].getAttribute('v2'), 10);
+            const v3 = parseInt(triEls[t].getAttribute('v3'), 10);
+            tempPos.push(
+              verts[v1 * 3], verts[v1 * 3 + 1], verts[v1 * 3 + 2],
+              verts[v2 * 3], verts[v2 * 3 + 1], verts[v2 * 3 + 2],
+              verts[v3 * 3], verts[v3 * 3 + 1], verts[v3 * 3 + 2]
+            );
+          }
+        }
+        if (tempPos.length > 0) {
+          meshPositions = new Float32Array(tempPos);
+        }
       }
 
-      let trianglesEl = mesh.getElementsByTagNameNS(ns, 'triangles');
-      if (trianglesEl.length === 0) trianglesEl = mesh.getElementsByTagName('triangles');
-      if (trianglesEl.length === 0) continue;
-
-      let triEls = trianglesEl[0].getElementsByTagNameNS(ns, 'triangle');
-      if (triEls.length === 0) triEls = trianglesEl[0].getElementsByTagName('triangle');
-
-      for (let i = 0; i < triEls.length; i++) {
-        const v1 = parseInt(triEls[i].getAttribute('v1'), 10);
-        const v2 = parseInt(triEls[i].getAttribute('v2'), 10);
-        const v3 = parseInt(triEls[i].getAttribute('v3'), 10);
-        targetPositions.push(
-          verts[v1 * 3], verts[v1 * 3 + 1], verts[v1 * 3 + 2],
-          verts[v2 * 3], verts[v2 * 3 + 1], verts[v2 * 3 + 2],
-          verts[v3 * 3], verts[v3 * 3 + 1], verts[v3 * 3 + 2]
-        );
+      const compEls = objEl.getElementsByTagName('component');
+      const components = [];
+      for (let c = 0; c < compEls.length; c++) {
+        const compEl = compEls[c];
+        const refId = compEl.getAttribute('objectid');
+        const pPath = compEl.getAttribute('p:path') || compEl.getAttributeNS('http://schemas.microsoft.com/3dmanufacturing/production/2015/06', 'path') || currentPath;
+        const matrix = this.parse3MFMatrix(compEl.getAttribute('transform'));
+        if (refId) {
+          components.push({ objectId: refId, path: pPath, matrix });
+        }
       }
+
+      objects[id] = { id, meshPositions, components };
+    }
+
+    const itemEls = doc.getElementsByTagName('item');
+    for (let i = 0; i < itemEls.length; i++) {
+      const itemEl = itemEls[i];
+      const objectId = itemEl.getAttribute('objectid');
+      const printable = itemEl.getAttribute('printable');
+      if (printable === '0') continue;
+      if (objectId) {
+        buildItems.push({
+          objectId,
+          matrix: this.parse3MFMatrix(itemEl.getAttribute('transform'))
+        });
+      }
+    }
+
+    return { objects, buildItems };
+  }
+
+  computePartVolumeMm3(pos) {
+    // Calculate centroid first so signed tetrahedron volume is translation-invariant
+    let cx = 0, cy = 0, cz = 0;
+    const n = pos.length / 3;
+    if (n === 0) return 0;
+    for (let i = 0; i < pos.length; i += 3) {
+      cx += pos[i]; cy += pos[i + 1]; cz += pos[i + 2];
+    }
+    cx /= n; cy /= n; cz /= n;
+
+    let vol = 0;
+    for (let i = 0; i < pos.length; i += 9) {
+      const x1 = pos[i] - cx,     y1 = pos[i + 1] - cy, z1 = pos[i + 2] - cz;
+      const x2 = pos[i + 3] - cx, y2 = pos[i + 4] - cy, z2 = pos[i + 5] - cz;
+      const x3 = pos[i + 6] - cx, y3 = pos[i + 7] - cy, z3 = pos[i + 8] - cz;
+      vol += (x1 * (y2 * z3 - z2 * y3) + y1 * (z2 * x3 - x2 * z3) + z1 * (x2 * y3 - y2 * x3)) / 6.0;
+    }
+    return Math.abs(vol);
+  }
+
+  resolveMultiPartCollisions(partMeshes, gapMm = 8.0, forceArrange = false) {
+    // Compute 3D bounding boxes in Z-up space for each part
+    const computeBox = (pos) => {
+      let minX = Infinity, minY = Infinity, minZ = Infinity;
+      let maxX = -Infinity, maxY = -Infinity, maxZ = -Infinity;
+      for (let i = 0; i < pos.length; i += 3) {
+        const x = pos[i], y = pos[i + 1], z = pos[i + 2];
+        if (x < minX) minX = x; if (x > maxX) maxX = x;
+        if (y < minY) minY = y; if (y > maxY) maxY = y;
+        if (z < minZ) minZ = z; if (z > maxZ) maxZ = z;
+      }
+      return { minX, maxX, minY, maxY, minZ, maxZ, w: maxX - minX, d: maxY - minY, h: maxZ - minZ };
+    };
+
+    const boxes = partMeshes.map(computeBox);
+
+    // Check if any two parts collide in 3D (overlap > 1.5mm in X, Y and Z)
+    let hasCollision = forceArrange;
+    for (let i = 0; i < boxes.length && !hasCollision; i++) {
+      for (let j = i + 1; j < boxes.length; j++) {
+        const a = boxes[i], b = boxes[j];
+        const overlapX = Math.min(a.maxX, b.maxX) - Math.max(a.minX, b.minX);
+        const overlapY = Math.min(a.maxY, b.maxY) - Math.max(a.minY, b.minY);
+        const overlapZ = Math.min(a.maxZ, b.maxZ) - Math.max(a.minZ, b.minZ);
+        if (overlapX > 1.5 && overlapY > 1.5 && overlapZ > 1.5) {
+          hasCollision = true;
+          break;
+        }
+      }
+    }
+
+    if (!hasCollision) {
+      return;
+    }
+
+    // Auto-Arrange Shelf Packing on the 256x256 build plate (like Bambu Studio Auto-Arrange)
+    const items = partMeshes.map((pos, idx) => ({ pos, box: boxes[idx], idx }));
+    // Sort largest footprint first
+    items.sort((a, b) => (b.box.w * b.box.d) - (a.box.w * a.box.d));
+
+    const totalArea = items.reduce((acc, it) => acc + (it.box.w + gapMm) * (it.box.d + gapMm), 0);
+    const maxRowWidth = Math.max(120, Math.min(240, Math.ceil(Math.sqrt(totalArea) * 1.15)));
+
+    let curX = 0;
+    let curY = 0;
+    let rowDepth = 0;
+
+    for (const item of items) {
+      const { pos, box } = item;
+      if (curX > 0 && curX + box.w > maxRowWidth) {
+        curX = 0;
+        curY += rowDepth + gapMm;
+        rowDepth = 0;
+      }
+
+      const dx = curX - box.minX;
+      const dy = curY - box.minY;
+      const dz = -box.minZ; // Drop flat onto the build plate (Z = 0)
+
+      for (let i = 0; i < pos.length; i += 3) {
+        pos[i]     += dx;
+        pos[i + 1] += dy;
+        pos[i + 2] += dz;
+      }
+
+      curX += box.w + gapMm;
+      if (box.d > rowDepth) rowDepth = box.d;
     }
   }
 
   parse3MFModelXML(xmlText) {
-    const positions = [];
-    this.extractPositionsFrom3MFXML(xmlText, positions);
-    if (positions.length === 0) return null;
+    const doc = this.parse3MFDocument(xmlText, '/3D/3dmodel.model');
+    const partMeshes = [];
+    for (const oid of Object.keys(doc.objects)) {
+      const o = doc.objects[oid];
+      if (o.meshPositions && o.meshPositions.length > 0) {
+        partMeshes.push(o.meshPositions);
+      }
+    }
+    if (partMeshes.length === 0) return null;
+    if (partMeshes.length > 1) this.resolveMultiPartCollisions(partMeshes, 8.0);
+    let totalFloats = 0;
+    for (const p of partMeshes) totalFloats += p.length;
+    const merged = new Float32Array(totalFloats);
+    let offset = 0;
+    for (const p of partMeshes) { merged.set(p, offset); offset += p.length; }
     const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    geometry.setAttribute('position', new THREE.BufferAttribute(merged, 3));
     geometry.computeVertexNormals();
     return geometry;
   }
