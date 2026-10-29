@@ -210,12 +210,14 @@ class LayerStudiosViewer {
     this.currentMesh.traverse(child => {
       if (child.isMesh) {
         child.material = mat.clone();
+        child.material.clippingPlanes = this.options.enableSlicing ? [this.clipPlane] : [];
         child.material.wireframe = this.isWireframe;
       }
     });
   }
 
   setCustomColor(hexColor) {
+    this.customColorHex = hexColor;
     if (!this.currentMesh) return;
     this.currentMesh.traverse(child => {
       if (child.isMesh && child.material && child.material.color) {
@@ -248,8 +250,18 @@ class LayerStudiosViewer {
     if (!this.currentGeometry || !this.currentGeometry.boundingBox) return;
     const bb = this.currentGeometry.boundingBox;
     const totalH = bb.max.y - bb.min.y;
-    const targetY = bb.min.y + totalH * (normalizedPercent / 100);
+    const pct = Math.max(1, Math.min(100, Number(normalizedPercent) || 100));
+    const targetY = pct >= 100 ? (bb.max.y + 50) : (bb.min.y + totalH * (pct / 100));
     this.clipPlane.constant = targetY;
+
+    if (this.currentMesh) {
+      this.currentMesh.traverse(child => {
+        if (child.isMesh && child.material) {
+          child.material.clippingPlanes = [this.clipPlane];
+          child.material.needsUpdate = true;
+        }
+      });
+    }
   }
 
   /* ─────────────────────── FIT CHECK ─────────────────────── */
@@ -332,9 +344,12 @@ class LayerStudiosViewer {
 
   /* ─────────────────────── GEOMETRY LOADING ─────────────────────── */
 
-  setGeometry(geometry) {
+  setGeometry(geometry, isZUp = true) {
     this._clearMesh();
 
+    if (isZUp) {
+      geometry.rotateX(-Math.PI / 2);
+    }
     geometry.computeVertexNormals();
     geometry.computeBoundingBox();
     geometry.center();
@@ -343,7 +358,14 @@ class LayerStudiosViewer {
     geometry.computeBoundingBox();
 
     this.currentGeometry = { boundingBox: geometry.boundingBox };
-    const mesh = new THREE.Mesh(geometry, this.getMaterial());
+    const mat = this.getMaterial();
+    mat.clippingPlanes = this.options.enableSlicing ? [this.clipPlane] : [];
+    mat.wireframe = this.isWireframe;
+    if (this.customColorHex && mat.color) {
+      mat.color.set(this.customColorHex);
+    }
+
+    const mesh = new THREE.Mesh(geometry, mat);
     mesh.castShadow = true;
     mesh.receiveShadow = true;
 
@@ -358,6 +380,11 @@ class LayerStudiosViewer {
     this._clearMesh();
 
     group.position.y = 0;
+    group.traverse(c => {
+      if (c.isMesh && c.material) {
+        c.material.clippingPlanes = this.options.enableSlicing ? [this.clipPlane] : [];
+      }
+    });
     this.scene.add(group);
     this.currentMesh = group;
 

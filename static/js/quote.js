@@ -86,15 +86,11 @@ class LayerStudiosQuoteEngine {
       }
     });
 
-    // Load default demo geometry on start so the 3D viewer looks alive immediately
-    if (this.viewer && typeof this.viewer.loadDefaultPart === 'function') {
-      this.viewer.loadDefaultPart();
-      // Keep currentTelemetry null until user uploads their own file so price starts clean
-      this.currentTelemetry = null;
-      this.updateTelemetryUI(null);
-      const lc = document.getElementById('quote-layer-count');
-      if (lc) lc.textContent = 'Peça de demonstração (carregue o seu STL)';
-    }
+    // Start with a clean empty 256x256x256mm build plate ready for the user's 3D file
+    this.currentTelemetry = null;
+    this.updateTelemetryUI(null);
+    const lc = document.getElementById('quote-layer-count');
+    if (lc) lc.textContent = 'Carregue um ficheiro STL / 3MF / OBJ para visualizar em 3D';
   }
 
   setupInteractiveControls() {
@@ -327,7 +323,8 @@ class LayerStudiosQuoteEngine {
         reader.onload = (evt) => {
           if (this.viewer) {
             this.viewer.loadSTLFromArrayBuffer(evt.target.result);
-            this.showToast(`Modelo 3D "${file.name}" analisado com sucesso!`, 'success');
+            this.resetSliceSlider();
+            this.showToast(`Modelo STL "${file.name}" carregado no Slicer 3D!`, 'success');
             if (window.LayerStudiosAnalytics) {
               window.LayerStudiosAnalytics.trackModelPreviewLoaded(document.querySelector('input[name="quote-material"]:checked')?.value || 'PETG');
             }
@@ -343,36 +340,55 @@ class LayerStudiosQuoteEngine {
               return;
             }
             const zip = await JSZip.loadAsync(evt.target.result);
-            const modelEntry = zip.file('3D/3dmodel.model') ||
-                               (zip.file(/\.model$/i).length > 0 ? zip.file(/\.model$/i)[0] : null);
-            if (modelEntry) {
-              const xmlText = await modelEntry.async('string');
-              const geometry = this.parse3MFModelXML(xmlText);
-              if (geometry && this.viewer) {
-                this.viewer.setGeometry(geometry);
-                this.showToast(`Modelo 3MF "${file.name}" carregado!`, 'success');
-                if (window.LayerStudiosAnalytics) {
-                  window.LayerStudiosAnalytics.trackModelPreviewLoaded(document.querySelector('input[name="quote-material"]:checked')?.value || 'PETG');
-                }
-              } else {
-                this.setFallbackTelemetryForCADFile(file);
+            const geometry = await this.parse3MFZipArchive(zip);
+            if (geometry && this.viewer) {
+              this.viewer.setGeometry(geometry, true);
+              this.resetSliceSlider();
+              this.showToast(`Modelo 3MF "${file.name}" carregado no Slicer 3D!`, 'success');
+              if (window.LayerStudiosAnalytics) {
+                window.LayerStudiosAnalytics.trackModelPreviewLoaded(document.querySelector('input[name="quote-material"]:checked')?.value || 'PETG');
               }
             } else {
               this.setFallbackTelemetryForCADFile(file);
             }
           } catch (err) {
+            console.warn('3MF parse fallback:', err);
             this.setFallbackTelemetryForCADFile(file);
           }
         };
         reader.readAsArrayBuffer(file);
+      } else if (ext === 'obj') {
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          const geometry = this.parseOBJText(evt.target.result);
+          if (geometry && this.viewer) {
+            this.viewer.setGeometry(geometry, false);
+            this.resetSliceSlider();
+            this.showToast(`Modelo OBJ "${file.name}" carregado no Slicer 3D!`, 'success');
+            if (window.LayerStudiosAnalytics) {
+              window.LayerStudiosAnalytics.trackModelPreviewLoaded(document.querySelector('input[name="quote-material"]:checked')?.value || 'PETG');
+            }
+          } else {
+            this.setFallbackTelemetryForCADFile(file);
+          }
+        };
+        reader.readAsText(file);
       } else {
-        // STEP / OBJ / ZIP / PDF — set estimated telemetry so user still gets an instant baseline quote
+        // STEP / ZIP / PDF — set estimated telemetry so user still gets an instant baseline quote
         this.setFallbackTelemetryForCADFile(file);
         this.showToast(`Ficheiro "${file.name}" anexado para validação técnica.`, 'info');
       }
     });
 
     this.recalculateQuote();
+  }
+
+  resetSliceSlider() {
+    const sliceSlider = document.getElementById('quote-slice-slider');
+    const sliceVal = document.getElementById('quote-slice-val');
+    if (sliceSlider) sliceSlider.value = 100;
+    if (sliceVal) sliceVal.textContent = '100%';
+    if (this.viewer) this.viewer.setSliceHeight(100);
   }
 
   setFallbackTelemetryForCADFile(file) {
@@ -408,57 +424,109 @@ class LayerStudiosQuoteEngine {
     }, 3500);
   }
 
-  parse3MFModelXML(xmlText) {
-    try {
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(xmlText, 'application/xml');
-      const ns = 'http://schemas.microsoft.com/3dmanufacturing/core/2015/02';
+  async parse3MFZipArchive(zip) {
+    // Bambu Studio, OrcaSlicer, PrusaSlicer and MakerWorld .3mf files store meshes
+    // across 3D/3dmodel.model AND/OR 3D/Objects/*.model. Scan all .model files!
+    const modelFiles = zip.file(/\.model$/i);
+    if (!modelFiles || modelFiles.length === 0) return null;
 
-      let meshes = doc.getElementsByTagNameNS(ns, 'mesh');
-      if (meshes.length === 0) meshes = doc.getElementsByTagName('mesh');
-      if (meshes.length === 0) return null;
+    const allPositions = [];
+    for (const entry of modelFiles) {
+      try {
+        const xmlText = await entry.async('string');
+        this.extractPositionsFrom3MFXML(xmlText, allPositions);
+      } catch (e) {}
+    }
 
-      const mesh = meshes[0];
+    if (allPositions.length === 0) return null;
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(allPositions, 3));
+    geometry.computeVertexNormals();
+    return geometry;
+  }
+
+  extractPositionsFrom3MFXML(xmlText, targetPositions) {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(xmlText, 'application/xml');
+    const ns = 'http://schemas.microsoft.com/3dmanufacturing/core/2015/02';
+
+    let meshes = doc.getElementsByTagNameNS(ns, 'mesh');
+    if (meshes.length === 0) meshes = doc.getElementsByTagName('mesh');
+    if (!meshes || meshes.length === 0) return;
+
+    for (let m = 0; m < meshes.length; m++) {
+      const mesh = meshes[m];
       let verticesEl = mesh.getElementsByTagNameNS(ns, 'vertices');
       if (verticesEl.length === 0) verticesEl = mesh.getElementsByTagName('vertices');
-      if (verticesEl.length === 0) return null;
+      if (verticesEl.length === 0) continue;
 
       let vertexEls = verticesEl[0].getElementsByTagNameNS(ns, 'vertex');
       if (vertexEls.length === 0) vertexEls = verticesEl[0].getElementsByTagName('vertex');
 
-      const verts = [];
+      const verts = new Float32Array(vertexEls.length * 3);
       for (let i = 0; i < vertexEls.length; i++) {
-        verts.push(
-          parseFloat(vertexEls[i].getAttribute('x')),
-          parseFloat(vertexEls[i].getAttribute('y')),
-          parseFloat(vertexEls[i].getAttribute('z'))
-        );
+        verts[i * 3]     = parseFloat(vertexEls[i].getAttribute('x')) || 0;
+        verts[i * 3 + 1] = parseFloat(vertexEls[i].getAttribute('y')) || 0;
+        verts[i * 3 + 2] = parseFloat(vertexEls[i].getAttribute('z')) || 0;
       }
 
       let trianglesEl = mesh.getElementsByTagNameNS(ns, 'triangles');
       if (trianglesEl.length === 0) trianglesEl = mesh.getElementsByTagName('triangles');
-      if (trianglesEl.length === 0) return null;
+      if (trianglesEl.length === 0) continue;
 
       let triEls = trianglesEl[0].getElementsByTagNameNS(ns, 'triangle');
       if (triEls.length === 0) triEls = trianglesEl[0].getElementsByTagName('triangle');
 
-      const positions = [];
       for (let i = 0; i < triEls.length; i++) {
-        const v1 = parseInt(triEls[i].getAttribute('v1'));
-        const v2 = parseInt(triEls[i].getAttribute('v2'));
-        const v3 = parseInt(triEls[i].getAttribute('v3'));
-        positions.push(
+        const v1 = parseInt(triEls[i].getAttribute('v1'), 10);
+        const v2 = parseInt(triEls[i].getAttribute('v2'), 10);
+        const v3 = parseInt(triEls[i].getAttribute('v3'), 10);
+        targetPositions.push(
           verts[v1 * 3], verts[v1 * 3 + 1], verts[v1 * 3 + 2],
           verts[v2 * 3], verts[v2 * 3 + 1], verts[v2 * 3 + 2],
           verts[v3 * 3], verts[v3 * 3 + 1], verts[v3 * 3 + 2]
         );
       }
+    }
+  }
 
+  parse3MFModelXML(xmlText) {
+    const positions = [];
+    this.extractPositionsFrom3MFXML(xmlText, positions);
+    if (positions.length === 0) return null;
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    geometry.computeVertexNormals();
+    return geometry;
+  }
+
+  parseOBJText(text) {
+    try {
+      const verts = [];
+      const positions = [];
+      const lines = text.split('\n');
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (line.startsWith('v ')) {
+          const parts = line.split(/\s+/);
+          verts.push([parseFloat(parts[1]) || 0, parseFloat(parts[2]) || 0, parseFloat(parts[3]) || 0]);
+        } else if (line.startsWith('f ')) {
+          const parts = line.split(/\s+/).slice(1);
+          const idx = parts.map(p => parseInt(p.split('/')[0], 10) - 1);
+          for (let k = 1; k < idx.length - 1; k++) {
+            const a = verts[idx[0]], b = verts[idx[k]], c = verts[idx[k + 1]];
+            if (a && b && c) {
+              positions.push(a[0], a[1], a[2], b[0], b[1], b[2], c[0], c[1], c[2]);
+            }
+          }
+        }
+      }
+      if (positions.length === 0) return null;
       const geometry = new THREE.BufferGeometry();
       geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
       geometry.computeVertexNormals();
       return geometry;
-    } catch (err) {
+    } catch (e) {
       return null;
     }
   }
