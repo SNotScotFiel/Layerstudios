@@ -451,121 +451,91 @@ html.theme-light .store-theme-minimal .store-filter-btn:not(.active) {
 }
 
 /* ==========================================================================
-   3. LASER SLICER / STUDIO CURTAIN PAGE TRANSITION
+   3. SMOOTH VIEW TRANSITIONS, SHARED 3D CARD MORPH & TOP PROGRESS LINE
    ========================================================================== */
 @view-transition {
   navigation: auto;
 }
 
-#ls-slicer-curtain {
+#main-header {
+  view-transition-name: studio-navbar;
+}
+
+#hero .glass-panel,
+#quote-3d-card {
+  view-transition-name: studio-3d-slicer;
+}
+
+::view-transition-old(root) {
+  animation: lsViewFadeOut 0.22s cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+::view-transition-new(root) {
+  animation: lsViewFadeIn 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+::view-transition-group(studio-3d-slicer) {
+  animation-duration: 0.38s;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes lsViewFadeOut {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to   { opacity: 0; transform: translateY(-8px) scale(0.992); }
+}
+
+@keyframes lsViewFadeIn {
+  from { opacity: 0; transform: translateY(12px) scale(0.992); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Sleek 2.5px Top Progress Bar (like Linear / Vercel / GitHub) */
+#ls-top-progress {
   position: fixed;
-  inset: 0;
-  z-index: 99999;
-  pointer-events: none;
-  overflow: hidden;
-  background: linear-gradient(180deg, rgba(11, 14, 20, 0.96) 0%, rgba(15, 22, 36, 0.98) 100%);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  transform: translateY(-102%);
-  will-change: transform, opacity;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-html.theme-light #ls-slicer-curtain {
-  background: linear-gradient(180deg, rgba(248, 250, 252, 0.96) 0%, rgba(241, 245, 249, 0.98) 100%);
-}
-
-/* Glowing 3D Printer Laser Slicer Line at the leading edge of the curtain */
-#ls-slicer-curtain .ls-laser-beam {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, transparent 0%, #3b82f6 15%, #93c5fd 40%, #ffffff 50%, #93c5fd 60%, #3b82f6 85%, transparent 100%);
-  box-shadow:
-    0 0 18px 3px rgba(59, 130, 246, 0.9),
-    0 0 42px 8px rgba(37, 99, 235, 0.55);
-}
-
-#ls-slicer-curtain .ls-laser-top {
-  position: absolute;
   top: 0;
   left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, transparent 0%, #3b82f6 15%, #93c5fd 40%, #ffffff 50%, #93c5fd 60%, #3b82f6 85%, transparent 100%);
-  box-shadow:
-    0 0 18px 3px rgba(59, 130, 246, 0.9),
-    0 0 42px 8px rgba(37, 99, 235, 0.55);
+  height: 2.5px;
+  width: 0%;
+  z-index: 99999;
+  pointer-events: none;
+  background: linear-gradient(90deg, #2563eb 0%, #60a5fa 60%, #93c5fd 100%);
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.85);
+  opacity: 0;
+  transition: width 0.28s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s ease;
 }
 
-#ls-slicer-curtain .ls-curtain-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 20px;
-  border-radius: 9999px;
-  background: rgba(15, 23, 42, 0.85);
-  border: 1px solid rgba(59, 130, 246, 0.35);
-  box-shadow: 0 0 30px rgba(59, 130, 246, 0.2);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  color: #60a5fa;
-  text-transform: uppercase;
+#ls-top-progress.is-active {
+  opacity: 1;
+  width: 85%;
 }
 
-html.theme-light #ls-slicer-curtain .ls-curtain-badge {
-  background: rgba(255, 255, 255, 0.92);
-  border-color: rgba(37, 99, 235, 0.35);
-  color: #2563eb;
+#ls-top-progress.is-done {
+  opacity: 0;
+  width: 100%;
+  transition: width 0.18s ease-out, opacity 0.25s ease 0.12s;
 }
 
-/* Phase 1: Exit Sweep (Top -> Center/Cover) */
-#ls-slicer-curtain.is-sweeping-in {
-  transition: transform 0.36s cubic-bezier(0.22, 1, 0.36, 1);
-  transform: translateY(0%);
+/* Smooth page content entrance & exit fallback */
+body > section,
+body > main {
+  animation: lsPageSectionIn 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
+  transition: opacity 0.16s ease, transform 0.16s ease;
 }
 
-/* Phase 2: Entrance Reveal (Center -> Bottom Out) */
-#ls-slicer-curtain.is-sweeping-out {
-  transform: translateY(0%);
-  animation: lsCurtainRevealOut 0.48s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+body.ls-page-leaving > section,
+body.ls-page-leaving > main {
+  opacity: 0;
+  transform: translateY(-6px) scale(0.995);
 }
 
-@keyframes lsCurtainRevealOut {
-  0% {
-    transform: translateY(0%);
-    opacity: 1;
-  }
-  85% {
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(102%);
+@keyframes lsPageSectionIn {
+  from {
     opacity: 0;
+    transform: translateY(10px);
   }
-}
-
-/* Subtle content entrance motion when arriving on a new page */
-body.ls-page-entering > section,
-body.ls-page-entering > main {
-  animation: lsContentRiseIn 0.48s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-@keyframes lsContentRiseIn {
-  0% {
-    opacity: 0.25;
-    transform: translateY(10px) scale(0.994);
-  }
-  100% {
+  to {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translateY(0);
   }
 }
 

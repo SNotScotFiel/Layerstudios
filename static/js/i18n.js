@@ -673,55 +673,54 @@ if (typeof window !== 'undefined') {
       langBtn.parentElement.insertBefore(themeBtn, langBtn);
     }
 
-    // Laser Slicer / Studio Curtain Page Transition Controller
-    let curtain = document.getElementById('ls-slicer-curtain');
-    if (!curtain) {
-      curtain = document.createElement('div');
-      curtain.id = 'ls-slicer-curtain';
-      curtain.innerHTML = `
-        <div class="ls-laser-top"></div>
-        <div class="ls-curtain-badge">
-          <span class="w-2 h-2 rounded-full bg-blue-400 animate-ping"></span>
-          <span id="ls-curtain-label">LAYER STUDIOS // 0.20mm SLICER</span>
-        </div>
-        <div class="ls-laser-beam"></div>
-      `;
-      document.body.appendChild(curtain);
+    // Smooth Page Transition Controller (Top Progress Bar + View Transitions + Prefetch)
+    let topBar = document.getElementById('ls-top-progress');
+    if (!topBar) {
+      topBar = document.createElement('div');
+      topBar.id = 'ls-top-progress';
+      document.body.appendChild(topBar);
     }
 
-    // Check if arriving from an internal Laser Slicer transition
+    // Complete top progress bar on arrival
     try {
-      const pendingLabel = sessionStorage.getItem('ls_slicer_transition');
-      if (pendingLabel) {
-        sessionStorage.removeItem('ls_slicer_transition');
-        const labelEl = document.getElementById('ls-curtain-label');
-        if (labelEl) labelEl.textContent = pendingLabel;
-        document.body.classList.add('ls-page-entering');
-        curtain.classList.remove('is-sweeping-in');
-        curtain.classList.add('is-sweeping-out');
+      if (sessionStorage.getItem('ls_nav_active') === '1') {
+        sessionStorage.removeItem('ls_nav_active');
+        topBar.style.transition = 'none';
+        topBar.style.width = '85%';
+        topBar.style.opacity = '1';
+        void topBar.offsetWidth;
+        topBar.style.transition = '';
+        topBar.classList.add('is-done');
         setTimeout(() => {
-          curtain.classList.remove('is-sweeping-out');
-          document.body.classList.remove('ls-page-entering');
-        }, 520);
+          topBar.classList.remove('is-active', 'is-done');
+          topBar.style.width = '0%';
+        }, 400);
       }
     } catch (e) {}
 
     window.addEventListener('pageshow', (evt) => {
-      if (evt.persisted && curtain) {
-        curtain.classList.remove('is-sweeping-in', 'is-sweeping-out');
+      if (evt.persisted) {
+        document.body.classList.remove('ls-page-leaving');
+        if (topBar) topBar.classList.remove('is-active', 'is-done');
       }
     });
 
-    const getRouteLabel = (pathname) => {
-      const p = (pathname || '/').toLowerCase();
-      if (p.includes('/quote')) return 'SLICER 3D // ORÇAMENTO IMEDIATO';
-      if (p.includes('/store')) return 'LAYER STUDIOS // CATÁLOGO LOJA';
-      if (p.includes('/materials')) return 'ENGENHARIA // GUIA DE MATERIAIS';
-      if (p.includes('/track')) return 'TELEMETRIA // SEGUIR ENCOMENDA';
-      if (p.includes('/login')) return 'CONTA CLIENTE // LAYER STUDIOS';
-      if (p.includes('/admin')) return 'ADMIN PORTAL // LAYER STUDIOS';
-      return 'LAYER STUDIOS // ESTÚDIO 3D';
-    };
+    // Prefetch internal pages on hover for instant navigation
+    const prefetched = new Set();
+    document.addEventListener('mouseover', (e) => {
+      const link = e.target.closest('a[href]');
+      if (!link) return;
+      try {
+        const u = new URL(link.href, window.location.origin);
+        if (u.origin === window.location.origin && u.pathname !== window.location.pathname && !prefetched.has(u.pathname)) {
+          prefetched.add(u.pathname);
+          const pf = document.createElement('link');
+          pf.rel = 'prefetch';
+          pf.href = u.href;
+          document.head.appendChild(pf);
+        }
+      } catch (err) {}
+    }, { passive: true });
 
     document.addEventListener('click', (e) => {
       const link = e.target.closest('a[href]');
@@ -741,26 +740,25 @@ if (typeof window !== 'undefined') {
       }
 
       if (targetUrl.origin !== window.location.origin) return;
-      // Same page hash navigation -> let browser scroll smoothly without curtain
       if (targetUrl.pathname === window.location.pathname && targetUrl.search === window.location.search) return;
 
-      e.preventDefault();
-      const label = getRouteLabel(targetUrl.pathname);
-      const labelEl = document.getElementById('ls-curtain-label');
-      if (labelEl) labelEl.textContent = label;
-
       try {
-        sessionStorage.setItem('ls_slicer_transition', label);
+        sessionStorage.setItem('ls_nav_active', '1');
       } catch (err) {}
 
-      curtain.classList.remove('is-sweeping-out');
-      // Force reflow so transition always plays cleanly
-      void curtain.offsetWidth;
-      curtain.classList.add('is-sweeping-in');
+      topBar.classList.remove('is-done');
+      topBar.classList.add('is-active');
 
+      // If browser supports native cross-document View Transitions, navigate immediately so GPU morphs the 3D card & page seamlessly
+      if ('CSSViewTransitionRule' in window || CSS.supports('view-transition-name: studio-3d-slicer')) {
+        return;
+      }
+
+      e.preventDefault();
+      document.body.classList.add('ls-page-leaving');
       setTimeout(() => {
         window.location.href = targetUrl.href;
-      }, 330);
+      }, 140);
     });
   });
 }
