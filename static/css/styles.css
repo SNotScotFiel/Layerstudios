@@ -462,7 +462,7 @@ html.theme-light .store-theme-minimal .store-filter-btn:not(.active) {
 }
 
 #hero .glass-panel,
-#quote-3d-card {
+#seekmake-wrapper {
   view-transition-name: studio-3d-slicer;
 }
 

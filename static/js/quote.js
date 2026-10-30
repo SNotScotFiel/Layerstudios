@@ -180,39 +180,68 @@ class LayerStudiosQuoteEngine {
   }
 
   setupPathSwitchers() {
+    const btnSeekMake = document.getElementById('tab-seekmake-iq');
     const btnHaveModel = document.getElementById('tab-have-model');
     const btnNeedDesign = document.getElementById('tab-need-design');
+    const switchManualBtn = document.getElementById('switch-to-manual-quote');
+    const seekmakeWrapper = document.getElementById('seekmake-wrapper');
+    const quoteForm = document.getElementById('quote-request-form');
     const uploadAreaModel = document.getElementById('upload-area-model');
     const uploadAreaDesign = document.getElementById('upload-area-design');
 
-    if (btnHaveModel && btnNeedDesign) {
-      btnHaveModel.addEventListener('click', () => {
-        this.hasModel = true;
-        btnHaveModel.classList.add('bg-blue-500', 'text-white');
-        btnHaveModel.classList.remove('text-slate-400');
-        btnNeedDesign.classList.remove('bg-blue-500', 'text-white');
-        btnNeedDesign.classList.add('text-slate-400');
-        if (uploadAreaModel) uploadAreaModel.classList.remove('hidden');
-        if (uploadAreaDesign) uploadAreaDesign.classList.add('hidden');
-        this.recalculateQuote();
-      });
-
-      btnNeedDesign.addEventListener('click', () => {
-        this.hasModel = false;
-        btnNeedDesign.classList.add('bg-blue-500', 'text-white');
-        btnNeedDesign.classList.remove('text-slate-400');
-        btnHaveModel.classList.remove('bg-blue-500', 'text-white');
-        btnHaveModel.classList.add('text-slate-400');
-        if (uploadAreaModel) uploadAreaModel.classList.add('hidden');
-        if (uploadAreaDesign) uploadAreaDesign.classList.remove('hidden');
-        this.recalculateQuote();
-
-        if (window.LayerStudiosAnalytics) {
-          window.LayerStudiosAnalytics.trackDesignHelpRequested();
-          window.LayerStudiosAnalytics.trackQuoteStarted('design_help');
+    const setActiveTabBtn = (activeBtn) => {
+      [btnSeekMake, btnHaveModel, btnNeedDesign].forEach(btn => {
+        if (!btn) return;
+        if (btn === activeBtn) {
+          btn.classList.add('bg-blue-500', 'text-white', 'shadow');
+          btn.classList.remove('text-slate-400');
+        } else {
+          btn.classList.remove('bg-blue-500', 'text-white', 'shadow');
+          btn.classList.add('text-slate-400');
         }
       });
-    }
+    };
+
+    const activateSeekMake = () => {
+      setActiveTabBtn(btnSeekMake);
+      if (seekmakeWrapper) seekmakeWrapper.classList.remove('hidden');
+      if (quoteForm) quoteForm.classList.add('hidden');
+    };
+
+    const activateHaveModel = () => {
+      this.hasModel = true;
+      setActiveTabBtn(btnHaveModel);
+      if (seekmakeWrapper) seekmakeWrapper.classList.add('hidden');
+      if (quoteForm) quoteForm.classList.remove('hidden');
+      if (uploadAreaModel) uploadAreaModel.classList.remove('hidden');
+      if (uploadAreaDesign) uploadAreaDesign.classList.add('hidden');
+      this.recalculateQuote();
+      if (this.viewer && typeof this.viewer.handleResize === 'function') {
+        setTimeout(() => this.viewer.handleResize(), 60);
+      }
+    };
+
+    const activateNeedDesign = () => {
+      this.hasModel = false;
+      setActiveTabBtn(btnNeedDesign);
+      if (seekmakeWrapper) seekmakeWrapper.classList.add('hidden');
+      if (quoteForm) quoteForm.classList.remove('hidden');
+      if (uploadAreaModel) uploadAreaModel.classList.add('hidden');
+      if (uploadAreaDesign) uploadAreaDesign.classList.remove('hidden');
+      this.recalculateQuote();
+      if (this.viewer && typeof this.viewer.handleResize === 'function') {
+        setTimeout(() => this.viewer.handleResize(), 60);
+      }
+      if (window.LayerStudiosAnalytics) {
+        window.LayerStudiosAnalytics.trackDesignHelpRequested();
+        window.LayerStudiosAnalytics.trackQuoteStarted('design_help');
+      }
+    };
+
+    if (btnSeekMake) btnSeekMake.addEventListener('click', activateSeekMake);
+    if (btnHaveModel) btnHaveModel.addEventListener('click', activateHaveModel);
+    if (btnNeedDesign) btnNeedDesign.addEventListener('click', activateNeedDesign);
+    if (switchManualBtn) switchManualBtn.addEventListener('click', activateHaveModel);
   }
 
   setupDropzone() {
