@@ -356,9 +356,15 @@ class DatabaseManager:
             conn.close()
 
     def migrate_legacy_data_if_empty(self):
-        # Check if products table is already populated
-        prod_count = self.fetchone('SELECT COUNT(*) as cnt FROM products')
-        if prod_count and prod_count.get('cnt', 0) > 0:
+        # Always purge legacy placeholder SVG products (prod-1..prod-6) so only real showcase prints / real products exist
+        try:
+            self.execute("DELETE FROM products WHERE id IN ('prod-1','prod-2','prod-3','prod-4','prod-5','prod-6') OR image LIKE '/static/assets/prod_%'")
+        except Exception:
+            pass
+
+        # Check if materials table is already populated
+        mat_count = self.fetchone('SELECT COUNT(*) as cnt FROM materials')
+        if mat_count and mat_count.get('cnt', 0) > 0:
             return  # Already seeded/migrated
 
         if not os.path.exists(LEGACY_JSON_PATH):
@@ -373,8 +379,8 @@ class DatabaseManager:
             conn = self.get_connection()
             cur = conn.cursor()
 
-            # 1. Products
-            for p in data.get('products', []):
+            # 1. Products (Cleared — no placeholder products seeded)
+            for p in []:
                 cur.execute(self.format_query('''
                     INSERT INTO products (id, slug, title, category, price, description, dimensions, default_material, materials, colors, in_stock, lead_time, image, customizable, customization_field, active, created_at, updated_at)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)

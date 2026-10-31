@@ -551,53 +551,77 @@
         </div>
       </div>
 
-      <!-- Portfolio Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <!-- Portfolio Grid (Real 3D Prints) -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         
-        <!-- Project 1 -->
-        <div class="portfolio-card rounded-3xl bg-slate-900/80 border border-slate-800 overflow-hidden glass-panel-hover" data-category="prototyping">
-          <div class="h-48 bg-gradient-to-br from-slate-900 to-blue-950/40 p-6 flex flex-col justify-between relative border-b border-slate-800">
-            <span class="px-2.5 py-1 rounded-full bg-blue-500/20 text-blue-400 text-[10px] font-mono font-bold w-fit">Example Part</span>
-            <div class="text-3xl">📡</div>
+        <!-- Real Print 1: Multi-Hook Batch -->
+        <div class="portfolio-card rounded-3xl bg-slate-900/80 border border-slate-800 overflow-hidden glass-panel-hover flex flex-col justify-between" data-category="mechanical">
+          <div class="h-52 relative overflow-hidden border-b border-slate-800">
+            <img src="/static/assets/showcase/print-hooks-batch.jpg" alt="Produção em Série Ganchos 3D" loading="lazy" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500">
+            <span class="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-slate-950/85 text-emerald-400 border border-emerald-500/30 text-[10px] font-mono font-bold backdrop-blur-md">✓ Impressão Real</span>
           </div>
-          <div class="p-6 space-y-3">
-            <h3 class="text-lg font-bold text-white">IoT Sensor Enclosure</h3>
-            <p class="text-xs text-slate-400 leading-relaxed">Weather-resistant enclosure design featuring brass heat-set threaded inserts and silicone gasket sealing groove in PETG.</p>
+          <div class="p-5 space-y-2.5 flex-1 flex flex-col justify-between">
+            <div>
+              <h3 class="text-base font-bold text-white">Produção em Série: Ganchos Duplos</h3>
+              <p class="text-xs text-slate-400 leading-relaxed mt-1">Lote de ganchos funcionais impressos em simultâneo na mesa PEI 256×256 mm com repetibilidade dimensional.</p>
+            </div>
             <div class="flex items-center justify-between pt-3 border-t border-slate-800/80 text-[11px] font-mono text-slate-500">
-              <span>Material: PETG Black</span>
-              <span>Lead: 24–48h</span>
+              <span>PLA+ / PETG</span>
+              <span>Lote Multi-Peça</span>
             </div>
           </div>
         </div>
 
-        <!-- Project 2 -->
-        <div class="portfolio-card rounded-3xl bg-slate-900/80 border border-slate-800 overflow-hidden glass-panel-hover" data-category="replacement">
-          <div class="h-48 bg-gradient-to-br from-slate-900 to-indigo-950/40 p-6 flex flex-col justify-between relative border-b border-slate-800">
-            <span class="px-2.5 py-1 rounded-full bg-indigo-500/20 text-indigo-400 text-[10px] font-mono font-bold w-fit">Example Part</span>
-            <div class="text-3xl">⚙️</div>
+        <!-- Real Print 2: UAV Drone Scale Model -->
+        <div class="portfolio-card rounded-3xl bg-slate-900/80 border border-slate-800 overflow-hidden glass-panel-hover flex flex-col justify-between" data-category="prototyping">
+          <div class="h-52 relative overflow-hidden border-b border-slate-800">
+            <img src="/static/assets/showcase/print-uav-drone.jpg" alt="Maquete Drone UAV 3D" loading="lazy" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500">
+            <span class="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-slate-950/85 text-emerald-400 border border-emerald-500/30 text-[10px] font-mono font-bold backdrop-blur-md">✓ Impressão Real</span>
           </div>
-          <div class="p-6 space-y-3">
-            <h3 class="text-lg font-bold text-white">Vintage Kitchen Mixer Gear</h3>
-            <p class="text-xs text-slate-400 leading-relaxed">Recreated obsolete helical gear modeled from caliper dimensions of original fragments with involute tooth profile.</p>
+          <div class="p-5 space-y-2.5 flex-1 flex flex-col justify-between">
+            <div>
+              <h3 class="text-base font-bold text-white">Maquete UAV Drone c/ Pedestal</h3>
+              <p class="text-xs text-slate-400 leading-relaxed mt-1">Modelo aerodinâmico de asa fixa com cauda em V, suportes subalares detalhados e base de exposição curva.</p>
+            </div>
             <div class="flex items-center justify-between pt-3 border-t border-slate-800/80 text-[11px] font-mono text-slate-500">
-              <span>Material: CF-PETG</span>
-              <span>Layer: 0.16mm</span>
+              <span>PLA+ Branco</span>
+              <span>Camada 0.16mm</span>
             </div>
           </div>
         </div>
 
-        <!-- Project 3 -->
-        <div class="portfolio-card rounded-3xl bg-slate-900/80 border border-slate-800 overflow-hidden glass-panel-hover" data-category="mechanical">
-          <div class="h-48 bg-gradient-to-br from-slate-900 to-emerald-950/40 p-6 flex flex-col justify-between relative border-b border-slate-800">
-            <span class="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-mono font-bold w-fit">Example Part</span>
-            <div class="text-3xl">🏎️</div>
+        <!-- Real Print 3: AGM-114R Multi-Color Replica -->
+        <div class="portfolio-card rounded-3xl bg-slate-900/80 border border-slate-800 overflow-hidden glass-panel-hover flex flex-col justify-between" data-category="prototyping">
+          <div class="h-52 relative overflow-hidden border-b border-slate-800">
+            <img src="/static/assets/showcase/print-hellfire-model.jpg" alt="Maquete Bicolor AGM-114R" loading="lazy" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500">
+            <span class="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-slate-950/85 text-emerald-400 border border-emerald-500/30 text-[10px] font-mono font-bold backdrop-blur-md">✓ Impressão Real</span>
           </div>
-          <div class="p-6 space-y-3">
-            <h3 class="text-lg font-bold text-white">Telemetry Camera Rig</h3>
-            <p class="text-xs text-slate-400 leading-relaxed">Lightweight action camera bracket with flexible TPU dampening bushings for motorsport data logging.</p>
+          <div class="p-5 space-y-2.5 flex-1 flex flex-col justify-between">
+            <div>
+              <h3 class="text-base font-bold text-white">Réplica Bicolor AGM-114R</h3>
+              <p class="text-xs text-slate-400 leading-relaxed mt-1">Impressão vertical de alta precisão com transição limpa preto/branco, alhetas finas e base gravada em relevo.</p>
+            </div>
             <div class="flex items-center justify-between pt-3 border-t border-slate-800/80 text-[11px] font-mono text-slate-500">
-              <span>Material: PETG + TPU</span>
-              <span>Weight: 42g</span>
+              <span>PLA+ Bicolor</span>
+              <span>Base c/ Relevo</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Real Print 4: Two-Tone Karambit Prop -->
+        <div class="portfolio-card rounded-3xl bg-slate-900/80 border border-slate-800 overflow-hidden glass-panel-hover flex flex-col justify-between" data-category="replacement">
+          <div class="h-52 relative overflow-hidden border-b border-slate-800">
+            <img src="/static/assets/showcase/print-karambit-prop.jpg" alt="Adereço Bicolor Karambit 3D" loading="lazy" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500">
+            <span class="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-slate-950/85 text-emerald-400 border border-emerald-500/30 text-[10px] font-mono font-bold backdrop-blur-md">✓ Impressão Real</span>
+          </div>
+          <div class="p-5 space-y-2.5 flex-1 flex flex-col justify-between">
+            <div>
+              <h3 class="text-base font-bold text-white">Adereço Ergonómico Bicolor</h3>
+              <p class="text-xs text-slate-400 leading-relaxed mt-1">Montagem multi-peça combinando pega preta mate anatómica com anel e lâmina em branco de alto contraste.</p>
+            </div>
+            <div class="flex items-center justify-between pt-3 border-t border-slate-800/80 text-[11px] font-mono text-slate-500">
+              <span>PLA+ Matte</span>
+              <span>Multi-Peça</span>
             </div>
           </div>
         </div>

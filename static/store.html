@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Loja de Peças e Acessórios em Impressão 3D | Layer Studios</title>
-  <meta name="description" content="Compre acessórios funcionais, suportes de secretária, organizadores e componentes fabricados em impressão 3D em Portugal. Envio registado para Portugal e União Europeia.">
-  <meta name="keywords" content="loja impressão 3D Portugal, produtos impressão 3D, suporte auscultadores 3D, organizador hexagonal 3D, acessórios impressos Lisboa">
+  <title>Galeria & Exemplos de Impressão 3D | Layer Studios</title>
+  <meta name="description" content="Veja exemplos reais de peças impressas em 3D pela Layer Studios em Portugal: produção em série, maquetes técnicas, protótipos e peças bicolor em PLA+, PETG e Fibra de Carbono.">
+  <meta name="keywords" content="exemplos impressão 3D Portugal, portfólio impressão 3D, maquetes 3D, produção em série 3D Lisboa, prototipagem Layer Studios">
   <meta name="author" content="Layer Studios">
 
   <!-- Canonical and Language Alternates -->
@@ -17,53 +17,16 @@
   <!-- Open Graph & Social Sharing -->
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Layer Studios">
-  <meta property="og:title" content="Loja de Peças e Acessórios em Impressão 3D | Layer Studios">
-  <meta property="og:description" content="Compre acessórios funcionais e suportes fabricados sob demanda em impressão 3D em Portugal.">
+  <meta property="og:title" content="Galeria & Exemplos Reais de Impressão 3D | Layer Studios">
+  <meta property="og:description" content="Exemplos reais do que as nossas impressoras 3D fabricam sob medida em Portugal.">
   <meta property="og:url" content="https://layerstudios.pt/store">
-  <meta property="og:image" content="https://layerstudios.pt/static/assets/og_image.svg">
+  <meta property="og:image" content="https://layerstudios.pt/static/assets/showcase/print-uav-drone.jpg">
   <meta property="og:locale" content="pt_PT">
 
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Loja de Peças e Acessórios em Impressão 3D | Layer Studios">
-  <meta name="twitter:description" content="Acessórios e produtos impressos em 3D de alta qualidade com envio em Portugal.">
-  <meta name="twitter:image" content="https://layerstudios.pt/static/assets/og_image.svg">
-
-  <!-- Schema.org JSON-LD -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "Store",
-        "name": "Loja Layer Studios",
-        "url": "https://layerstudios.pt/store",
-        "description": "Catálogo de peças e produtos funcionais fabricados em impressão 3D sob demanda em Portugal.",
-        "parentOrganization": {
-          "@type": "LocalBusiness",
-          "name": "Layer Studios",
-          "url": "https://layerstudios.pt"
-        }
-      },
-      {
-        "@type": "BreadcrumbList",
-        "itemListElement": [
-          {
-            "@type": "ListItem",
-            "position": 1,
-            "name": "Início",
-            "item": "https://layerstudios.pt/"
-          },
-          {
-            "@type": "ListItem",
-            "position": 2,
-            "name": "Loja",
-            "item": "https://layerstudios.pt/store"
-          }
-        ]
-      }
-    ]
-  }
-  </script>
+  <meta name="twitter:title" content="Galeria & Exemplos Reais de Impressão 3D | Layer Studios">
+  <meta name="twitter:description" content="Peças reais impressas em 3D na nossa oficina em Portugal.">
+  <meta name="twitter:image" content="https://layerstudios.pt/static/assets/showcase/print-uav-drone.jpg">
 
   <!-- Tailwind CSS via CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -84,9 +47,7 @@
     }
   </script>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-  <link rel="stylesheet" href="/static/css/styles.css?v=3.5">
+  <link rel="stylesheet" href="/static/css/styles.css?v=3.6">
   <link rel="icon" type="image/svg+xml" href="/static/assets/logo.svg">
 </head>
 <body class="bg-[#09090b] text-slate-100 antialiased selection:bg-blue-500 selection:text-white relative overflow-x-hidden cad-grid">
@@ -94,7 +55,7 @@
   <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col space-y-3 pointer-events-none"></div>
 
   <!-- ═══════════════════════════════════════════════════════════════════
-       1. GLOBAL STICKY NAVBAR (Clean, Single-Line, Aligned)
+       1. GLOBAL STICKY NAVBAR
   ═══════════════════════════════════════════════════════════════════ -->
   <header id="main-header" class="fixed top-0 left-0 right-0 z-40 bg-slate-950/85 backdrop-blur-xl border-b border-slate-800/80 transition-all duration-300">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -134,13 +95,6 @@
             <span>Entrar / Criar Conta</span>
           </a>
 
-          <!-- Cart button -->
-          <button id="cart-toggle-btn" type="button" class="relative px-3.5 py-2 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white flex items-center space-x-2 text-xs font-semibold transition-all whitespace-nowrap">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
-            <span>Carrinho</span>
-            <span id="cart-count-badge" class="px-1.5 py-0.2 rounded-full bg-blue-500 text-white text-[10px] font-bold">0</span>
-          </button>
-
           <a href="/quote" class="hidden sm:inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-blue-500 hover:bg-blue-400 text-white shadow-md shadow-blue-500/20 hover:shadow-blue-500/35 transition-all whitespace-nowrap">
             <span>Pedir Orçamento &rarr;</span>
           </a>
@@ -175,16 +129,17 @@
   </div>
 
   <!-- ═══════════════════════════════════════════════════════════════════
-       STORE HEADER & CONTROLS
+       SHOWCASE HEADER & CONTROLS
   ═══════════════════════════════════════════════════════════════════ -->
   <div class="pt-32 pb-8 px-4 sm:px-6 lg:px-8 border-b border-slate-800/80">
     <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-6">
       <div>
-        <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 text-xs font-semibold mb-3">
-          <span>Catálogo Exclusivo &bull; Impresso Sob Demanda</span>
+        <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 text-xs font-semibold mb-3 border border-blue-500/20">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span>Exemplos Reais de Produção &bull; Mesa 256×256×256 mm</span>
         </div>
-        <h1 class="text-3xl sm:text-4xl font-black text-white">Loja Layer Studios</h1>
-        <p class="text-sm text-slate-400 mt-1 max-w-xl">Cada peça é fabricada na hora com filamentos premium (PLA+, PETG, Fibra de Carbono) na nossa oficina em Lisboa.</p>
+        <h1 class="text-3xl sm:text-4xl font-black text-white">Exemplos do Que Podemos Imprimir</h1>
+        <p class="text-sm text-slate-400 mt-1.5 max-w-2xl">Peças reais fotografadas diretamente na mesa de impressão da Layer Studios. Produzimos sob encomenda a partir do seu ficheiro 3D ou desenhamos o projeto à medida.</p>
       </div>
 
       <!-- Theme Switcher (Studio Minimal vs CAD Blueprint) -->
@@ -200,73 +155,83 @@
   </div>
 
   <!-- ═══════════════════════════════════════════════════════════════════
-       STORE CONTENT & PRODUCTS
+       REAL 3D PRINT SHOWCASE GALLERY
   ═══════════════════════════════════════════════════════════════════ -->
   <section id="store" class="py-12 px-4 sm:px-6 lg:px-8 store-theme-minimal min-h-[600px]">
     <div class="max-w-7xl mx-auto">
       
       <!-- Category Filter Tabs -->
       <div class="flex flex-wrap items-center gap-2 mb-10 pb-4 border-b border-slate-800/60">
-        <button class="store-filter-btn active px-4 py-2 rounded-xl text-xs font-semibold transition-all" data-category="All">All Products</button>
-        <button class="store-filter-btn px-4 py-2 rounded-xl text-xs font-semibold transition-all" data-category="Desk & Workspace">Desk &amp; Workspace</button>
-        <button class="store-filter-btn px-4 py-2 rounded-xl text-xs font-semibold transition-all" data-category="Tech & Audio">Tech &amp; Audio</button>
-        <button class="store-filter-btn px-4 py-2 rounded-xl text-xs font-semibold transition-all" data-category="Mechanical & Mounts">Mechanical &amp; Mounts</button>
-        <button class="store-filter-btn px-4 py-2 rounded-xl text-xs font-semibold transition-all" data-category="Home & Living">Home &amp; Living</button>
+        <button class="store-filter-btn active px-4 py-2 rounded-xl text-xs font-semibold transition-all" data-category="All">Todos os Exemplos (4)</button>
+        <button class="store-filter-btn px-4 py-2 rounded-xl text-xs font-semibold transition-all" data-category="Batch & Functional">Produção em Série &amp; Funcional</button>
+        <button class="store-filter-btn px-4 py-2 rounded-xl text-xs font-semibold transition-all" data-category="Scale Models">Maquetes &amp; Escala</button>
+        <button class="store-filter-btn px-4 py-2 rounded-xl text-xs font-semibold transition-all" data-category="Multi-Color & Props">Multi-Cor &amp; Props</button>
       </div>
 
-      <!-- Products Grid -->
-      <div id="store-products-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <!-- Rendered by store.js via /api/products -->
+      <!-- Showcase Grid (2 columns on desktop so real print photos look big & detailed) -->
+      <div id="store-products-grid" class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- Rendered by store.js -->
+      </div>
+
+      <!-- Custom Order CTA Banner -->
+      <div class="mt-14 rounded-3xl bg-gradient-to-r from-slate-900 via-slate-900 to-blue-950/60 border border-blue-500/25 p-8 sm:p-10 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6">
+        <div class="space-y-2 text-center md:text-left">
+          <span class="inline-block px-3 py-1 rounded-full bg-blue-500/15 text-blue-400 text-[11px] font-mono font-bold uppercase tracking-wider">Impresso Sob Medida</span>
+          <h2 class="text-2xl sm:text-3xl font-extrabold text-white">Tem um ficheiro 3D ou uma peça para fabricar?</h2>
+          <p class="text-sm text-slate-400 max-w-xl">Carregue o seu ficheiro STL, STEP ou 3MF no nosso Slicer Automático para calcular o preço na hora, ou envie-nos a sua ideia.</p>
+        </div>
+        <a href="/quote" class="shrink-0 inline-flex items-center space-x-2 px-7 py-4 rounded-2xl bg-blue-500 hover:bg-blue-400 text-white font-bold text-sm shadow-xl shadow-blue-500/25 transition-all">
+          <span>Pedir Orçamento Agora</span>
+          <span>&rarr;</span>
+        </a>
       </div>
 
     </div>
   </section>
 
   <!-- ═══════════════════════════════════════════════════════════════════
-       PRODUCT DETAIL MODAL
+       SHOWCASE PHOTO LIGHTBOX MODAL
   ═══════════════════════════════════════════════════════════════════ -->
-  <div id="product-detail-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
-    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-2xl w-full shadow-2xl max-h-[90vh] overflow-y-auto relative">
-      <button class="modal-close-btn absolute top-6 right-6 text-slate-400 hover:text-white p-1">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+  <div id="product-detail-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5 sm:p-8 max-w-3xl w-full shadow-2xl max-h-[92vh] overflow-y-auto relative">
+      <button class="modal-close-btn absolute top-5 right-5 z-10 w-9 h-9 rounded-full bg-slate-950/80 border border-slate-700 text-slate-300 hover:text-white flex items-center justify-center">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
       </button>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 items-start">
-        <div class="rounded-2xl bg-slate-950 border border-slate-800 p-6 flex items-center justify-center min-h-[220px]">
-          <img id="modal-prod-img" src="/static/assets/prod-headphone.svg" class="w-40 h-40 object-contain" alt="">
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+        <div class="md:col-span-7 rounded-2xl bg-slate-950 border border-slate-800 overflow-hidden">
+          <img id="modal-prod-img" src="" class="w-full h-auto max-h-[65vh] object-cover block" alt="">
         </div>
 
-        <div class="space-y-4">
+        <div class="md:col-span-5 space-y-4">
           <div>
-            <span id="modal-prod-dim" class="text-[10px] font-mono text-blue-400 font-bold uppercase"></span>
-            <h3 id="modal-prod-title" class="text-xl font-bold text-white mt-1"></h3>
-            <p id="modal-prod-price" class="text-2xl font-black text-white mt-1"></p>
+            <span id="modal-prod-dim" class="inline-block px-2.5 py-1 rounded-md bg-blue-500/10 border border-blue-500/20 text-[10px] font-mono text-blue-400 font-bold uppercase"></span>
+            <h3 id="modal-prod-title" class="text-xl font-extrabold text-white mt-2"></h3>
           </div>
 
-          <p id="modal-prod-desc" class="text-xs text-slate-400 leading-relaxed"></p>
+          <p id="modal-prod-desc" class="text-xs sm:text-sm text-slate-300 leading-relaxed"></p>
 
-          <div class="space-y-3 pt-3 border-t border-slate-800 text-xs">
-            <div>
-              <label class="block text-slate-400 font-medium mb-1">Material</label>
-              <select id="modal-prod-material" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-2 text-white text-xs"></select>
+          <div class="p-3.5 rounded-2xl bg-slate-950/90 border border-slate-800 space-y-2 text-xs font-mono">
+            <div class="flex justify-between">
+              <span class="text-slate-500">Material:</span>
+              <span id="modal-prod-mat-label" class="text-slate-200 font-bold"></span>
             </div>
-            <div>
-              <label class="block text-slate-400 font-medium mb-1">Colour</label>
-              <select id="modal-prod-color" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-2 text-white text-xs"></select>
+            <div class="flex justify-between">
+              <span class="text-slate-500">Mesa de Impressão:</span>
+              <span class="text-slate-200">256 × 256 × 256 mm (PEI)</span>
             </div>
-            <div id="modal-prod-custom-container" class="hidden">
-              <label id="modal-prod-custom-label" class="block text-slate-400 font-medium mb-1">Custom Text / Initials</label>
-              <input id="modal-prod-custom-input" type="text" maxlength="20" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-2 text-white text-xs" placeholder="e.g. STUDIO-01">
-            </div>
-            <div class="flex items-center space-x-3">
-              <label class="text-slate-400 font-medium">Quantity:</label>
-              <input id="modal-prod-qty" type="number" min="1" max="100" value="1" class="w-20 rounded-xl bg-slate-950 border border-slate-800 p-2 text-white text-xs text-center font-bold">
+            <div class="flex justify-between">
+              <span class="text-slate-500">Produção:</span>
+              <span id="modal-prod-lead" class="text-emerald-400 font-bold"></span>
             </div>
           </div>
 
-          <div class="pt-3">
-            <button id="modal-prod-add-btn" type="button" class="w-full py-3.5 rounded-xl bg-blue-500 hover:bg-blue-400 text-white font-bold text-xs shadow-lg shadow-blue-500/25 transition-all">
-              Add to Cart &bull; <span id="modal-prod-lead">Ships in 24h</span>
+          <div class="pt-2 space-y-2.5">
+            <a href="/quote" class="block w-full text-center py-3.5 rounded-xl bg-blue-500 hover:bg-blue-400 text-white font-bold text-xs shadow-lg shadow-blue-500/25 transition-all">
+              Pedir Orçamento Semelhante &rarr;
+            </a>
+            <button type="button" class="modal-close-btn w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs transition-all">
+              Fechar Pré-visualização
             </button>
           </div>
         </div>
@@ -274,153 +239,10 @@
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════════════════════════════════
-       CART DRAWER
-  ═══════════════════════════════════════════════════════════════════ -->
-  <div id="cart-drawer-backdrop" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm transition-opacity"></div>
-  <div id="cart-drawer" class="fixed top-0 right-0 bottom-0 z-50 w-full sm:w-96 bg-slate-950 border-l border-slate-800 translate-x-full transition-transform duration-300 flex flex-col p-6">
-    <div class="flex items-center justify-between pb-4 border-b border-slate-800">
-      <div class="flex items-center space-x-2">
-        <span class="text-base font-bold text-white">Your Cart</span>
-      </div>
-      <button id="cart-drawer-close" class="p-1.5 text-slate-400 hover:text-white">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-      </button>
-    </div>
-
-    <!-- Empty State -->
-    <div id="cart-empty-state" class="flex-1 flex flex-col items-center justify-center text-center p-6 space-y-3">
-      <div class="w-16 h-16 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-2xl">🛍️</div>
-      <p class="text-sm font-bold text-white">Your cart is empty</p>
-      <p class="text-xs text-slate-500">Explore our ready-made catalog or request a custom print.</p>
-    </div>
-
-    <!-- Cart items list -->
-    <div id="cart-items-list" class="hidden flex-1 overflow-y-auto py-4 space-y-3"></div>
-
-    <!-- Drawer Footer -->
-    <div id="cart-drawer-footer" class="hidden pt-4 border-t border-slate-800 space-y-3">
-      
-      <!-- Promo code -->
-      <div class="flex gap-2">
-        <input id="cart-promo-input" type="text" placeholder="Promo code (e.g. WELCOME10)" class="flex-1 rounded-xl bg-slate-900 border border-slate-800 px-3 py-2 text-xs text-white uppercase focus:border-blue-400 focus:outline-none font-mono">
-        <button id="cart-promo-apply-btn" type="button" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold">Apply</button>
-      </div>
-
-      <div class="space-y-1.5 text-xs font-mono text-slate-400">
-        <div class="flex justify-between"><span>Subtotal:</span><span id="cart-subtotal-val" class="text-white font-bold">&euro;0.00</span></div>
-        <div id="cart-discount-row" class="hidden flex justify-between text-emerald-400"><span>Discount:</span><span id="cart-discount-val">-&euro;0.00</span></div>
-        <div class="flex justify-between"><span>Shipping:</span><span id="cart-shipping-val">&euro;4.50</span></div>
-        <div class="flex justify-between text-sm font-bold text-white pt-2 border-t border-slate-800">
-          <span>Total:</span>
-          <span id="cart-total-val" class="text-blue-400">&euro;0.00</span>
-        </div>
-      </div>
-
-      <button id="cart-checkout-btn" type="button" class="w-full py-3.5 rounded-xl bg-blue-500 hover:bg-blue-400 text-white font-bold text-xs shadow-lg shadow-blue-500/25 transition-all">
-        Proceed to Checkout &rarr;
-      </button>
-    </div>
-  </div>
-
-  <!-- ═══════════════════════════════════════════════════════════════════
-       CHECKOUT MODAL (Portugal & EU friendly)
-  ═══════════════════════════════════════════════════════════════════ -->
-  <div id="checkout-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
-    <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl max-h-[90vh] overflow-y-auto relative">
-      <button class="modal-close-btn absolute top-6 right-6 text-slate-400 hover:text-white p-1">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-      </button>
-
-      <h3 class="text-xl font-bold text-white mb-1">Complete Checkout</h3>
-      <p class="text-xs text-slate-400 mb-6">Enter your delivery details to generate your order reference.</p>
-
-      <form id="checkout-form" class="space-y-4">
-        <div>
-          <label class="block text-xs font-semibold text-slate-300 mb-1">Full Name</label>
-          <input id="checkout-name" name="name" autocomplete="name" type="text" required class="w-full rounded-xl bg-slate-950 border border-slate-800 p-2.5 text-xs text-white focus:border-blue-400 focus:outline-none">
-        </div>
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-semibold text-slate-300 mb-1">Email</label>
-            <input id="checkout-email" name="email" autocomplete="email" type="email" required class="w-full rounded-xl bg-slate-950 border border-slate-800 p-2.5 text-xs text-white focus:border-blue-400 focus:outline-none">
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-slate-300 mb-1">Phone</label>
-            <input id="checkout-phone" name="tel" autocomplete="tel" type="tel" required class="w-full rounded-xl bg-slate-950 border border-slate-800 p-2.5 text-xs text-white focus:border-blue-400 focus:outline-none">
-          </div>
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-slate-300 mb-1">Delivery Address</label>
-          <input id="checkout-street" name="street-address" autocomplete="street-address" type="text" required placeholder="Street, Apt / Door" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-2.5 text-xs text-white focus:border-blue-400 focus:outline-none">
-        </div>
-        <div class="grid grid-cols-3 gap-3">
-          <div>
-            <label class="block text-xs font-semibold text-slate-300 mb-1">Postal Code</label>
-            <input id="checkout-postal" name="postal-code" autocomplete="postal-code" type="text" required placeholder="1000-001" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-2.5 text-xs text-white focus:border-blue-400 focus:outline-none">
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-slate-300 mb-1">City</label>
-            <input id="checkout-city" name="address-level2" autocomplete="address-level2" type="text" required placeholder="Lisboa" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-2.5 text-xs text-white focus:border-blue-400 focus:outline-none">
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-slate-300 mb-1">Country</label>
-            <select id="checkout-country" name="country-name" autocomplete="country-name" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-2.5 text-xs text-white focus:border-blue-400 focus:outline-none">
-              <option value="Portugal" selected>Portugal</option>
-              <option value="Spain">Spain</option>
-              <option value="European Union">EU</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="pt-3 border-t border-slate-800 space-y-2">
-          <label class="block text-xs font-semibold text-slate-300">Payment Method</label>
-          <div class="grid grid-cols-3 gap-2 text-[11px] font-mono">
-            <label class="p-2.5 rounded-xl bg-slate-950 border border-blue-500/50 flex flex-col items-center justify-center cursor-pointer text-center">
-              <input type="radio" name="checkout-payment" value="mbway" class="sr-only" checked>
-              <span class="font-bold text-white">MB WAY</span>
-              <span class="text-[9px] text-slate-500">Instant</span>
-            </label>
-            <label class="p-2.5 rounded-xl bg-slate-950 border border-slate-800 flex flex-col items-center justify-center cursor-pointer text-center">
-              <input type="radio" name="checkout-payment" value="multibanco" class="sr-only">
-              <span class="font-bold text-white">Multibanco</span>
-              <span class="text-[9px] text-slate-500">Ref / Entity</span>
-            </label>
-            <label class="p-2.5 rounded-xl bg-slate-950 border border-slate-800 flex flex-col items-center justify-center cursor-pointer text-center">
-              <input type="radio" name="checkout-payment" value="card" class="sr-only">
-              <span class="font-bold text-white">Card / Stripe</span>
-              <span class="text-[9px] text-slate-500">Visa &bull; MC</span>
-            </label>
-          </div>
-
-          <div id="pay-details-mbway" class="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-xs text-blue-300">
-            MB WAY transfer details and order tracking reference will be provided upon placement.
-          </div>
-          <div id="pay-details-multibanco" class="hidden p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-400 font-mono">
-            Bank transfer reference will be generated upon order placement.
-          </div>
-          <div id="pay-details-card" class="hidden p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-400">
-            Secure payment processed by Stripe.
-          </div>
-        </div>
-
-        <div class="pt-3 border-t border-slate-800 flex items-center justify-between">
-          <span class="text-xs text-slate-400">Total payable:</span>
-          <span id="checkout-total-badge" class="text-xl font-black text-blue-400">&euro;0.00</span>
-        </div>
-
-        <button type="submit" class="w-full py-3.5 rounded-xl bg-blue-500 hover:bg-blue-400 text-white font-bold text-xs shadow-lg shadow-blue-500/25 transition-all">
-          Confirm Order &rarr;
-        </button>
-      </form>
-    </div>
-  </div>
-
-  <!-- FOOTER -->
   <!-- FOOTER -->
   <footer class="border-t border-slate-800/80 bg-slate-950 py-10 px-4 sm:px-6 lg:px-8 mt-20">
     <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500 font-mono">
-      <div>&copy; 2026 Layer Studios. Loja &amp; Catálogo &bull; Portugal.</div>
+      <div>&copy; 2026 Layer Studios. Impressão 3D &amp; Prototipagem &bull; Portugal.</div>
       <div class="flex flex-wrap gap-4 justify-center">
         <a href="/" class="hover:text-white">Início</a>
         <a href="/quote" class="hover:text-white">Pedir Orçamento</a>
@@ -437,7 +259,7 @@
     </div>
   </footer>
 
-  <script src="/static/js/store.js"></script>
+  <script src="/static/js/store.js?v=3.6"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       // Mobile menu toggle
@@ -451,7 +273,7 @@
       if (mobClose) mobClose.addEventListener('click', shutM);
       if (mobBack) mobBack.addEventListener('click', shutM);
 
-      // Initialize store controller
+      // Initialize store showcase controller
       if (typeof LayerStudiosStore !== 'undefined') {
         window.LayerStudiosStoreInstance = new LayerStudiosStore();
       }
@@ -462,6 +284,6 @@
   <script src="/static/js/payments.js?v=2.2"></script>
   <script src="/static/js/notifications.js?v=2.2"></script>
   <script src="/static/js/auth.js?v=2.2"></script>
-  <script src="/static/js/i18n.js?v=3.5"></script>
+  <script src="/static/js/i18n.js?v=3.6"></script>
 </body>
 </html>
